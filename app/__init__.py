@@ -1,6 +1,6 @@
-from flask import Flask, current_app, session, render_template
+from flask import Flask, current_app, session, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
@@ -177,6 +177,11 @@ TRANSLATIONS = {
         'Join the support system and manage tickets efficiently': 'Únete al sistema de soporte y gestiona tickets de manera eficiente',
         'Go to Tickets': 'Ir a Tickets',
         'Sign In Now': 'Entrar Ahora'
+        , 'Please change the default admin password before continuing': 'Por seguridad, cambia la contraseña predeterminada de admin antes de continuar'
+        , 'Password updated successfully': 'Contraseña actualizada correctamente'
+        , 'New Password': 'Nueva contraseña'
+        , 'Confirm Password': 'Confirmar contraseña'
+        , 'Update Password': 'Actualizar contraseña'
     },
     'en': {
         'Abierto': 'Open',
@@ -361,6 +366,27 @@ def create_app(config_class=None):
             '_': _translate,
             'current_lang': lang,
         }
+
+    @app.before_request
+    def enforce_default_admin_password_change():
+        if not current_user.is_authenticated:
+            return None
+
+        endpoint = request.endpoint or ''
+        allowed_endpoints = {
+            'auth.force_password_change',
+            'auth.logout',
+            'main.set_language',
+            'static',
+        }
+        if endpoint in allowed_endpoints or endpoint.startswith('static'):
+            return None
+
+        from app.auth import must_change_default_admin_password
+        if must_change_default_admin_password(current_user):
+            return redirect(url_for('auth.force_password_change'))
+
+        return None
 
     # app logging to file to diagnose production errors without crashing user flow
     log_dir = app.instance_path
