@@ -42,9 +42,14 @@ class ProductionConfig(Config):
     TESTING = False
     SQLALCHEMY_ECHO = False
     
-    # In production, DATABASE_URL should point to PostgreSQL
-    # Example: postgresql://user:password@localhost:5432/soporte
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    # In production, prefer PostgreSQL URL from env vars.
+    # Render usually provides DATABASE_URL; some platforms use SQLALCHEMY_DATABASE_URI.
+    # Fallback to SQLite only to avoid startup crash during initial setup.
+    SQLALCHEMY_DATABASE_URI = (
+        os.environ.get('DATABASE_URL')
+        or os.environ.get('SQLALCHEMY_DATABASE_URI')
+        or 'sqlite:///' + os.path.join(basedir, 'instance', 'soporte.db')
+    )
     
     # PostgreSQL connection pool configuration for production
     # NOTE: connect_args timeout is for SQLite only, not PostgreSQL
