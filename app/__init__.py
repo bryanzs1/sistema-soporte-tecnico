@@ -380,3 +380,8 @@ def create_app(config_class=None):
         return render_template('errors/500.html'), 500
 
     return app
+
+
+# Compatibility entrypoint for platforms configured with: gunicorn app:app
+config_name = 'config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.Config'
+app = create_app(config_name)
