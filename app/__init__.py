@@ -196,6 +196,15 @@ TRANSLATIONS = {
         , 'Our goal is for every team to work without interruptions, with professional and approachable technical support.': 'Nuestro objetivo es que cada equipo trabaje sin interrupciones, con soporte técnico profesional y cercano.'
         , 'Create ticket now': 'Crear ticket ahora'
         , 'Sign in to the system': 'Entrar al sistema'
+        , 'Comment added': 'Comentario agregado'
+        , 'Welcome back, {username}!': '¡Bienvenido de nuevo, {username}!'
+        , 'You have been logged out successfully': 'Has cerrado sesión correctamente'
+        , 'User "{username}" created successfully with role: {role}': 'Usuario "{username}" creado correctamente con rol: {role}'
+        , 'User "{username}" updated - New role: {role}': 'Usuario "{username}" actualizado - Nuevo rol: {role}'
+        , 'Option "{value}" added to {type}': 'Opción "{value}" agregada a {type}'
+        , 'Option "{value}" removed': 'Opción "{value}" eliminada'
+        , 'Option updated to "{value}"': 'Opción actualizada a "{value}"'
+        , 'Ticket #{id} updated successfully - Status: {status}': 'Ticket #{id} actualizado correctamente - Estado: {status}'
     },
     'en': {
         'Abierto': 'Open',

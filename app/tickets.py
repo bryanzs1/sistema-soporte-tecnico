@@ -295,7 +295,13 @@ def ticket_detail(ticket_id):
             ticket.resolved_at = None
 
         db.session.commit()
-        flash(f'Ticket #{ticket.id} updated successfully - Status: {ticket.status}', 'success')
+        flash(
+            _t('Ticket #{id} updated successfully - Status: {status}').format(
+                id=ticket.id,
+                status=ticket.status,
+            ),
+            'success'
+        )
         return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
     # prefill form
