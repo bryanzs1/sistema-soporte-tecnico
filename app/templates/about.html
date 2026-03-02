@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Quiénes Somos{% endblock %}
+{% block title %}{{ _('Who We Are') }}{% endblock %}
 {% block body_class %}home-page{% endblock %}
 {% block content %}
   <div class="hero-section">
@@ -11,14 +11,14 @@
       </div>
 
       <div class="hero-text">
-        <h1 class="hero-title">Quiénes Somos</h1>
-        <p class="hero-subtitle">Somos un equipo enfocado en brindar soporte técnico corporativo, ágil y confiable, con procesos claros y atención centrada en las personas.</p>
+        <h1 class="hero-title">{{ _('Who We Are') }}</h1>
+        <p class="hero-subtitle">{{ _('We are a team focused on delivering agile, reliable corporate technical support with clear processes and people-centered service.') }}</p>
         <div class="hero-buttons">
           {% if current_user.is_authenticated %}
-            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary btn-lg btn-animated">Crear Ticket</a>
-            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-primary btn-lg btn-animated">Ver Tickets</a>
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary btn-lg btn-animated">{{ _('Create Ticket') }}</a>
+            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-primary btn-lg btn-animated">{{ _('View Tickets') }}</a>
           {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-animated">Iniciar Sesión</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-animated">{{ _('Sign In') }}</a>
           {% endif %}
         </div>
       </div>
@@ -27,8 +27,8 @@
 
   <div class="features-section">
     <div class="container py-5">
-      <h2 class="section-title">Nuestra Identidad</h2>
-      <p class="section-subtitle">Combinamos tecnología, metodología y servicio para mantener la operación de tu empresa siempre en movimiento.</p>
+      <h2 class="section-title">{{ _('Our Identity') }}</h2>
+      <p class="section-subtitle">{{ _('We combine technology, methodology, and service to keep your company operating without interruptions.') }}</p>
 
       <div class="features-grid">
         <div class="feature-card">
@@ -37,8 +37,8 @@
               <path d="M3 12h18M12 3v18"/>
             </svg>
           </div>
-          <h3>Misión</h3>
-          <p>Resolver incidentes y solicitudes con rapidez, calidad y trazabilidad, garantizando continuidad operativa para cada área de negocio.</p>
+          <h3>{{ _('Mission') }}</h3>
+          <p>{{ _('Resolve incidents and requests with speed, quality, and traceability, ensuring operational continuity for every business area.') }}</p>
         </div>
 
         <div class="feature-card">
@@ -48,8 +48,8 @@
               <path d="M12 8v4l3 2"/>
             </svg>
           </div>
-          <h3>Visión</h3>
-          <p>Ser una mesa de ayuda referente en eficiencia y experiencia de usuario, impulsando decisiones con métricas y mejora continua.</p>
+          <h3>{{ _('Vision') }}</h3>
+          <p>{{ _('Be a benchmark help desk in efficiency and user experience, driving decisions through metrics and continuous improvement.') }}</p>
         </div>
 
         <div class="feature-card">
@@ -58,8 +58,8 @@
               <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.8 5.5 21l2-7.5L2 9h7z"/>
             </svg>
           </div>
-          <h3>Valores</h3>
-          <p>Compromiso, transparencia, colaboración y orientación al cliente en cada interacción, desde la apertura hasta el cierre del ticket.</p>
+          <h3>{{ _('Values') }}</h3>
+          <p>{{ _('Commitment, transparency, collaboration, and customer focus in every interaction, from ticket creation to closure.') }}</p>
         </div>
       </div>
     </div>
@@ -67,12 +67,12 @@
 
   <div class="cta-section">
     <div class="container py-5 text-center">
-      <h2>Listos para apoyarte</h2>
-      <p>Nuestro objetivo es que cada equipo trabaje sin interrupciones, con soporte técnico profesional y cercano.</p>
+      <h2>{{ _('Ready to support you') }}</h2>
+      <p>{{ _('Our goal is for every team to work without interruptions, with professional and approachable technical support.') }}</p>
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-light btn-lg btn-animated mt-3">Crear ticket ahora</a>
+        <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Create ticket now') }}</a>
       {% else %}
-        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-animated mt-3">Entrar al sistema</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Sign in to the system') }}</a>
       {% endif %}
     </div>
   </div>

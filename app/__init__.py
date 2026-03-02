@@ -182,6 +182,20 @@ TRANSLATIONS = {
         , 'New Password': 'Nueva contraseña'
         , 'Confirm Password': 'Confirmar contraseña'
         , 'Update Password': 'Actualizar contraseña'
+        , 'Who We Are': 'Quiénes Somos'
+        , 'We are a team focused on delivering agile, reliable corporate technical support with clear processes and people-centered service.': 'Somos un equipo enfocado en brindar soporte técnico corporativo, ágil y confiable, con procesos claros y atención centrada en las personas.'
+        , 'Our Identity': 'Nuestra Identidad'
+        , 'We combine technology, methodology, and service to keep your company operating without interruptions.': 'Combinamos tecnología, metodología y servicio para mantener la operación de tu empresa siempre en movimiento.'
+        , 'Mission': 'Misión'
+        , 'Resolve incidents and requests with speed, quality, and traceability, ensuring operational continuity for every business area.': 'Resolver incidentes y solicitudes con rapidez, calidad y trazabilidad, garantizando continuidad operativa para cada área de negocio.'
+        , 'Vision': 'Visión'
+        , 'Be a benchmark help desk in efficiency and user experience, driving decisions through metrics and continuous improvement.': 'Ser una mesa de ayuda referente en eficiencia y experiencia de usuario, impulsando decisiones con métricas y mejora continua.'
+        , 'Values': 'Valores'
+        , 'Commitment, transparency, collaboration, and customer focus in every interaction, from ticket creation to closure.': 'Compromiso, transparencia, colaboración y orientación al cliente en cada interacción, desde la apertura hasta el cierre del ticket.'
+        , 'Ready to support you': 'Listos para apoyarte'
+        , 'Our goal is for every team to work without interruptions, with professional and approachable technical support.': 'Nuestro objetivo es que cada equipo trabaje sin interrupciones, con soporte técnico profesional y cercano.'
+        , 'Create ticket now': 'Crear ticket ahora'
+        , 'Sign in to the system': 'Entrar al sistema'
     },
     'en': {
         'Abierto': 'Open',
