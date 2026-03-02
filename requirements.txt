@@ -5,6 +5,7 @@ Flask-Login
 Flask-WTF
 psycopg2-binary
 gunicorn
+python-dotenv
 
 # development/testing helpers
 requests
