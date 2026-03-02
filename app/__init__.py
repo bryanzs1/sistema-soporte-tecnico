@@ -8,6 +8,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 # extensions
 
@@ -378,6 +379,34 @@ def create_app(config_class=None):
             return error
         app.logger.exception('Unhandled exception: %s', error)
         return render_template('errors/500.html'), 500
+
+    # Bootstrap for first deployment (e.g. fresh Render instance):
+    # create tables if missing and seed default admin user.
+    with app.app_context():
+        try:
+            from app.models import User
+            db.create_all()
+
+            default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
+            default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
+            default_admin_email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'admin@eie-puj.com')
+
+            existing_admin = User.query.filter_by(username=default_admin_username).first()
+            if existing_admin is None:
+                admin_user = User(
+                    username=default_admin_username,
+                    email=default_admin_email,
+                    role='admin'
+                )
+                admin_user.set_password(default_admin_password)
+                db.session.add(admin_user)
+                db.session.commit()
+                app.logger.warning('Default admin user created for initial setup: %s', default_admin_username)
+        except IntegrityError:
+            db.session.rollback()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            app.logger.error('Database bootstrap failed: %s', e)
 
     return app
 
