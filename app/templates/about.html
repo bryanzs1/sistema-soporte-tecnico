@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Quiénes Somos{% endblock %}
+{% block content %}
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+
+      <div class="hero-text">
+        <h1 class="hero-title">Quiénes Somos</h1>
+        <p class="hero-subtitle">Somos un equipo enfocado en brindar soporte técnico corporativo, ágil y confiable, con procesos claros y atención centrada en las personas.</p>
+        <div class="hero-buttons">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary btn-lg btn-animated">Crear Ticket</a>
+            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-primary btn-lg btn-animated">Ver Tickets</a>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-animated">Iniciar Sesión</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="features-section">
+    <div class="container py-5">
+      <h2 class="section-title">Nuestra Identidad</h2>
+      <p class="section-subtitle">Combinamos tecnología, metodología y servicio para mantener la operación de tu empresa siempre en movimiento.</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M3 12h18M12 3v18"/>
+            </svg>
+          </div>
+          <h3>Misión</h3>
+          <p>Resolver incidentes y solicitudes con rapidez, calidad y trazabilidad, garantizando continuidad operativa para cada área de negocio.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 8v4l3 2"/>
+            </svg>
+          </div>
+          <h3>Visión</h3>
+          <p>Ser una mesa de ayuda referente en eficiencia y experiencia de usuario, impulsando decisiones con métricas y mejora continua.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.8 5.5 21l2-7.5L2 9h7z"/>
+            </svg>
+          </div>
+          <h3>Valores</h3>
+          <p>Compromiso, transparencia, colaboración y orientación al cliente en cada interacción, desde la apertura hasta el cierre del ticket.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <div class="container py-5 text-center">
+      <h2>Listos para apoyarte</h2>
+      <p>Nuestro objetivo es que cada equipo trabaje sin interrupciones, con soporte técnico profesional y cercano.</p>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-light btn-lg btn-animated mt-3">Crear ticket ahora</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-animated mt-3">Entrar al sistema</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -16,6 +16,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about_us') }}">Quiénes Somos</a></li>
             {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">{{ _('Tickets') }}</a></li>
               {% if current_user.is_admin() or current_user.is_technician() %}

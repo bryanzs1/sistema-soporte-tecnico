@@ -17,3 +17,8 @@ def set_language(lang):
     return redirect(request.referrer or url_for('main.index'))
 
 
+@bp.route('/quienes-somos')
+def about_us():
+    return render_template('about.html')
+
+
