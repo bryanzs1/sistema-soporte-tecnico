@@ -16,7 +16,6 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about_us') }}">{{ _('Who We Are') }}</a></li>
             {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">{{ _('Tickets') }}</a></li>
               {% if current_user.is_admin() or current_user.is_technician() %}
@@ -25,12 +24,15 @@
               {% if current_user.is_admin() %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_users') }}">{{ _('Admin') }}</a></li>
               {% endif %}
+            {% endif %}
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about_us') }}">{{ _('Who We Are') }}</a></li>
+            {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
             {% else %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
             {% endif %}
-          </ul>
-          <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">{{ _('Language') }}</a>
               <ul class="dropdown-menu dropdown-menu-end">
