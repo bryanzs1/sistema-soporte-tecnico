@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: soporte-tecnico
+    env: python
+    pythonVersion: 3.11
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:create_app()
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+
+  - type: postgresql
+    name: soporte-db
+    version: 13
+    ipAllowList: []
+    databaseName: soporte_db
+    user: soporte_user
