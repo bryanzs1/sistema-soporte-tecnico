@@ -1,0 +1,70 @@
+import os
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+class Config:
+    """Base configuration for all environments."""
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    
+    # Database configuration with thread-safe pooling
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'instance', 'soporte.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Default: SQLite options (no pooling needed for development)
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+
+    # email settings (console backend for development)
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'localhost')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 25))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'false').lower() in ['true', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@localhost')
+
+
+class DevelopmentConfig(Config):
+    """Development configuration - uses SQLite."""
+    DEBUG = True
+    TESTING = False
+    SQLALCHEMY_ECHO = False
+    
+    # SQLite doesn't need pool configuration
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': {'timeout': 15}
+    }
+
+
+class ProductionConfig(Config):
+    """Production configuration - uses PostgreSQL."""
+    DEBUG = False
+    TESTING = False
+    SQLALCHEMY_ECHO = False
+    
+    # In production, DATABASE_URL should point to PostgreSQL
+    # Example: postgresql://user:password@localhost:5432/soporte
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    
+    # PostgreSQL connection pool configuration for production
+    # NOTE: connect_args timeout is for SQLite only, not PostgreSQL
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 20,              # Number of connections to maintain in pool
+        'pool_recycle': 1800,         # Recycle connections after 30 minutes
+        'pool_pre_ping': True,        # Test connection before reusing
+        'max_overflow': 40,           # Additional connections allowed
+    }
+
+
+class TestingConfig(Config):
+    """Testing configuration - uses in-memory SQLite."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    MAIL_SUPPRESS_SEND = True
+    WTF_CSRF_ENABLED = False
+    
+    # In-memory SQLite for testing (no pooling needed)
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': {'timeout': 1}
+    }
+

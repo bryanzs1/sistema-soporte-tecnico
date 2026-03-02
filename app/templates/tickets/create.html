@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('New Ticket') }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="mb-5">
+    <h2 class="mb-4">{{ _('Create a new ticket') }}</h2>
+    
+    <!-- Main Form Card -->
+    <div class="form-card">
+      <form method="post" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <!-- Basic Information Section -->
+        <div class="section-card mb-4">
+          <h3>{{ _('Basic Information') }}</h3>
+          
+          <div class="row mb-3">
+            <div class="col-lg-6">
+              <div class="mb-3">
+                {{ form.creator_name.label }}
+                {{ form.creator_name(class_='form-control input-enhanced', placeholder=_('Your name')) }}
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="mb-3">
+                {{ form.category.label }}
+                {{ form.category(class_='form-select input-enhanced') }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            {{ form.title.label }}
+            {{ form.title(class_='form-control input-enhanced', placeholder=_('Ticket title')) }}
+          </div>
+          
+          <div class="mb-3">
+            {{ form.description.label }}
+            {{ form.description(class_='form-control input-enhanced', rows=5, placeholder=_('Describe the issue in detail')) }}
+          </div>
+        </div>
+        
+        <!-- Options Section -->
+        <div class="section-card mb-4">
+          <h3>{{ _('Options') }}</h3>
+          
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="mb-3">
+                {{ form.priority.label }}
+                {{ form.priority(class_='form-select input-enhanced') }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Attachment Section -->
+        <div class="section-card mb-4">
+          <h3>{{ _('Attachments') }}</h3>
+          
+          <div class="mb-3">
+            {{ form.attachment.label }}
+            {{ form.attachment(class_='form-control input-enhanced') }}
+            <small class="text-muted d-block mt-2">{{ _('Accepted formats') }}: PNG, JPG, PDF, TXT, DOCX, XLSX, CSV</small>
+          </div>
+        </div>
+        
+        <!-- Submit Section -->
+        <div class="d-flex gap-3">
+          {{ form.submit(class_='btn btn-primary btn-animated btn-lg', value=_('Create Ticket')) }}
+          <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-secondary btn-lg">{{ _('Cancel') }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Control Panel') }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="mb-5">
+    <h2 class="mb-4">{{ _('Control Panel') }}</h2>
+    
+    <!-- Main Metrics Row -->
+    <div class="row g-4">
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets') }}" class="text-decoration-none">
+          <div class="metric-card">
+            <div class="metric-label">{{ _('Total tickets') }}</div>
+            <div class="metric-value">{{ stats.total }}</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets', status='Abierto') }}" class="text-decoration-none">
+          <div class="metric-card metric-danger">
+            <div class="metric-label">{{ _('Open') }}</div>
+            <div class="metric-value">{{ stats.open }}</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets', status='En proceso') }}" class="text-decoration-none">
+          <div class="metric-card metric-info">
+            <div class="metric-label">{{ _('In Progress') }}</div>
+            <div class="metric-value">{{ stats.in_progress }}</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets', status='Esperando') }}" class="text-decoration-none">
+          <div class="metric-card metric-warning">
+            <div class="metric-label">{{ _('Waiting') }}</div>
+            <div class="metric-value">{{ stats.waiting }}</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary Metrics Row -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-3 col-md-6">
+      <a href="{{ url_for('tickets.list_tickets', status='Cerrado') }}" class="text-decoration-none">
+        <div class="metric-card metric-success">
+          <div class="metric-label">{{ _('Closed') }}</div>
+          <div class="metric-value">{{ stats.closed }}</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="metric-card metric-danger">
+        <div class="metric-label">{{ _('Overdue SLA') }}</div>
+        <div class="metric-value">{{ stats.overdue }}</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="metric-card">
+        <div class="metric-label">{{ _('Avg resolution (h)') }}</div>
+        <div class="metric-value">{{ "%.1f" | format(stats.avg_resolution_hours) }}</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="metric-card metric-warning">
+        <div class="metric-label">{{ _('Reopened tickets') }}</div>
+        <div class="metric-value">{{ stats.reopened }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Section -->
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="section-card">
+        <h3>{{ _('By category') }}</h3>
+        <ul class="list-group list-group-flush">
+          {% for cat, count in categories.items() %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ _(cat) }}</span>
+              <span class="badge rounded-pill" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">{{ count }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="section-card">
+        <h3>{{ _('Quick Actions') }}</h3>
+        <div class="d-flex flex-column gap-2">
+          <a class="btn btn-primary btn-animated" href="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</a>
+          {% if current_user.is_admin() %}
+            <a class="btn btn-outline-primary" href="{{ url_for('admin.list_users') }}">{{ _('Manage users') }}</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('admin.ticket_options') }}">{{ _('Manage ticket options') }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

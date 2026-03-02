@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Error') }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="alert alert-danger mt-3">
+    {{ _('An unexpected error occurred') }}.
+  </div>
+  <p>{{ _('Try again. If the problem persists, notify the administrator.') }}</p>
+  <a class="btn btn-primary" href="{{ url_for('tickets.list_tickets') }}">{{ _('Back to tickets') }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Support') }}{% endblock %}
+{% block body_class %}home-page{% endblock %}
+{% block content %}
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+      
+      <div class="hero-text">
+        <h1 class="hero-title">{{ _('Welcome to the support system') }}</h1>
+        <p class="hero-subtitle">{{ _('Use navigation to sign in or create tickets.') }}</p>
+        
+        <div class="hero-buttons">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-primary btn-lg btn-animated">{{ _('View Tickets') }}</a>
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-outline-primary btn-lg btn-animated">{{ _('Create Ticket') }}</a>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-animated">{{ _('Sign In') }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <div class="container py-5">
+      <h2 class="section-title">{{ _('Key Features') }}</h2>
+      <p class="section-subtitle">{{ _('Everything you need for efficient support management') }}</p>
+      
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5m-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11m3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+            </svg>
+          </div>
+          <h3>{{ _('Easy to Use') }}</h3>
+          <p>{{ _('Intuitive interface designed for seamless ticket management and tracking') }}</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h3>{{ _('SLA Tracking') }}</h3>
+          <p>{{ _('Monitor response times and resolution SLAs for tickets with real-time alerts') }}</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h3>{{ _('Collaborate') }}</h3>
+          <p>{{ _('Add comments and attachments to tickets for team collaboration') }}</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <h3>{{ _('Dashboard') }}</h3>
+          <p>{{ _('View analytics and KPIs across all tickets and support metrics') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="cta-section">
+    <div class="container py-5 text-center">
+      <h2>{{ _('Ready to get started?') }}</h2>
+      <p>{{ _('Join the support system and manage tickets efficiently') }}</p>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Go to Tickets') }}</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Sign In Now') }}</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

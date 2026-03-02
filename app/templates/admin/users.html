@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Users') }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-body">
+      <h2 class="card-title">{{ _('Users') }}</h2>
+      <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">{{ _('Create User') }}</a>
+      <a href="{{ url_for('admin.ticket_options') }}" class="btn btn-outline-primary mb-3">{{ _('Manage ticket options') }}</a>
+      <table class="table">
+        <thead><tr><th>ID</th><th>{{ _('Username') }}</th><th>{{ _('Email') }}</th><th>{{ _('Role') }}</th><th>{{ _('Actions') }}</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.role }}</td>
+              <td><a class="btn btn-sm btn-primary" href="{{ url_for('admin.edit_user', user_id=u.id) }}">{{ _('Edit') }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
