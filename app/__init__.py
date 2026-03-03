@@ -440,6 +440,15 @@ def create_app(config_class=None):
             from app.models import User
             db.create_all()
 
+            # Add is_active column if it doesn't exist (migration support)
+            inspector = db.inspect(db.engine)
+            user_columns = [col['name'] for col in inspector.get_columns('user')]
+            if 'is_active' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE'))
+                    conn.commit()
+                app.logger.warning('Added is_active column to user table')
+
             default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
             default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
             default_admin_email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'admin@eie-puj.com')
