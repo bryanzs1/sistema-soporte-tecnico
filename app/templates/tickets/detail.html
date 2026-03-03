@@ -34,7 +34,7 @@
         <div class="col-md-12 mb-3">
           <div class="detail-item">
             <strong>{{ _('Description') }}:</strong>
-            <p class="mt-2 text-secondary">{{ ticket.description }}</p>
+            <p class="mt-2" style="color: #333;">{{ ticket.description }}</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@
           {% endfor %}
         </ul>
       {% else %}
-        <p class="text-muted">{{ _('No attachments') }}.</p>
+        <p style="color: #333;">{{ _('No attachments') }}.</p>
       {% endif %}
     </div>
 
@@ -128,12 +128,12 @@
                 <strong>{{ c.user.username if c.user else _('User') }}</strong>
                 <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
               </div>
-              <p class="text-secondary mb-0">{{ c.message }}</p>
+              <p class="mb-0" style="color: #333;">{{ c.message }}</p>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-muted">{{ _('No comments yet') }}.</p>
+        <p style="color: #333;">{{ _('No comments yet') }}.</p>
       {% endif %}
     </div>
 

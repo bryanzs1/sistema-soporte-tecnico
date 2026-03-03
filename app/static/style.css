@@ -751,6 +751,15 @@ footer {
     gap: 10px;
 }
 
+.section-card .detail-item {
+    color: #333;
+    font-weight: 500;
+}
+
+.section-card .detail-item strong {
+    color: #222;
+}
+
 /* Metric Card for Dashboard */
 .metric-card {
     background: white;
@@ -811,6 +820,14 @@ footer {
 .content-card:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     transform: translateY(-5px);
+}
+
+.content-card strong {
+    color: #222;
+}
+
+.content-card p {
+    color: #333;
 }
 
 /* Floating Shapes Background */
