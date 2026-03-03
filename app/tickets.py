@@ -252,13 +252,16 @@ def ticket_detail(ticket_id):
     comment_form = TicketCommentForm(prefix='comment')
     # populate technician choices only for admin/tech
     if current_user.is_admin() or current_user.is_technician():
-        # Get active technicians only
+        # Get active technicians who are currently online (active within last 30 minutes)
+        from datetime import datetime, timedelta
+        thirty_min_ago = datetime.utcnow() - timedelta(minutes=30)
         techs = User.query.filter(
             User.role == 'technician',
-            User.is_active == True
+            User.is_active == True,
+            User.last_activity >= thirty_min_ago
         ).order_by(User.username).all()
         # Add "Unassigned" option first
-        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, t.username) for t in techs]
+        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, f"{t.username} (online)") for t in techs]
     else:
         form.technician.choices = []
 

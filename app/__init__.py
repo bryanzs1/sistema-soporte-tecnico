@@ -212,6 +212,7 @@ TRANSLATIONS = {
         , '-- Unassigned --': '-- Sin asignar --'
         , 'Details': 'Detalles'
         , 'SLA Information': 'Información SLA'
+        , '(online)': '(en línea)'
     },
     'en': {
         'Abierto': 'Open',
@@ -398,7 +399,16 @@ def create_app(config_class=None):
         }
 
     @app.before_request
-    def enforce_default_admin_password_change():
+    def update_user_activity_and_enforce_password():
+        if current_user.is_authenticated:
+            # Update last_activity timestamp for online tracking
+            from datetime import datetime
+            current_user.last_activity = datetime.utcnow()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+        
         if not current_user.is_authenticated:
             return None
 
@@ -451,6 +461,12 @@ def create_app(config_class=None):
                     conn.execute(db.text('ALTER TABLE "user" ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE'))
                     conn.commit()
                 app.logger.warning('Added is_active column to user table')
+
+            if 'last_activity' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added last_activity column to user table')
 
             default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
             default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
