@@ -12,13 +12,13 @@
         <div class="col-md-6 mb-3">
           <div class="detail-item">
             <strong>{{ _('Status') }}:</strong> 
-            <span class="badge ticket-badge-{{ ticket.status.lower() }} ms-2">{{ _(ticket.status) }}</span>
+            <span class="badge ticket-badge-{% if ticket.status == 'Cerrado' %}success{% elif ticket.status == 'Abierto' %}danger{% elif ticket.status == 'En proceso' %}info{% else %}warning{% endif %} ms-2">{{ _(ticket.status) }}</span>
           </div>
         </div>
         <div class="col-md-6 mb-3">
           <div class="detail-item">
             <strong>{{ _('Priority') }}:</strong> 
-            <span class="badge priority-badge-{{ ticket.priority.lower() }} ms-2">{{ _(ticket.priority) }}</span>
+            <span class="badge priority-badge-{% if ticket.priority == 'Crítica' %}danger{% elif ticket.priority == 'Alta' %}warning{% elif ticket.priority == 'Media' %}info{% else %}light{% endif %} ms-2">{{ _(ticket.priority) }}</span>
           </div>
         </div>
         <div class="col-md-6 mb-3">
