@@ -734,7 +734,6 @@ footer {
     margin-bottom: 30px;
     transition: all 0.3s ease;
     animation: fadeInUp 0.6s ease-out;
-    color: #333;
 }
 
 .section-card:hover {
@@ -750,22 +749,6 @@ footer {
     display: flex;
     align-items: center;
     gap: 10px;
-}
-
-.section-card p {
-    color: #333;
-}
-
-.section-card strong {
-    color: #222;
-}
-
-.section-card .text-secondary {
-    color: #555 !important;
-}
-
-.section-card p {
-    color: #333;
 }
 
 /* Metric Card for Dashboard */
@@ -823,24 +806,11 @@ footer {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     animation: fadeInUp 0.6s ease-out;
-    color: #333;
 }
 
 .content-card:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     transform: translateY(-5px);
-}
-
-.content-card p {
-    color: #333;
-}
-
-.content-card strong {
-    color: #222;
-}
-
-.content-card .text-secondary {
-    color: #555 !important;
 }
 
 /* Floating Shapes Background */
