@@ -71,8 +71,10 @@ def edit_user(user_id):
     form = UserRoleForm(obj=user)
     if form.validate_on_submit():
         user.role = form.role.data
+        user.is_active = form.is_active.data
         db.session.commit()
-        flash(_t('User "{username}" updated - New role: {role}').format(username=user.username, role=user.role), 'success')
+        status = _t('Active') if user.is_active else _t('Inactive')
+        flash(_t('User "{username}" updated - Role: {role}, Status: {status}').format(username=user.username, role=user.role, status=status), 'success')
         return redirect(url_for('admin.list_users'))
     return render_template('admin/edit_user.html', user=user, form=form)
 

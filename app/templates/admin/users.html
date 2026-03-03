@@ -8,7 +8,7 @@
       <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">{{ _('Create User') }}</a>
       <a href="{{ url_for('admin.ticket_options') }}" class="btn btn-outline-primary mb-3">{{ _('Manage ticket options') }}</a>
       <table class="table">
-        <thead><tr><th>ID</th><th>{{ _('Username') }}</th><th>{{ _('Email') }}</th><th>{{ _('Role') }}</th><th>{{ _('Actions') }}</th></tr></thead>
+        <thead><tr><th>ID</th><th>{{ _('Username') }}</th><th>{{ _('Email') }}</th><th>{{ _('Role') }}</th><th>{{ _('Status') }}</th><th>{{ _('Actions') }}</th></tr></thead>
         <tbody>
           {% for u in users %}
             <tr>
@@ -16,6 +16,13 @@
               <td>{{ u.username }}</td>
               <td>{{ u.email }}</td>
               <td>{{ u.role }}</td>
+              <td>
+                {% if u.is_active %}
+                  <span class="badge bg-success">{{ _('Active') }}</span>
+                {% else %}
+                  <span class="badge bg-danger">{{ _('Inactive') }}</span>
+                {% endif %}
+              </td>
               <td><a class="btn btn-sm btn-primary" href="{{ url_for('admin.edit_user', user_id=u.id) }}">{{ _('Edit') }}</a></td>
             </tr>
           {% endfor %}

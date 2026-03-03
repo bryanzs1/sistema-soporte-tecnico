@@ -205,6 +205,10 @@ TRANSLATIONS = {
         , 'Option "{value}" removed': 'Opción "{value}" eliminada'
         , 'Option updated to "{value}"': 'Opción actualizada a "{value}"'
         , 'Ticket #{id} updated successfully - Status: {status}': 'Ticket #{id} actualizado correctamente - Estado: {status}'
+        , 'Active': 'Activo'
+        , 'Inactive': 'Inactivo'
+        , 'This account has been deactivated. Please contact an administrator.': 'Esta cuenta ha sido desactivada. Por favor contacta a un administrador.'
+        , 'User "{username}" updated - Role: {role}, Status: {status}': 'Usuario "{username}" actualizado - Rol: {role}, Estado: {status}'
     },
     'en': {
         'Abierto': 'Open',

@@ -87,11 +87,13 @@ class TicketCommentForm(FlaskForm):
 
 class UserRoleForm(FlaskForm):
     role = SelectField('Role', choices=[(r, r.capitalize()) for r in ['user', 'technician', 'admin']])
+    is_active = BooleanField('Active')
     submit = SubmitField('Save')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role.label.text = tr('Role', 'Rol')
+        self.is_active.label.text = tr('Active', 'Activo')
         self.submit.label.text = tr('Save', 'Guardar')
 
 

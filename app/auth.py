@@ -40,6 +40,9 @@ def login():
         if user is None or not user.check_password(form.password.data):
             flash(_t('Invalid username or password'), 'danger')
             return redirect(url_for('auth.login'))
+        if not user.is_active:
+            flash(_t('This account has been deactivated. Please contact an administrator.'), 'danger')
+            return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
         if must_change_default_admin_password(user):
             flash(_t('Please change the default admin password before continuing'), 'warning')

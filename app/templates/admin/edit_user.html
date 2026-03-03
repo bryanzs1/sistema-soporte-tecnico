@@ -13,6 +13,11 @@
           {{ form.role(class_='form-select') }}
           {% for e in form.role.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
         </div>
+        <div class="mb-3 form-check">
+          {{ form.is_active(class_='form-check-input') }}
+          {{ form.is_active.label(class_='form-check-label') }}
+          {% for e in form.is_active.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+        </div>
         {% else %}
         <div class="mb-3">
           {{ form.username.label }}
