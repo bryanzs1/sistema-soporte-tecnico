@@ -453,7 +453,8 @@ footer {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-.btn-primary {
+/* Hero buttons - special styling override */
+.hero-buttons .btn-primary {
     background-color: white;
     color: #667eea;
     border: none;
@@ -461,12 +462,12 @@ footer {
     padding: 12px 40px;
 }
 
-.btn-primary:hover {
+.hero-buttons .btn-primary:hover {
     background-color: #f0f0f0;
     color: #764ba2;
 }
 
-.btn-outline-primary {
+.hero-buttons .btn-outline-primary {
     color: #667eea;
     border: 2px solid #667eea;
     background-color: white;
@@ -474,10 +475,21 @@ footer {
     padding: 10px 38px;
 }
 
-.btn-outline-primary:hover {
+.hero-buttons .btn-outline-primary:hover {
     background-color: #667eea;
     color: white;
     border-color: #667eea;
+}
+
+/* Standard button styling */
+.btn-primary {
+    color: white !important;
+}
+
+.btn-outline-primary:not(.hero-buttons .btn-outline-primary) {
+    color: #667eea;
+    border-color: #667eea;
+}
 }
 
 /* Features Section */
