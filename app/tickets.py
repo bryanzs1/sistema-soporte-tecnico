@@ -252,13 +252,13 @@ def ticket_detail(ticket_id):
     comment_form = TicketCommentForm(prefix='comment')
     # populate technician choices only for admin/tech
     if current_user.is_admin() or current_user.is_technician():
-        # Get active technicians and admins who can be assigned tickets
+        # Get active technicians only
         techs = User.query.filter(
-            User.role.in_(['technician', 'admin']),
+            User.role == 'technician',
             User.is_active == True
         ).order_by(User.username).all()
         # Add "Unassigned" option first
-        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, f"{t.username} ({t.role})") for t in techs]
+        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, t.username) for t in techs]
     else:
         form.technician.choices = []
 
