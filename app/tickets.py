@@ -137,6 +137,35 @@ def create_ticket():
     return render_template('tickets/create.html', form=form)
 
 
+@bp.route('/request-password-reset')
+@login_required
+def request_password_reset_ticket():
+    if current_user.is_admin() or current_user.is_technician():
+        flash(_t('This option is only for normal users'), 'warning')
+        return redirect(url_for('tickets.list_tickets'))
+
+    categories = Ticket.categories()
+    priorities = Ticket.priorities()
+
+    category = 'Software' if 'Software' in categories else (categories[0] if categories else 'Software')
+    priority = 'Alta' if 'Alta' in priorities else (priorities[0] if priorities else 'Alta')
+
+    ticket = Ticket(
+        title=_t('Password reset request'),
+        creator_name=current_user.username,
+        description=_t('User requested password reset. Registered email: {email}').format(email=current_user.email),
+        category=category,
+        priority=priority,
+        user=current_user,
+    )
+    ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
+    db.session.add(ticket)
+    db.session.commit()
+
+    flash(_t('Password reset ticket created successfully'), 'success')
+    return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+
 @bp.route('/attachments/<int:attachment_id>/download')
 @login_required
 def download_attachment(attachment_id):

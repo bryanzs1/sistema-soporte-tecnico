@@ -68,6 +68,11 @@
         </div>
         <div class="col-md-6 mb-3">
           <div class="detail-item">
+            <strong>{{ _('Requester email') }}:</strong> {{ ticket.user.email if ticket.user else 'N/A' }}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
             <strong>{{ _('Reopened') }}:</strong> {{ ticket.reopened_count or 0 }} {{ _('time(s)') }}
           </div>
         </div>

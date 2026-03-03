@@ -213,6 +213,12 @@ TRANSLATIONS = {
         , 'Details': 'Detalles'
         , 'SLA Information': 'Información SLA'
         , '(online)': '(en línea)'
+        , 'Request password reset': 'Solicitar restablecimiento de contraseña'
+        , 'Password reset request': 'Solicitud de restablecimiento de contraseña'
+        , 'User requested password reset. Registered email: {email}': 'El usuario solicitó restablecimiento de contraseña. Correo registrado: {email}'
+        , 'Password reset ticket created successfully': 'Ticket de restablecimiento de contraseña creado correctamente'
+        , 'Requester email': 'Correo del solicitante'
+        , 'This option is only for normal users': 'Esta opción es solo para usuarios normales'
     },
     'en': {
         'Abierto': 'Open',
