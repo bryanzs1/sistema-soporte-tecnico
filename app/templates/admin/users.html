@@ -24,8 +24,8 @@
                 {% endif %}
               </td>
               <td>
-                <a class="btn btn-sm btn-primary" href="{{ url_for('admin.edit_user', user_id=u.id) }}">{{ _('Edit') }}</a>
-                <a class="btn btn-sm btn-warning" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">{{ _('Reset Password') }}</a>
+                <a class="btn btn-sm btn-info text-white" href="{{ url_for('admin.edit_user', user_id=u.id) }}">{{ _('Edit') }}</a>
+                <a class="btn btn-sm btn-warning text-dark" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">{{ _('Reset Password') }}</a>
               </td>
             </tr>
           {% endfor %}
