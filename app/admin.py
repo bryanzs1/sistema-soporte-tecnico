@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 
 from app import db, translate
 from app.models import User, TicketOption
-from app.forms import UserRoleForm, NewUserForm, TicketOptionForm
+from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
 
@@ -77,6 +77,25 @@ def edit_user(user_id):
         flash(_t('User "{username}" updated - Role: {role}, Status: {status}').format(username=user.username, role=user.role, status=status), 'success')
         return redirect(url_for('admin.list_users'))
     return render_template('admin/edit_user.html', user=user, form=form)
+
+
+@bp.route('/users/<int:user_id>/reset-password', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def reset_user_password(user_id):
+    user = User.query.get_or_404(user_id)
+    form = AdminResetPasswordForm()
+
+    if form.validate_on_submit():
+        user.set_password(form.new_password.data)
+        db.session.commit()
+        flash(
+            _t('Password for user "{username}" was reset successfully').format(username=user.username),
+            'success'
+        )
+        return redirect(url_for('admin.list_users'))
+
+    return render_template('admin/reset_user_password.html', user=user, form=form)
 
 
 @bp.route('/dashboard')

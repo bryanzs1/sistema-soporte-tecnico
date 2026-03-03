@@ -219,6 +219,9 @@ TRANSLATIONS = {
         , 'Password reset ticket created successfully': 'Ticket de restablecimiento de contraseña creado correctamente'
         , 'Requester email': 'Correo del solicitante'
         , 'This option is only for normal users': 'Esta opción es solo para usuarios normales'
+        , 'Reset Password': 'Restablecer contraseña'
+        , 'Password for user "{username}" was reset successfully': 'La contraseña del usuario "{username}" fue restablecida correctamente'
+        , 'Registered email': 'Correo registrado'
     },
     'en': {
         'Abierto': 'Open',

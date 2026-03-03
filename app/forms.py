@@ -153,3 +153,15 @@ class ForcePasswordChangeForm(FlaskForm):
         self.new_password.label.text = tr('New Password', 'Nueva contraseña')
         self.confirm_password.label.text = tr('Confirm Password', 'Confirmar contraseña')
         self.submit.label.text = tr('Update Password', 'Actualizar contraseña')
+
+
+class AdminResetPasswordForm(FlaskForm):
+    new_password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('Reset Password')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.new_password.label.text = tr('New Password', 'Nueva contraseña')
+        self.confirm_password.label.text = tr('Confirm Password', 'Confirmar contraseña')
+        self.submit.label.text = tr('Reset Password', 'Restablecer contraseña')
