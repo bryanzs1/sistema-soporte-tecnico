@@ -209,6 +209,9 @@ TRANSLATIONS = {
         , 'Inactive': 'Inactivo'
         , 'This account has been deactivated. Please contact an administrator.': 'Esta cuenta ha sido desactivada. Por favor contacta a un administrador.'
         , 'User "{username}" updated - Role: {role}, Status: {status}': 'Usuario "{username}" actualizado - Rol: {role}, Estado: {status}'
+        , '-- Unassigned --': '-- Sin asignar --'
+        , 'Details': 'Detalles'
+        , 'SLA Information': 'Información SLA'
     },
     'en': {
         'Abierto': 'Open',

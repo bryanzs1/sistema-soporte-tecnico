@@ -252,8 +252,13 @@ def ticket_detail(ticket_id):
     comment_form = TicketCommentForm(prefix='comment')
     # populate technician choices only for admin/tech
     if current_user.is_admin() or current_user.is_technician():
-        techs = User.query.filter(User.role=='technician').all()
-        form.technician.choices = [(t.id, t.username) for t in techs]
+        # Get active technicians and admins who can be assigned tickets
+        techs = User.query.filter(
+            User.role.in_(['technician', 'admin']),
+            User.is_active == True
+        ).order_by(User.username).all()
+        # Add "Unassigned" option first
+        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, f"{t.username} ({t.role})") for t in techs]
     else:
         form.technician.choices = []
 
@@ -281,7 +286,9 @@ def ticket_detail(ticket_id):
 
         submitted_technician = request.form.get('technician')
         if submitted_technician and str(submitted_technician).isdigit():
-            ticket.technician_id = int(submitted_technician)
+            tech_id = int(submitted_technician)
+            # 0 means unassign, set to None
+            ticket.technician_id = tech_id if tech_id > 0 else None
 
         if ticket.first_response_at is None and ticket.status in ('En proceso', 'Esperando usuario', 'Cerrado'):
             ticket.first_response_at = datetime.utcnow()
