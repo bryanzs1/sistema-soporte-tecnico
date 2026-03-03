@@ -42,8 +42,8 @@
     <div class="col-auto">
       <button type="submit" class="btn btn-primary">{{ _('Filter') }}</button>
       <div class="btn-group">
-        <a class="btn btn-secondary" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a>
-        <a class="btn btn-secondary" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a>
+        <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a>
+        <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a>
       </div>
     </div>
   </form>
