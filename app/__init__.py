@@ -390,6 +390,7 @@ TRANSLATIONS = {
         , 'Other': 'Otro'
         , 'Integration name': 'Nombre de la integración'
         , 'Manage all system configurations and settings in one place': 'Gestiona todas las configuraciones y ajustes del sistema en un solo lugar'
+    },
     'en': {
         'Abierto': 'Open',
         'En proceso': 'In progress',
