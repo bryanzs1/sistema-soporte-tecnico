@@ -21,25 +21,28 @@ body {
 
 /* Login button highlight effect */
 .btn-login-highlight {
+    background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
     animation: pulse-glow 2s ease-in-out infinite;
-    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    box-shadow: 0 0 8px rgba(94, 114, 228, 0.4);
     position: relative;
     overflow: hidden;
+    border: none;
 }
 
 .btn-login-highlight:hover {
+    background: linear-gradient(135deg, #6e82f4 0%, #9270f4 100%);
     animation: none;
-    box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+    box-shadow: 0 0 15px rgba(94, 114, 228, 0.6);
     transform: translateY(-2px);
     transition: all 0.3s ease;
 }
 
 @keyframes pulse-glow {
     0%, 100% {
-        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        box-shadow: 0 0 8px rgba(94, 114, 228, 0.4);
     }
     50% {
-        box-shadow: 0 0 20px rgba(255, 193, 7, 0.9);
+        box-shadow: 0 0 15px rgba(94, 114, 228, 0.7);
     }
 }
 
