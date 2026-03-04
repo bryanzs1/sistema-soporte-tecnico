@@ -31,7 +31,7 @@
             {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
             {% else %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
+              <li class="nav-item"><a class="btn btn-warning text-dark fw-bold mx-2 btn-login-highlight" href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
             {% endif %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">{{ _('Language') }}</a>
