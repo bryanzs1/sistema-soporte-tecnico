@@ -55,6 +55,17 @@ class Ticket(db.Model):
 
     ml_suggested_technician = db.relationship('User', foreign_keys=[ml_suggested_technician_id])
 
+    # AI Sentiment Analysis fields
+    sentiment_label = db.Column(db.String(20))  # 'very_negative', 'negative', 'neutral', 'positive', 'very_positive'
+    sentiment_score = db.Column(db.Float)  # -1 to 1 sentiment polarity
+    urgency_level = db.Column(db.String(20))  # 'high', 'medium', 'low'
+    
+    # AI Chatbot auto-response fields
+    ai_response = db.Column(db.Text)  # Automatic response text (if any)
+    ai_response_id = db.Column(db.Integer)  # KB entry ID that was used
+    ai_response_confidence = db.Column(db.Float)  # 0-1 confidence in auto-response
+    ai_response_accepted = db.Column(db.Boolean)  # Did user accept the auto-response?
+
     # possible values for dropdowns can be defined in code
     @staticmethod
     def default_categories():

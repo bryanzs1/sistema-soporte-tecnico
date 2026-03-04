@@ -305,6 +305,33 @@ TRANSLATIONS = {
         , 'For Slack slash commands': 'Para comandos slash de Slack'
         , 'Manage API tokens and integrations with Slack, Teams, and other platforms': 'Gestiona tokens API e integraciones con Slack, Teams y otras plataformas'
         , 'Setup Instructions': 'Instrucciones de configuración'
+        , 'AI System': 'Sistema de IA'
+        , 'Sentiment Analysis': 'Análisis de sentimiento'
+        , 'Auto-Response Chatbot': 'Chatbot de respuesta automática'
+        , 'Sentiment': 'Sentimiento'
+        , 'Very Negative': 'Muy negativo'
+        , 'Negative': 'Negativo'
+        , 'Neutral': 'Neutral'
+        , 'Positive': 'Positivo'
+        , 'Very Positive': 'Muy positivo'
+        , 'Urgency': 'Urgencia'
+        , 'High': 'Alta'
+        , 'Medium': 'Media'
+        , 'Low': 'Baja'
+        , 'AI Response': 'Respuesta IA'
+        , 'Provided by AI': 'Proporcionada por IA'
+        , 'Mark as helpful': 'Marcar como útil'
+        , 'This was helpful': 'Esto fue útil'
+        , 'I need more help': 'Necesito más ayuda'
+        , 'Enable AI': 'Habilitar IA'
+        , 'Disable AI': 'Deshabilitar IA'
+        , 'AI System Settings': 'Configuración del sistema de IA'
+        , 'Enable sentiment analysis': 'Habilitar análisis de sentimiento'
+        , 'Enable auto-response chatbot': 'Habilitar chatbot de respuesta automática'
+        , 'Auto-response confidence threshold': 'Umbral de confianza de respuesta automática'
+        , 'Minimum confidence (0-1) to send automatic response': 'Confianza mínima (0-1) para enviar respuesta automática'
+        , 'Detected sentiment: {sentiment}': 'Sentimiento detectado: {sentiment}'
+        , 'Urgency level: {urgency}': 'Nivel de urgencia: {urgency}'
     },
     'en': {
         'Abierto': 'Open',
@@ -404,7 +431,34 @@ TRANSLATIONS = {
         'Tu nombre': 'Your name',
         'Título del ticket': 'Ticket title',
         'Describe el problema en detalle': 'Describe the issue in detail',
-        'Agregar un comentario...': 'Add a comment...'
+        'Agregar un comentario...': 'Add a comment...',
+        'AI System': 'AI System',
+        'Sentiment Analysis': 'Sentiment Analysis',
+        'Auto-Response Chatbot': 'Auto-Response Chatbot',
+        'Sentiment': 'Sentiment',
+        'Very Negative': 'Very Negative',
+        'Negative': 'Negative',
+        'Neutral': 'Neutral',
+        'Positive': 'Positive',
+        'Very Positive': 'Very Positive',
+        'Urgency': 'Urgency',
+        'High': 'High',
+        'Medium': 'Medium',
+        'Low': 'Low',
+        'AI Response': 'AI Response',
+        'Provided by AI': 'Provided by AI',
+        'Mark as helpful': 'Mark as helpful',
+        'This was helpful': 'This was helpful',
+        'I need more help': 'I need more help',
+        'Enable AI': 'Enable AI',
+        'Disable AI': 'Disable AI',
+        'AI System Settings': 'AI System Settings',
+        'Enable sentiment analysis': 'Enable sentiment analysis',
+        'Enable auto-response chatbot': 'Enable auto-response chatbot',
+        'Auto-response confidence threshold': 'Auto-response confidence threshold',
+        'Minimum confidence (0-1) to send automatic response': 'Minimum confidence (0-1) to send automatic response',
+        'Detected sentiment: {sentiment}': 'Detected sentiment: {sentiment}',
+        'Urgency level: {urgency}': 'Urgency level: {urgency}',
     }
 }
 
@@ -608,6 +662,50 @@ def create_app(config_class=None):
                     conn.execute(db.text('ALTER TABLE ticket ADD COLUMN auto_assigned BOOLEAN DEFAULT FALSE'))
                     conn.commit()
                 app.logger.warning('Added auto_assigned column to ticket table')
+            
+            # Add AI sentiment analysis columns
+            if 'sentiment_label' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN sentiment_label VARCHAR(20)'))
+                    conn.commit()
+                app.logger.warning('Added sentiment_label column to ticket table')
+            
+            if 'sentiment_score' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN sentiment_score REAL'))
+                    conn.commit()
+                app.logger.warning('Added sentiment_score column to ticket table')
+            
+            if 'urgency_level' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN urgency_level VARCHAR(20)'))
+                    conn.commit()
+                app.logger.warning('Added urgency_level column to ticket table')
+            
+            # Add AI chatbot fields
+            if 'ai_response' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response TEXT'))
+                    conn.commit()
+                app.logger.warning('Added ai_response column to ticket table')
+            
+            if 'ai_response_id' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added ai_response_id column to ticket table')
+            
+            if 'ai_response_confidence' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response_confidence REAL'))
+                    conn.commit()
+                app.logger.warning('Added ai_response_confidence column to ticket table')
+            
+            if 'ai_response_accepted' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response_accepted BOOLEAN'))
+                    conn.commit()
+                app.logger.warning('Added ai_response_accepted column to ticket table')
 
             # Create technician_stats table if it doesn't exist
             if not inspector.has_table('technician_stats'):

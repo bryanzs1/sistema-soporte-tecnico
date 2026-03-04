@@ -389,3 +389,47 @@ def delete_integration(integration_id):
     
     flash(_t('Integration deleted'), 'success')
     return redirect(url_for('admin.integrations'))
+
+
+@bp.route('/ai-system')
+@login_required
+@admin_required
+def ai_system():
+    """Panel de control del sistema IA"""
+    from app.ai_sentiment import get_analyzer
+    from app.ai_chatbot import get_chatbot
+    
+    # Get settings from session or DB
+    ai_settings = session.get('ai_settings', {
+        'sentiment_enabled': True,
+        'chatbot_enabled': True,
+        'chatbot_confidence_threshold': 0.75
+    })
+    
+    analyzer = get_analyzer()
+    chatbot = get_chatbot()
+    
+    return render_template('admin/ai_system.html',
+                         ai_settings=ai_settings,
+                         sentiment_available=analyzer.available,
+                         chatbot_categories=chatbot.get_all_categories())
+
+
+@bp.route('/ai-system/settings', methods=['POST'])
+@login_required
+@admin_required
+def ai_system_settings():
+    """Actualizar configuración de IA"""
+    from app.models import db
+    
+    # Actualizar configuración en sesión (en producción, usar DB)
+    ai_settings = {
+        'sentiment_enabled': request.form.get('sentiment_enabled') == 'on',
+        'chatbot_enabled': request.form.get('chatbot_enabled') == 'on',
+        'chatbot_confidence_threshold': float(request.form.get('chatbot_threshold', 0.75))
+    }
+    
+    session['ai_settings'] = ai_settings
+    flash(_t('AI System Settings updated'), 'success')
+    return redirect(url_for('admin.ai_system'))
+

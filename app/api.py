@@ -10,6 +10,8 @@ from functools import wraps
 from flask import Blueprint, request, jsonify, current_app
 from app import db
 from app.models import Ticket, User, ApiToken, Integration
+from app.ai_sentiment import analyze_ticket as analyze_sentiment
+from app.ai_chatbot import answer_question
 
 
 bp = Blueprint('api', __name__)
@@ -110,6 +112,25 @@ def create_ticket_api():
         # Calcular SLA
         ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
         
+        # AI: Análisis de sentimiento
+        try:
+            sentiment_result = analyze_sentiment(title, description)
+            ticket.sentiment_label = sentiment_result['sentiment_label']
+            ticket.sentiment_score = sentiment_result['sentiment_score']
+            ticket.urgency_level = sentiment_result['urgency_level']
+        except Exception as e:
+            current_app.logger.warning(f'Sentiment analysis failed: {e}')
+        
+        # AI: Buscar respuesta automática del chatbot
+        try:
+            chatbot_answer = answer_question(f"{title} {description}")
+            if chatbot_answer and chatbot_answer['confidence'] >= 0.75:
+                ticket.ai_response = chatbot_answer['answer']
+                ticket.ai_response_id = chatbot_answer['kb_entry_id']
+                ticket.ai_response_confidence = chatbot_answer['confidence']
+        except Exception as e:
+            current_app.logger.warning(f'Chatbot answer search failed: {e}')
+        
         # ML: Obtener sugerencia de técnico
         try:
             from app.ml_classifier import classifier
@@ -152,7 +173,15 @@ def create_ticket_api():
                 'created_at': ticket.created_at.isoformat(),
                 'sla_due_at': ticket.sla_due_at.isoformat() if ticket.sla_due_at else None,
                 'auto_assigned': ticket.auto_assigned,
-                'url': f"{request.url_root}tickets/{ticket.id}"
+                'url': f"{request.url_root}tickets/{ticket.id}",
+                # AI fields
+                'sentiment': {
+                    'label': ticket.sentiment_label,
+                    'score': ticket.sentiment_score,
+                    'urgency': ticket.urgency_level
+                } if ticket.sentiment_label else None,
+                'ai_response': ticket.ai_response,
+                'ai_response_confidence': ticket.ai_response_confidence
             }
         }
         
