@@ -95,6 +95,7 @@
           {% if current_user.is_admin() %}
             <a class="btn btn-outline-primary" href="{{ url_for('admin.list_users') }}">{{ _('Manage users') }}</a>
             <a class="btn btn-outline-primary" href="{{ url_for('admin.ticket_options') }}">{{ _('Manage ticket options') }}</a>
+            <a class="btn btn-outline-success" href="{{ url_for('admin.ml_system') }}">🤖 {{ _('ML Classification System') }}</a>
           {% endif %}
         </div>
       </div>

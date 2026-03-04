@@ -45,6 +45,15 @@ class Ticket(db.Model):
     first_response_at = db.Column(db.DateTime)
     resolved_at = db.Column(db.DateTime)
     reopened_count = db.Column(db.Integer, default=0, nullable=False)
+    
+    # ML-related fields
+    resolution_time_minutes = db.Column(db.Integer)  # tiempo real de resolucion
+    satisfaction_rating = db.Column(db.Integer)  # 1-5 rating opcional
+    ml_suggested_technician_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    ml_confidence_score = db.Column(db.Float)  # 0-1 confianza del modelo
+    auto_assigned = db.Column(db.Boolean, default=False)  # si fue asignado automaticamente
+
+    ml_suggested_technician = db.relationship('User', foreign_keys=[ml_suggested_technician_id])
 
     # possible values for dropdowns can be defined in code
     @staticmethod
@@ -142,3 +151,15 @@ class TicketOption(db.Model):
     __table_args__ = (
         db.UniqueConstraint('option_type', 'value', name='uq_ticket_option_type_value'),
     )
+
+class TechnicianStats(db.Model):
+    """Estadísticas de técnicos para el sistema ML"""
+    id = db.Column(db.Integer, primary_key=True)
+    technician_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    total_tickets_resolved = db.Column(db.Integer, default=0)
+    avg_resolution_time = db.Column(db.Float)  # en minutos
+    avg_satisfaction = db.Column(db.Float)  # promedio de ratings
+    specialization = db.Column(db.String(200))  # categorías donde es experto (JSON)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    technician = db.relationship('User', backref=db.backref('stats', uselist=False))

@@ -197,3 +197,57 @@ def edit_ticket_option(option_id):
     db.session.commit()
     flash(_t('Option updated to "{value}"').format(value=new_value), 'success')
     return redirect(url_for('admin.ticket_options'))
+
+@bp.route('/ml-system')
+@login_required
+@admin_required
+def ml_system():
+    """Página de administración del sistema ML"""
+    from app.ml_classifier import classifier
+    from app.models import TechnicianStats
+    
+    # Obtener información del modelo
+    model_info = classifier.get_model_info()
+    
+    # Obtener estadísticas de técnicos
+    tech_stats = TechnicianStats.query.all()
+    
+    # Obtener tickets con predicciones ML
+    ml_tickets = Ticket.query.filter(
+        Ticket.ml_suggested_technician_id.isnot(None)
+    ).order_by(Ticket.created_at.desc()).limit(20).all()
+    
+    # Calcular precisión del modelo (tickets donde la sugerencia coincide con la asignación final)
+    if ml_tickets:
+        correct_predictions = sum(
+            1 for t in ml_tickets 
+            if t.technician_id and t.technician_id == t.ml_suggested_technician_id
+        )
+        ml_accuracy = (correct_predictions / len(ml_tickets)) * 100 if ml_tickets else 0
+    else:
+        ml_accuracy = 0
+    
+    return render_template(
+        'admin/ml_system.html',
+        model_info=model_info,
+        tech_stats=tech_stats,
+        ml_tickets=ml_tickets,
+        ml_accuracy=ml_accuracy
+    )
+
+
+@bp.route('/ml-system/train', methods=['POST'])
+@login_required
+@admin_required
+def ml_train():
+    """Entrena el modelo ML"""
+    from app.ml_classifier import classifier
+    
+    result = classifier.train(min_tickets=10)
+    
+    if result['success']:
+        flash(_t('ML model trained successfully! Accuracy: {accuracy:.1%}').format(accuracy=result['accuracy']), 'success')
+    else:
+        flash(_t('Error training model: {error}').format(error=result.get('error', 'Unknown error')), 'danger')
+    
+    return redirect(url_for('admin.ml_system'))

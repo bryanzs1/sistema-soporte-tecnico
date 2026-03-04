@@ -222,6 +222,49 @@ TRANSLATIONS = {
         , 'Reset Password': 'Restablecer contraseña'
         , 'Password for user "{username}" was reset successfully': 'La contraseña del usuario "{username}" fue restablecida correctamente'
         , 'Registered email': 'Correo registrado'
+        , 'ML System': 'Sistema ML'
+        , 'ML Classification System': 'Sistema de Clasificación ML'
+        , 'Intelligent Ticket Classification System': 'Sistema Inteligente de Clasificación de Tickets'
+        , 'ML Model Status': 'Estado del Modelo ML'
+        , 'Model is trained and ready': 'Modelo entrenado y listo'
+        , 'Trained on:': 'Entrenado el:'
+        , 'Number of technicians:': 'Número de técnicos:'
+        , 'Text features:': 'Características de texto:'
+        , 'Prediction accuracy:': 'Precisión de predicción:'
+        , 'Retrain Model': 'Reentrenar modelo'
+        , 'This will retrain the model with current data. Continue?': 'Esto reentrenará el modelo con los datos actuales. ¿Continuar?'
+        , 'Model not trained yet': 'Modelo no entrenado aún'
+        , 'You need at least 10 closed tickets to train the model.': 'Necesitas al menos 10 tickets cerrados para entrenar el modelo.'
+        , 'Train Model Now': 'Entrenar modelo ahora'
+        , 'How It Works': 'Cómo funciona'
+        , 'Analyzes ticket content:': 'Analiza el contenido del ticket:'
+        , 'The system reads the title and description using NLP (Natural Language Processing).': 'El sistema lee el título y descripción usando PLN (Procesamiento de Lenguaje Natural).'
+        , 'Considers category and priority:': 'Considera categoría y prioridad:'
+        , 'Uses the selected category and priority level.': 'Usa la categoría y nivel de prioridad seleccionados.'
+        , 'Evaluates technician expertise:': 'Evalúa la experiencia del técnico:'
+        , 'Reviews past performance, resolution time, and specialization.': 'Revisa rendimiento pasado, tiempo de resolución y especialización.'
+        , 'Suggests the best technician:': 'Sugiere el mejor técnico:'
+        , 'Recommends the most suitable technician with a confidence score.': 'Recomienda el técnico más adecuado con un puntaje de confianza.'
+        , 'Auto-assigns high-confidence tickets:': 'Auto-asigna tickets de alta confianza:'
+        , 'If confidence > 70%, automatically assigns the ticket.': 'Si la confianza > 70%, asigna automáticamente el ticket.'
+        , 'Technician Performance Statistics': 'Estadísticas de Rendimiento de Técnicos'
+        , 'Tickets Resolved': 'Tickets resueltos'
+        , 'Avg. Resolution Time': 'Tiempo promedio de resolución'
+        , 'Avg. Satisfaction': 'Satisfacción promedio'
+        , 'Top Category': 'Categoría principal'
+        , 'hours': 'horas'
+        , 'No statistics available yet. Statistics are calculated when the model is trained.': 'No hay estadísticas disponibles aún. Se calculan cuando se entrena el modelo.'
+        , 'Recent ML Predictions': 'Predicciones ML recientes'
+        , 'ML Suggested': 'Sugerido por ML'
+        , 'Confidence': 'Confianza'
+        , 'Actually Assigned': 'Realmente asignado'
+        , 'Auto-assigned by ML': 'Auto-asignado por ML'
+        , 'Unassigned': 'Sin asignar'
+        , 'Match': 'Coincide'
+        , 'Different': 'Diferente'
+        , 'Back to Dashboard': 'Volver al Dashboard'
+        , 'ML model trained successfully! Accuracy: {accuracy:.1%}': 'Modelo ML entrenado exitosamente! Precisión: {accuracy:.1%}'
+        , 'Error training model: {error}': 'Error al entrenar el modelo: {error}'
     },
     'en': {
         'Abierto': 'Open',
@@ -406,6 +449,18 @@ def create_app(config_class=None):
             '_': _translate,
             'current_lang': lang,
         }
+    
+    # Add custom Jinja2 filters
+    @app.template_filter('from_json')
+    def from_json_filter(value):
+        """Convert JSON string to Python dict"""
+        if not value:
+            return {}
+        try:
+            import json
+            return json.loads(value)
+        except:
+            return {}
 
     @app.before_request
     def update_user_activity_and_enforce_password():
@@ -477,6 +532,45 @@ def create_app(config_class=None):
                     conn.commit()
                 app.logger.warning('Added last_activity column to user table')
 
+            # Add ML-related columns to ticket table
+            ticket_columns = [col['name'] for col in inspector.get_columns('ticket')]
+            
+            if 'resolution_time_minutes' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN resolution_time_minutes INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added resolution_time_minutes column to ticket table')
+            
+            if 'satisfaction_rating' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN satisfaction_rating INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added satisfaction_rating column to ticket table')
+            
+            if 'ml_suggested_technician_id' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ml_suggested_technician_id INTEGER REFERENCES "user"(id)'))
+                    conn.commit()
+                app.logger.warning('Added ml_suggested_technician_id column to ticket table')
+            
+            if 'ml_confidence_score' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ml_confidence_score REAL'))
+                    conn.commit()
+                app.logger.warning('Added ml_confidence_score column to ticket table')
+            
+            if 'auto_assigned' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN auto_assigned BOOLEAN DEFAULT FALSE'))
+                    conn.commit()
+                app.logger.warning('Added auto_assigned column to ticket table')
+
+            # Create technician_stats table if it doesn't exist
+            if not inspector.has_table('technician_stats'):
+                from app.models import TechnicianStats
+                TechnicianStats.__table__.create(db.engine)
+                app.logger.warning('Created technician_stats table')
+
             default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
             default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
             default_admin_email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'admin@eie-puj.com')
@@ -497,6 +591,10 @@ def create_app(config_class=None):
         except SQLAlchemyError as e:
             db.session.rollback()
             app.logger.error('Database bootstrap failed: %s', e)
+
+    # Register ML commands
+    from app.ml_commands import register_ml_commands
+    register_ml_commands(app)
 
     return app
 

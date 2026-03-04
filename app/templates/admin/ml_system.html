@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('ML System') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">🤖 {{ _('Intelligent Ticket Classification System') }}</h1>
+    
+    <!-- Model Status Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ _('ML Model Status') }}</h5>
+        </div>
+        <div class="card-body">
+            {% if model_info.trained %}
+                <div class="alert alert-success">
+                    <strong>✅ {{ _('Model is trained and ready') }}</strong>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-3">
+                        <p><strong>{{ _('Trained on:') }}</strong><br>
+                        {{ model_info.trained_at if model_info.trained_at else _('Unknown') }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>{{ _('Number of technicians:') }}</strong><br>
+                        {{ model_info.num_technicians }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>{{ _('Text features:') }}</strong><br>
+                        {{ model_info.num_features }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>{{ _('Prediction accuracy:') }}</strong><br>
+                        <span class="badge bg-info fs-5">{{ "%.1f%%"|format(ml_accuracy) }}</span></p>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('admin.ml_train') }}" class="mt-3">
+                    <button type="submit" class="btn btn-warning text-dark" onclick="return confirm('{{ _('This will retrain the model with current data. Continue?') }}')">
+                        🔄 {{ _('Retrain Model') }}
+                    </button>
+                </form>
+            {% else %}
+                <div class="alert alert-warning">
+                    <strong>⚠️ {{ _('Model not trained yet') }}</strong>
+                    <p class="mb-0">{{ _('You need at least 10 closed tickets to train the model.') }}</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('admin.ml_train') }}" class="mt-3">
+                    <button type="submit" class="btn btn-primary text-white">
+                        🚀 {{ _('Train Model Now') }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- How it Works -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">{{ _('How It Works') }}</h5>
+        </div>
+        <div class="card-body">
+            <ol>
+                <li><strong>{{ _('Analyzes ticket content:') }}</strong> {{ _('The system reads the title and description using NLP (Natural Language Processing).') }}</li>
+                <li><strong>{{ _('Considers category and priority:') }}</strong> {{ _('Uses the selected category and priority level.') }}</li>
+                <li><strong>{{ _('Evaluates technician expertise:') }}</strong> {{ _('Reviews past performance, resolution time, and specialization.') }}</li>
+                <li><strong>{{ _('Suggests the best technician:') }}</strong> {{ _('Recommends the most suitable technician with a confidence score.') }}</li>
+                <li><strong>{{ _('Auto-assigns high-confidence tickets:') }}</strong> {{ _('If confidence > 70%, automatically assigns the ticket.') }}</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Technician Statistics -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">👥 {{ _('Technician Performance Statistics') }}</h5>
+        </div>
+        <div class="card-body">
+            {% if tech_stats %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Technician') }}</th>
+                                <th>{{ _('Tickets Resolved') }}</th>
+                                <th>{{ _('Avg. Resolution Time') }}</th>
+                                <th>{{ _('Avg. Satisfaction') }}</th>
+                                <th>{{ _('Top Category') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in tech_stats %}
+                                <tr>
+                                    <td><strong>{{ stat.technician.username }}</strong></td>
+                                    <td>{{ stat.total_tickets_resolved }}</td>
+                                    <td>
+                                        {% if stat.avg_resolution_time %}
+                                            {{ "%.1f"|format(stat.avg_resolution_time / 60) }} {{ _('hours') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if stat.avg_satisfaction %}
+                                            <span class="badge bg-warning text-dark">
+                                                {{ "%.1f"|format(stat.avg_satisfaction) }} ⭐
+                                            </span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if stat.specialization %}
+                                            {% set specs = stat.specialization|from_json %}
+                                            {% if specs %}
+                                                {{ specs|items|sort(attribute='1', reverse=True)|first|first }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">{{ _('No statistics available yet. Statistics are calculated when the model is trained.') }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent ML Predictions -->
+    {% if ml_tickets %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">🎯 {{ _('Recent ML Predictions') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Ticket') }}</th>
+                            <th>{{ _('ML Suggested') }}</th>
+                            <th>{{ _('Confidence') }}</th>
+                            <th>{{ _('Actually Assigned') }}</th>
+                            <th>{{ _('Status') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in ml_tickets %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('tickets.ticket_detail', ticket_id=ticket.id) }}">
+                                        #{{ ticket.id }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if ticket.ml_suggested_technician %}
+                                        {{ ticket.ml_suggested_technician.username }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ticket.ml_confidence_score %}
+                                        <span class="badge {% if ticket.ml_confidence_score > 0.7 %}bg-success{% elif ticket.ml_confidence_score > 0.5 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                            {{ "%.0f%%"|format(ticket.ml_confidence_score * 100) }}
+                                        </span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ticket.technician %}
+                                        {{ ticket.technician.username }}
+                                        {% if ticket.auto_assigned %}
+                                            <span class="badge bg-info" title="{{ _('Auto-assigned by ML') }}">🤖</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <em class="text-muted">{{ _('Unassigned') }}</em>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ticket.technician_id == ticket.ml_suggested_technician_id %}
+                                        <span class="text-success">✓ {{ _('Match') }}</span>
+                                    {% elif not ticket.technician_id %}
+                                        <span class="text-muted">-</span>
+                                    {% else %}
+                                        <span class="text-warning">✗ {{ _('Different') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary text-white">
+        ← {{ _('Back to Dashboard') }}
+    </a>
+</div>
+{% endblock %}

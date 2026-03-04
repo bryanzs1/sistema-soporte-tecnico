@@ -125,6 +125,33 @@ def create_ticket():
             user=current_user
         )
         ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
+        
+        # ML: Obtener sugerencia de técnico
+        try:
+            from app.ml_classifier import classifier
+            
+            ticket_data = {
+                'title': ticket.title,
+                'description': ticket.description,
+                'category': ticket.category or 'Otro',
+                'priority': ticket.priority or 'Media'
+            }
+            
+            predictions = classifier.predict(ticket_data, top_n=1)
+            
+            if predictions:
+                suggested_tech_id, confidence = predictions[0]
+                ticket.ml_suggested_technician_id = suggested_tech_id
+                ticket.ml_confidence_score = confidence
+                
+                # Auto-asignar si la confianza es muy alta (>70%)
+                if confidence > 0.7:
+                    ticket.technician_id = suggested_tech_id
+                    ticket.auto_assigned = True
+        except Exception as e:
+            # Si falla el ML, no afecta la creación del ticket
+            current_app.logger.warning(f'ML prediction failed: {e}')
+        
         db.session.add(ticket)
         db.session.commit()
 
@@ -159,6 +186,33 @@ def request_password_reset_ticket():
         user=current_user,
     )
     ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
+    
+    # ML: Obtener sugerencia de técnico
+    try:
+        from app.ml_classifier import classifier
+        
+        ticket_data = {
+            'title': ticket.title,
+            'description': ticket.description,
+            'category': category,
+            'priority': priority
+        }
+        
+        predictions = classifier.predict(ticket_data, top_n=1)
+        
+        if predictions:
+            suggested_tech_id, confidence = predictions[0]
+            ticket.ml_suggested_technician_id = suggested_tech_id
+            ticket.ml_confidence_score = confidence
+            
+            # Auto-asignar si la confianza es muy alta (>70%)
+            if confidence > 0.7:
+                ticket.technician_id = suggested_tech_id
+                ticket.auto_assigned = True
+    except Exception as e:
+        # Si falla el ML, no afecta la creación del ticket
+        current_app.logger.warning(f'ML prediction failed: {e}')
+    
     db.session.add(ticket)
     db.session.commit()
 

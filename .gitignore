@@ -63,3 +63,6 @@ htmlcov/
 # Media/Uploads (if applicable)
 uploads/
 media/
+# Machine Learning models
+ml_models/
+*.pkl
