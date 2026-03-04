@@ -102,4 +102,5 @@ def register_ml_commands(app: Flask):
                     click.echo(f"   Especialización: {top_category}")
                 
                 click.echo()
-
+        except Exception as e:
+            click.echo(f"❌ Error: {e}")
