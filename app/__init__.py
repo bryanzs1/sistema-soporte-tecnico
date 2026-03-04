@@ -389,6 +389,7 @@ TRANSLATIONS = {
         , 'Analyzes the title and description using NLP (Natural Language Processing).': 'Analiza el título y la descripción usando PNL (Procesamiento de Lenguaje Natural).'
         , 'Other': 'Otro'
         , 'Integration name': 'Nombre de la integración'
+        , 'Manage all system configurations and settings in one place': 'Gestiona todas las configuraciones y ajustes del sistema en un solo lugar'
     'en': {
         'Abierto': 'Open',
         'En proceso': 'In progress',
@@ -572,6 +573,7 @@ TRANSLATIONS = {
         'Analyzes the title and description using NLP (Natural Language Processing).': 'Analyzes the title and description using NLP (Natural Language Processing).',
         'Other': 'Other',
         'Integration name': 'Integration name',
+        'Manage all system configurations and settings in one place': 'Manage all system configurations and settings in one place',
     }
 }
 
