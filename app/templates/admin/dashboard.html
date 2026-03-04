@@ -91,11 +91,12 @@
       <div class="section-card">
         <h3>{{ _('Quick Actions') }}</h3>
         <div class="d-flex flex-column gap-2">
-          <a class="btn btn-primary btn-animated" href="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</a>
+          <a class="btn btn-primary btn-animated text-white" href="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</a>
           {% if current_user.is_admin() %}
             <a class="btn btn-outline-primary" href="{{ url_for('admin.list_users') }}">{{ _('Manage users') }}</a>
             <a class="btn btn-outline-primary" href="{{ url_for('admin.ticket_options') }}">{{ _('Manage ticket options') }}</a>
             <a class="btn btn-outline-success" href="{{ url_for('admin.ml_system') }}">🤖 {{ _('ML Classification System') }}</a>
+            <a class="btn btn-outline-info" href="{{ url_for('admin.integrations') }}">🔗 {{ _('Chat Integrations') }}</a>
           {% endif %}
         </div>
       </div>

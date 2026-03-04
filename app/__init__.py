@@ -273,6 +273,38 @@ TRANSLATIONS = {
         , 'ML System Not Available': 'Sistema ML no disponible'
         , 'Please install ML dependencies': 'Por favor instala las dependencias de ML'
         , 'An error occurred loading the ML system': 'Ocurrió un error al cargar el sistema ML'
+        , 'Integrations': 'Integraciones'
+        , 'Chat Integrations': 'Integraciones de Chat'
+        , 'API Tokens': 'Tokens de API'
+        , 'Active Integrations': 'Integraciones activas'
+        , 'Platform': 'Plataforma'
+        , 'Token name is required': 'El nombre del token es requerido'
+        , 'API token created successfully. Save it now, it won\'t be shown again: {token}': 'Token API creado exitosamente. Guárdalo ahora, no se mostrará de nuevo: {token}'
+        , 'API token revoked': 'Token API revocado'
+        , 'Platform and name are required': 'Plataforma y nombre son requeridos'
+        , 'Integration created successfully': 'Integración creada exitosamente'
+        , 'activated': 'activada'
+        , 'deactivated': 'desactivada'
+        , 'Integration {status}': 'Integración {status}'
+        , 'Integration deleted': 'Integración eliminada'
+        , 'Token Name': 'Nombre del token'
+        , 'Created': 'Creado'
+        , 'Last Used': 'Último uso'
+        , 'Actions': 'Acciones'
+        , 'Revoke': 'Revocar'
+        , 'Revoked': 'Revocado'
+        , 'Never': 'Nunca'
+        , 'Create New Token': 'Crear nuevo token'
+        , 'Create': 'Crear'
+        , 'Webhook URL': 'URL del webhook'
+        , 'Verification Token': 'Token de verificación'
+        , 'Create New Integration': 'Crear nueva integración'
+        , 'Toggle': 'Alternar'
+        , 'Delete': 'Eliminar'
+        , 'Optional': 'Opcional'
+        , 'For Slack slash commands': 'Para comandos slash de Slack'
+        , 'Manage API tokens and integrations with Slack, Teams, and other platforms': 'Gestiona tokens API e integraciones con Slack, Teams y otras plataformas'
+        , 'Setup Instructions': 'Instrucciones de configuración'
     },
     'en': {
         'Abierto': 'Open',
@@ -436,6 +468,10 @@ def create_app(config_class=None):
     # admin blueprint for user management
     from app.admin import bp as admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    # API blueprint for external integrations
+    from app.api import bp as api_bp
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
 
     from app import routes, models  # noqa: F401
 
@@ -578,6 +614,18 @@ def create_app(config_class=None):
                 from app.models import TechnicianStats
                 TechnicianStats.__table__.create(db.engine)
                 app.logger.warning('Created technician_stats table')
+            
+            # Create api_token table if it doesn't exist
+            if not inspector.has_table('api_token'):
+                from app.models import ApiToken
+                ApiToken.__table__.create(db.engine)
+                app.logger.warning('Created api_token table')
+            
+            # Create integration table if it doesn't exist
+            if not inspector.has_table('integration'):
+                from app.models import Integration
+                Integration.__table__.create(db.engine)
+                app.logger.warning('Created integration table')
 
             default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
             default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 
 from app import db, translate
-from app.models import User, TicketOption
+from app.models import User, TicketOption, ApiToken, Integration
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -268,3 +268,124 @@ def ml_train():
         flash(_t('Error training model: {error}').format(error=result.get('error', 'Unknown error')), 'danger')
     
     return redirect(url_for('admin.ml_system'))
+
+
+@bp.route('/integrations')
+@login_required
+@admin_required
+def integrations():
+    """Gestión de integraciones y API tokens"""
+    api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
+    integrations = Integration.query.order_by(Integration.created_at.desc()).all()
+    
+    return render_template('admin/integrations.html', 
+                         api_tokens=api_tokens,
+                         integrations=integrations)
+
+
+@bp.route('/integrations/tokens/create', methods=['POST'])
+@login_required
+@admin_required
+def create_api_token():
+    """Crea un nuevo API token"""
+    import secrets
+    
+    name = request.form.get('name', '').strip()
+    
+    if not name:
+        flash(_t('Token name is required'), 'danger')
+        return redirect(url_for('admin.integrations'))
+    
+    # Generar token seguro
+    token_value = secrets.token_urlsafe(32)
+    
+    # Crear el token
+    token = ApiToken(
+        name=name,
+        token=token_value,
+        created_by=current_user,
+        is_active=True
+    )
+    
+    db.session.add(token)
+    db.session.commit()
+    
+    flash(_t('API token created successfully. Save it now, it won\'t be shown again: {token}').format(token=token_value), 'success')
+    return redirect(url_for('admin.integrations'))
+
+
+@bp.route('/integrations/tokens/<int:token_id>/revoke', methods=['POST'])
+@login_required
+@admin_required
+def revoke_api_token(token_id):
+    """Revoca un API token"""
+    token = ApiToken.query.get_or_404(token_id)
+    token.is_active = False
+    db.session.commit()
+    
+    flash(_t('API token revoked'), 'success')
+    return redirect(url_for('admin.integrations'))
+
+
+@bp.route('/integrations/create', methods=['POST'])
+@login_required
+@admin_required
+def create_integration():
+    """Crea una nueva integración"""
+    import json
+    
+    platform = request.form.get('platform', '').strip()
+    name = request.form.get('name', '').strip()
+    webhook_url = request.form.get('webhook_url', '').strip()
+    verification_token = request.form.get('verification_token', '').strip()
+    
+    if not platform or not name:
+        flash(_t('Platform and name are required'), 'danger')
+        return redirect(url_for('admin.integrations'))
+    
+    # Configuración adicional
+    config = {}
+    if verification_token:
+        config['verification_token'] = verification_token
+    
+    integration = Integration(
+        platform=platform,
+        name=name,
+        webhook_url=webhook_url,
+        config=json.dumps(config) if config else None,
+        created_by=current_user,
+        is_active=True
+    )
+    
+    db.session.add(integration)
+    db.session.commit()
+    
+    flash(_t('Integration created successfully'), 'success')
+    return redirect(url_for('admin.integrations'))
+
+
+@bp.route('/integrations/<int:integration_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_integration(integration_id):
+    """Activa/desactiva una integración"""
+    integration = Integration.query.get_or_404(integration_id)
+    integration.is_active = not integration.is_active
+    db.session.commit()
+    
+    status = _t('activated') if integration.is_active else _t('deactivated')
+    flash(_t('Integration {status}').format(status=status), 'success')
+    return redirect(url_for('admin.integrations'))
+
+
+@bp.route('/integrations/<int:integration_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_integration(integration_id):
+    """Elimina una integración"""
+    integration = Integration.query.get_or_404(integration_id)
+    db.session.delete(integration)
+    db.session.commit()
+    
+    flash(_t('Integration deleted'), 'success')
+    return redirect(url_for('admin.integrations'))

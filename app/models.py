@@ -163,3 +163,40 @@ class TechnicianStats(db.Model):
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     technician = db.relationship('User', backref=db.backref('stats', uselist=False))
+
+
+class ApiToken(db.Model):
+    """Tokens de API para integraciones externas"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)  # Nombre descriptivo del token
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    last_used_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = db.Column(db.DateTime)  # None = nunca expira
+    
+    created_by = db.relationship('User', backref=db.backref('api_tokens', lazy='dynamic'))
+    
+    def is_valid(self):
+        """Verifica si el token está activo y no ha expirado"""
+        if not self.is_active:
+            return False
+        if self.expires_at and datetime.utcnow() > self.expires_at:
+            return False
+        return True
+
+
+class Integration(db.Model):
+    """Configuración de integraciones con plataformas externas"""
+    id = db.Column(db.Integer, primary_key=True)
+    platform = db.Column(db.String(20), nullable=False)  # slack, teams, etc
+    name = db.Column(db.String(100), nullable=False)  # Nombre descriptivo
+    webhook_url = db.Column(db.String(500))  # URL del webhook para respuestas
+    config = db.Column(db.Text)  # Configuración adicional (JSON)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = db.Column(db.DateTime)
+    
+    created_by = db.relationship('User', backref=db.backref('integrations', lazy='dynamic'))
