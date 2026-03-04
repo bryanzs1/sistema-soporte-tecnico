@@ -54,7 +54,7 @@
                 </div>
                 
                 <form method="POST" action="{{ url_for('admin.ml_train') }}" class="mt-3">
-                    <button type="submit" class="btn btn-warning text-dark" onclick="return confirm('{{ _('This will retrain the model with current data. Continue?') }}')">
+                    <button type="submit" class="btn btn-warning text-dark" onclick="return confirm('Retrain ML model with current data?')">
                         🔄 {{ _('Retrain Model') }}
                     </button>
                 </form>

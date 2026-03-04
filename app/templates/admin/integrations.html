@@ -50,7 +50,7 @@
                                 {% if token.is_active %}
                                 <form method="POST" action="{{ url_for('admin.revoke_api_token', token_id=token.id) }}" style="display:inline;">
                                     <button type="submit" class="btn btn-sm btn-danger text-white" 
-                                            onclick="return confirm('{{ _('Revoke this token?') }}')">
+                                            onclick="return confirm('Revoke this API token?')">
                                         {{ _('Revoke') }}
                                     </button>
                                 </form>
@@ -137,7 +137,7 @@
                                 </form>
                                 <form method="POST" action="{{ url_for('admin.delete_integration', integration_id=integration.id) }}" style="display:inline;">
                                     <button type="submit" class="btn btn-sm btn-danger text-white" 
-                                            onclick="return confirm('{{ _('Delete this integration?') }}')">
+                                            onclick="return confirm('Delete this integration?')">
                                         {{ _('Delete') }}
                                     </button>
                                 </form>
