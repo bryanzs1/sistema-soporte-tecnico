@@ -338,7 +338,57 @@ TRANSLATIONS = {
         , 'Minimum confidence (0-1) to send automatic response': 'Confianza mínima (0-1) para enviar respuesta automática'
         , 'Detected sentiment: {sentiment}': 'Sentimiento detectado: {sentiment}'
         , 'Urgency level: {urgency}': 'Nivel de urgencia: {urgency}'
-    },
+        , 'System Settings': 'Configuración del Sistema'
+        , 'Manage all system configurations in one place': 'Gestiona todas las configuraciones del sistema en un solo lugar'
+        , 'Create, edit, and manage system users and their roles': 'Crea, edita y gestiona usuarios del sistema y sus roles'
+        , 'Active': 'Activo'
+        , 'Inactive': 'Inactivo'
+        , 'No users found. Create the first user to get started.': 'No hay usuarios. Crea el primer usuario para comenzar.'
+        , 'Configure categories and priority levels for tickets': 'Configura categorías y niveles de prioridad para los tickets'
+        , 'Add New Option': 'Agregar nueva opción'
+        , 'You need at least 10 closed tickets to train the model.': 'Necesitas al menos 10 tickets cerrados para entrenar el modelo.'
+        , 'Unknown': 'Desconocido'
+        , 'ML System Not Available': 'Sistema ML no disponible'
+        , 'Please install ML dependencies': 'Por favor instala las dependencias de ML'
+        , 'An error occurred loading the ML system': 'Ocurrió un error al cargar el sistema ML'
+        , 'Considers category and priority:': 'Considera la categoría y prioridad:'
+        , 'Uses the selected category and priority level.': 'Usa la categoría y nivel de prioridad seleccionados.'
+        , 'Evaluates technician expertise:': 'Evalúa la experiencia del técnico:'
+        , 'Reviews past performance, resolution time, and specialization.': 'Revisa el desempeño pasado, tiempo de resolución y especialización.'
+        , 'Suggests the best technician:': 'Sugiere el mejor técnico:'
+        , 'Recommends the most suitable technician with a confidence score.': 'Recomienda el técnico más adecuado con una puntuación de confianza.'
+        , 'Auto-assigns high-confidence tickets:': 'Auto-asigna tickets de alta confianza:'
+        , 'If confidence > 70%, automatically assigns the ticket.': 'Si la confianza > 70%, asigna automáticamente el ticket.'
+        , 'Technician Performance Statistics': 'Estadísticas de desempeño del técnico'
+        , 'Avg. Resolution Time': 'Tiempo promedio de resolución'
+        , 'Avg. Satisfaction': 'Satisfacción promedio'
+        , 'Top Category': 'Categoría principal'
+        , 'hours': 'horas'
+        , 'No statistics available yet. Statistics are calculated when the model is trained.': 'No hay estadísticas disponibles aún. Las estadísticas se calculan cuando se entrena el modelo.'
+        , 'Automatically detects customer sentiment and urgency level': 'Detecta automáticamente el sentimiento del cliente y el nivel de urgencia'
+        , 'Provides automatic responses to common questions and issues': 'Proporciona respuestas automáticas a preguntas y problemas comunes'
+        , 'Customer is very angry or frustrated': 'El cliente está muy enojado o frustrado'
+        , 'Customer is frustrated': 'El cliente está frustrado'
+        , 'Customer is neutral or factual': 'El cliente es neutral o factual'
+        , 'Customer is satisfied or friendly': 'El cliente está satisfecho o es amigable'
+        , 'Detection Categories:': 'Categorías de detección:'
+        , 'Supported Categories:': 'Categorías soportadas:'
+        , 'Benefits:': 'Beneficios:'
+        , 'Instant answers to common problems': 'Respuestas instantáneas a problemas comunes'
+        , 'Reduces ticket queue by handling FAQs': 'Reduce la cola de tickets manejando preguntas frecuentes'
+        , 'Improves customer satisfaction': 'Mejora la satisfacción del cliente'
+        , 'Frees up technicians for complex issues': 'Libera a los técnicos para problemas complejos'
+        , 'Responds automatically to common questions from our knowledge base.': 'Responde automáticamente a preguntas comunes de nuestra base de conocimientos.'
+        , 'Analyzes ticket content to detect customer sentiment and urgency levels.': 'Analiza el contenido del ticket para detectar el sentimiento del cliente y los niveles de urgencia.'
+        , 'API tokens allow external applications to create tickets programmatically.': 'Los tokens API permiten que aplicaciones externas creen tickets programáticamente.'
+        , 'Configure webhooks for Slack, Microsoft Teams, and other platforms.': 'Configura webhooks para Slack, Microsoft Teams y otras plataformas.'
+        , 'No API tokens yet. Create one to get started.': 'Sin tokens API aún. Crea uno para comenzar.'
+        , 'Example: Slack Integration, Teams Bot, etc.': 'Ejemplo: Integración de Slack, Teams Bot, etc.'
+        , 'No integrations configured yet.': 'Sin integraciones configuradas aún.'
+        , 'Save Settings': 'Guardar configuración'
+        , 'Analyzes the title and description using NLP (Natural Language Processing).': 'Analiza el título y la descripción usando PNL (Procesamiento de Lenguaje Natural).'
+        , 'Other': 'Otro'
+        , 'Integration name': 'Nombre de la integración'
     'en': {
         'Abierto': 'Open',
         'En proceso': 'In progress',
@@ -471,6 +521,57 @@ TRANSLATIONS = {
         'Sistema de ML': 'ML System',
         'Sistema de IA': 'AI System',
         'Centro de Configuración': 'Settings Hub',
+        'System Settings': 'System Settings',
+        'Manage all system configurations in one place': 'Manage all system configurations in one place',
+        'Create, edit, and manage system users and their roles': 'Create, edit, and manage system users and their roles',
+        'Active': 'Active',
+        'Inactive': 'Inactive',
+        'No users found. Create the first user to get started.': 'No users found. Create the first user to get started.',
+        'Configure categories and priority levels for tickets': 'Configure categories and priority levels for tickets',
+        'Add New Option': 'Add New Option',
+        'You need at least 10 closed tickets to train the model.': 'You need at least 10 closed tickets to train the model.',
+        'Unknown': 'Unknown',
+        'ML System Not Available': 'ML System Not Available',
+        'Please install ML dependencies': 'Please install ML dependencies',
+        'An error occurred loading the ML system': 'An error occurred loading the ML system',
+        'Considers category and priority:': 'Considers category and priority:',
+        'Uses the selected category and priority level.': 'Uses the selected category and priority level.',
+        'Evaluates technician expertise:': 'Evaluates technician expertise:',
+        'Reviews past performance, resolution time, and specialization.': 'Reviews past performance, resolution time, and specialization.',
+        'Suggests the best technician:': 'Suggests the best technician:',
+        'Recommends the most suitable technician with a confidence score.': 'Recommends the most suitable technician with a confidence score.',
+        'Auto-assigns high-confidence tickets:': 'Auto-assigns high-confidence tickets:',
+        'If confidence > 70%, automatically assigns the ticket.': 'If confidence > 70%, automatically assigns the ticket.',
+        'Technician Performance Statistics': 'Technician Performance Statistics',
+        'Avg. Resolution Time': 'Avg. Resolution Time',
+        'Avg. Satisfaction': 'Avg. Satisfaction',
+        'Top Category': 'Top Category',
+        'hours': 'hours',
+        'No statistics available yet. Statistics are calculated when the model is trained.': 'No statistics available yet. Statistics are calculated when the model is trained.',
+        'Automatically detects customer sentiment and urgency level': 'Automatically detects customer sentiment and urgency level',
+        'Provides automatic responses to common questions and issues': 'Provides automatic responses to common questions and issues',
+        'Customer is very angry or frustrated': 'Customer is very angry or frustrated',
+        'Customer is frustrated': 'Customer is frustrated',
+        'Customer is neutral or factual': 'Customer is neutral or factual',
+        'Customer is satisfied or friendly': 'Customer is satisfied or friendly',
+        'Detection Categories:': 'Detection Categories:',
+        'Supported Categories:': 'Supported Categories:',
+        'Benefits:': 'Benefits:',
+        'Instant answers to common problems': 'Instant answers to common problems',
+        'Reduces ticket queue by handling FAQs': 'Reduces ticket queue by handling FAQs',
+        'Improves customer satisfaction': 'Improves customer satisfaction',
+        'Frees up technicians for complex issues': 'Frees up technicians for complex issues',
+        'Responds automatically to common questions from our knowledge base.': 'Responds automatically to common questions from our knowledge base.',
+        'Analyzes ticket content to detect customer sentiment and urgency levels.': 'Analyzes ticket content to detect customer sentiment and urgency levels.',
+        'API tokens allow external applications to create tickets programmatically.': 'API tokens allow external applications to create tickets programmatically.',
+        'Configure webhooks for Slack, Microsoft Teams, and other platforms.': 'Configure webhooks for Slack, Microsoft Teams, and other platforms.',
+        'No API tokens yet. Create one to get started.': 'No API tokens yet. Create one to get started.',
+        'Example: Slack Integration, Teams Bot, etc.': 'Example: Slack Integration, Teams Bot, etc.',
+        'No integrations configured yet.': 'No integrations configured yet.',
+        'Save Settings': 'Save Settings',
+        'Analyzes the title and description using NLP (Natural Language Processing).': 'Analyzes the title and description using NLP (Natural Language Processing).',
+        'Other': 'Other',
+        'Integration name': 'Integration name',
     }
 }
 
