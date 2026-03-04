@@ -6,13 +6,30 @@
 <div class="container mt-4">
     <h1 class="mb-4">🤖 {{ _('Intelligent Ticket Classification System') }}</h1>
     
+    <!-- ML Dependencies Warning -->
+    {% if not ml_available %}
+    <div class="alert alert-danger mb-4">
+        <strong>⚠️ {{ _('Machine Learning dependencies not available') }}</strong>
+        <p class="mb-0">{{ _('ML dependencies are not installed. Install them manually:') }}</p>
+        <code style="background:#f5f5f5; padding:8px; display:block; margin-top:8px;">
+            pip install scikit-learn numpy
+        </code>
+        <p class="text-muted mt-2 mb-0" style="font-size:0.9em;">{{ _('After installation, redeploy the application.') }}</p>
+    </div>
+    {% endif %}
+    
     <!-- Model Status Card -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">{{ _('ML Model Status') }}</h5>
         </div>
         <div class="card-body">
-            {% if model_info.trained %}
+            {% if not ml_available %}
+                <div class="alert alert-danger">
+                    <strong>❌ {{ _('ML System Not Available') }}</strong>
+                    <p class="mb-0">{{ _('Please install ML dependencies') }}</p>
+                </div>
+            {% elif model_info.trained %}
                 <div class="alert alert-success">
                     <strong>✅ {{ _('Model is trained and ready') }}</strong>
                 </div>

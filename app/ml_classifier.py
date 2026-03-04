@@ -10,12 +10,19 @@ import pickle
 import os
 import json
 from datetime import datetime, timedelta
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import accuracy_score, classification_report
+
+# Lazy imports for ML dependencies - will be imported only when needed
+try:
+    import numpy as np
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.metrics import accuracy_score, classification_report
+    ML_AVAILABLE = True
+except ImportError as e:
+    ML_AVAILABLE = False
+    _ml_import_error = str(e)
 
 from app import db
 from app.models import Ticket, User, TechnicianStats
@@ -88,6 +95,12 @@ class TicketClassifier:
         Returns:
             dict: Métricas del entrenamiento
         """
+        if not ML_AVAILABLE:
+            return {
+                'success': False,
+                'error': f'Machine Learning dependencies not available. Please install scikit-learn: pip install scikit-learn numpy'
+            }
+        
         # Obtener tickets cerrados con técnico asignado
         tickets = Ticket.query.filter(
             Ticket.status == 'Cerrado',
@@ -176,6 +189,10 @@ class TicketClassifier:
         Returns:
             list: [(technician_id, confidence_score), ...]
         """
+        if not ML_AVAILABLE:
+            # Si ML no está disponible, retornar lista vacía (no auto-asignar)
+            return []
+        
         if not self.is_trained or self.model is None:
             # Intentar cargar modelo guardado
             if not self.load_model():

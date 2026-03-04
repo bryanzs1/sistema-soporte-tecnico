@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_required, current_user
 
 from app import db, translate
@@ -203,37 +203,54 @@ def edit_ticket_option(option_id):
 @admin_required
 def ml_system():
     """Página de administración del sistema ML"""
-    from app.ml_classifier import classifier
-    from app.models import TechnicianStats
-    
-    # Obtener información del modelo
-    model_info = classifier.get_model_info()
-    
-    # Obtener estadísticas de técnicos
-    tech_stats = TechnicianStats.query.all()
-    
-    # Obtener tickets con predicciones ML
-    ml_tickets = Ticket.query.filter(
-        Ticket.ml_suggested_technician_id.isnot(None)
-    ).order_by(Ticket.created_at.desc()).limit(20).all()
-    
-    # Calcular precisión del modelo (tickets donde la sugerencia coincide con la asignación final)
-    if ml_tickets:
-        correct_predictions = sum(
-            1 for t in ml_tickets 
-            if t.technician_id and t.technician_id == t.ml_suggested_technician_id
+    try:
+        from app.ml_classifier import classifier, ML_AVAILABLE
+        from app.models import TechnicianStats
+        
+        if not ML_AVAILABLE:
+            flash(_t('Machine Learning dependencies not installed. Please run: pip install scikit-learn numpy'), 'warning')
+            return render_template(
+                'admin/ml_system.html',
+                model_info={'trained': False, 'error': 'Dependencies not available'},
+                tech_stats=[],
+                ml_tickets=[],
+                ml_accuracy=0,
+                ml_available=False
+            )
+        
+        # Obtener información del modelo
+        model_info = classifier.get_model_info()
+        
+        # Obtener estadísticas de técnicos
+        tech_stats = TechnicianStats.query.all()
+        
+        # Obtener tickets con predicciones ML
+        ml_tickets = Ticket.query.filter(
+            Ticket.ml_suggested_technician_id.isnot(None)
+        ).order_by(Ticket.created_at.desc()).limit(20).all()
+        
+        # Calcular precisión del modelo (tickets donde la sugerencia coincide con la asignación final)
+        if ml_tickets:
+            correct_predictions = sum(
+                1 for t in ml_tickets 
+                if t.technician_id and t.technician_id == t.ml_suggested_technician_id
+            )
+            ml_accuracy = (correct_predictions / len(ml_tickets)) * 100 if ml_tickets else 0
+        else:
+            ml_accuracy = 0
+        
+        return render_template(
+            'admin/ml_system.html',
+            model_info=model_info,
+            tech_stats=tech_stats,
+            ml_tickets=ml_tickets,
+            ml_accuracy=ml_accuracy,
+            ml_available=True
         )
-        ml_accuracy = (correct_predictions / len(ml_tickets)) * 100 if ml_tickets else 0
-    else:
-        ml_accuracy = 0
-    
-    return render_template(
-        'admin/ml_system.html',
-        model_info=model_info,
-        tech_stats=tech_stats,
-        ml_tickets=ml_tickets,
-        ml_accuracy=ml_accuracy
-    )
+    except Exception as e:
+        current_app.logger.error(f'Error in ML system: {e}')
+        flash(_t('An error occurred loading the ML system'), 'danger')
+        return redirect(url_for('admin.dashboard'))
 
 
 @bp.route('/ml-system/train', methods=['POST'])

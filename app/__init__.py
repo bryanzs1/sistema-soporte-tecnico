@@ -265,6 +265,14 @@ TRANSLATIONS = {
         , 'Back to Dashboard': 'Volver al Dashboard'
         , 'ML model trained successfully! Accuracy: {accuracy:.1%}': 'Modelo ML entrenado exitosamente! Precisión: {accuracy:.1%}'
         , 'Error training model: {error}': 'Error al entrenar el modelo: {error}'
+        , 'Machine Learning dependencies not installed': 'Las dependencias de Machine Learning no están instaladas'
+        , 'ML dependencies not installed. Please run: pip install scikit-learn numpy': 'Las dependencias de ML no están instaladas. Por favor ejecuta: pip install scikit-learn numpy'
+        , 'Machine Learning dependencies not available': 'Las dependencias de Machine Learning no están disponibles'
+        , 'ML dependencies are not installed. Install them manually:': 'Las dependencias de ML no están instaladas. Instálalas manualmente:'
+        , 'After installation, redeploy the application.': 'Después de la instalación, vuelve a desplegar la aplicación.'
+        , 'ML System Not Available': 'Sistema ML no disponible'
+        , 'Please install ML dependencies': 'Por favor instala las dependencias de ML'
+        , 'An error occurred loading the ML system': 'Ocurrió un error al cargar el sistema ML'
     },
     'en': {
         'Abierto': 'Open',
