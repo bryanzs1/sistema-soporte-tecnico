@@ -390,6 +390,9 @@ TRANSLATIONS = {
         , 'Other': 'Otro'
         , 'Integration name': 'Nombre de la integración'
         , 'Manage all system configurations and settings in one place': 'Gestiona todas las configuraciones y ajustes del sistema en un solo lugar'
+        , 'My Tickets': 'Mis Tickets'
+        , 'Change Password': 'Cambiar Contraseña'
+        , 'Feature coming soon': 'Función próximamente'
     },
     'en': {
         'Abierto': 'Open',
@@ -575,6 +578,9 @@ TRANSLATIONS = {
         'Other': 'Other',
         'Integration name': 'Integration name',
         'Manage all system configurations and settings in one place': 'Manage all system configurations and settings in one place',
+        'My Tickets': 'My Tickets',
+        'Change Password': 'Change Password',
+        'Feature coming soon': 'Feature coming soon',
     }
 }
 

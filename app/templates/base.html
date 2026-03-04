@@ -5,6 +5,7 @@
     <title>{% block title %}{{ _('Support') }}{% endblock %}</title>
     <!-- Bootswatch Cerulean for a clean corporate look -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.2.3/dist/cerulean/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head>
   <body class="app-bg {% block body_class %}{% endblock %}">
@@ -17,29 +18,73 @@
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
             {% if current_user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">{{ _('Tickets') }}</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">
+                🎫 {{ _('Tickets') }}
+              </a></li>
               {% if current_user.is_admin() or current_user.is_technician() %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">{{ _('Dashboard') }}</a></li>
-              {% endif %}
-              {% if current_user.is_admin() %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.settings') }}">⚙️ {{ _('Settings') }}</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                📊 {{ _('Dashboard') }}
+              </a></li>
               {% endif %}
             {% endif %}
           </ul>
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about_us') }}">{{ _('Who We Are') }}</a></li>
             {% if current_user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
+              <!-- User Dropdown Menu -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="user-avatar me-2">
+                    {{ current_user.username[0]|upper }}
+                  </div>
+                  <span class="d-none d-md-inline">{{ current_user.username }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                  <li class="dropdown-header">
+                    <div class="text-center">
+                      <div class="user-avatar-large mb-2">
+                        {{ current_user.username[0]|upper }}
+                      </div>
+                      <strong>{{ current_user.username }}</strong><br>
+                      <small class="text-muted">{{ current_user.email }}</small>
+                    </div>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{{ url_for('tickets.list_tickets') }}">
+                    <i class="bi bi-ticket-perforated"></i> {{ _('My Tickets') }}
+                  </a></li>
+                  <li><a class="dropdown-item" href="#" onclick="alert('{{ _('Feature coming soon') }}'); return false;">
+                    <i class="bi bi-key"></i> {{ _('Change Password') }}
+                  </a></li>
+                  {% if current_user.is_admin() %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{{ url_for('admin.settings') }}">
+                    <i class="bi bi-gear"></i> {{ _('Settings') }}
+                  </a></li>
+                  {% endif %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                    <i class="bi bi-box-arrow-right"></i> {{ _('Logout') }}
+                  </a></li>
+                </ul>
+              </li>
+              
+              <!-- Language Dropdown -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-globe"></i> <span class="d-none d-md-inline">{{ _('Language') }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
+                    🇺🇸 {{ _('English') }}
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
+                    🇪🇸 {{ _('Spanish') }}
+                  </a></li>
+                </ul>
+              </li>
             {% else %}
               <li class="nav-item"><a class="btn btn-sm text-white fw-bold mx-2 btn-login-highlight" href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
             {% endif %}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">{{ _('Language') }}</a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">{{ _('English') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">{{ _('Spanish') }}</a></li>
-              </ul>
-            </li>
           </ul>
         </div>
       </div>
@@ -62,7 +107,16 @@
 
     <footer class="footer-custom">
       <div class="container text-center py-3">
-        <small>&copy; {{ current_year or 2026 }} {{ _('Corporate Support') }}</small>
+        <div class="row">
+          <div class="col-md-6 text-md-start">
+            <small>&copy; {{ current_year or 2026 }} {{ _('Corporate Support') }}</small>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <small>
+              <a href="{{ url_for('main.about_us') }}" class="text-decoration-none">{{ _('Who We Are') }}</a>
+            </small>
+          </div>
+        </div>
       </div>
     </footer>
     <!-- Bootstrap JS bundle (includes Popper) -->
