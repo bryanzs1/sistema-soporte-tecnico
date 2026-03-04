@@ -27,6 +27,7 @@ TRANSLATIONS = {
         'Tickets': 'Tickets',
         'Dashboard': 'Panel',
         'Admin': 'Admin',
+        'Settings': 'Configuración',
         'Logout': 'Cerrar sesión',
         'Login': 'Iniciar sesión',
         'Language': 'Idioma',
@@ -287,6 +288,11 @@ TRANSLATIONS = {
         , 'deactivated': 'desactivada'
         , 'Integration {status}': 'Integración {status}'
         , 'Integration deleted': 'Integración eliminada'
+        , 'Users Management': 'Gestión de Usuarios'
+        , 'Ticket Options': 'Opciones de Ticket'
+        , 'ML System': 'Sistema de ML'
+        , 'AI System': 'Sistema de IA'
+        , 'Settings Hub': 'Centro de Configuración'
         , 'Token Name': 'Nombre del token'
         , 'Created': 'Creado'
         , 'Last Used': 'Último uso'
@@ -459,6 +465,12 @@ TRANSLATIONS = {
         'Minimum confidence (0-1) to send automatic response': 'Minimum confidence (0-1) to send automatic response',
         'Detected sentiment: {sentiment}': 'Detected sentiment: {sentiment}',
         'Urgency level: {urgency}': 'Urgency level: {urgency}',
+        'Configuración': 'Settings',
+        'Gestión de Usuarios': 'Users Management',
+        'Opciones de Ticket': 'Ticket Options',
+        'Sistema de ML': 'ML System',
+        'Sistema de IA': 'AI System',
+        'Centro de Configuración': 'Settings Hub',
     }
 }
 

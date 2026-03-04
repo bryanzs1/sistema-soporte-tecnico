@@ -1,0 +1,71 @@
+{% extends 'admin/settings/layout.html' %}
+{% block title %}{{ _('User Management') }}{% endblock %}
+
+{% block settings_content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">👥 {{ _('User Management') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">{{ _('Create, edit, and manage system users and their roles') }}</p>
+        
+        <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">
+            ➕ {{ _('Create User') }}
+        </a>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{{ _('Username') }}</th>
+                        <th>{{ _('Email') }}</th>
+                        <th>{{ _('Role') }}</th>
+                        <th>{{ _('Status') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td><strong>#{{ u.id }}</strong></td>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            {% if u.role == 'admin' %}
+                                <span class="badge bg-danger">Admin</span>
+                            {% elif u.role == 'technician' %}
+                                <span class="badge bg-info">Technician</span>
+                            {% else %}
+                                <span class="badge bg-secondary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="badge bg-success">{{ _('Active') }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ _('Inactive') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-info text-white" href="{{ url_for('admin.edit_user', user_id=u.id) }}">
+                                ✏️ {{ _('Edit') }}
+                            </a>
+                            <a class="btn btn-sm btn-warning text-dark" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">
+                                🔑 {{ _('Reset Password') }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not users %}
+        <div class="alert alert-info mt-3">
+            {{ _('No users found. Create the first user to get started.') }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

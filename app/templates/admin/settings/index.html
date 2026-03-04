@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>⚙️ {{ _('System Settings') }}</h1>
+            <p class="text-muted">{{ _('Manage all system configurations and settings in one place') }}</p>
+        </div>
+    </div>
+    
+    <!-- Settings Navigation Tabs -->
+    <div class="row">
+        <div class="col-lg-3">
+            <!-- Sidebar Navigation -->
+            <div class="list-group sticky-top">
+                <a href="{{ url_for('admin.settings_users') }}" 
+                   class="list-group-item list-group-item-action {% if active_tab == 'users' %}active{% endif %}">
+                    👥 {{ _('User Management') }}
+                </a>
+                <a href="{{ url_for('admin.settings_ticket_options') }}" 
+                   class="list-group-item list-group-item-action {% if active_tab == 'ticket_options' %}active{% endif %}">
+                    📋 {{ _('Ticket Options') }}
+                </a>
+                <a href="{{ url_for('admin.settings_ml') }}" 
+                   class="list-group-item list-group-item-action {% if active_tab == 'ml_system' %}active{% endif %}">
+                    🤖 {{ _('ML Classification System') }}
+                </a>
+                <a href="{{ url_for('admin.settings_ai') }}" 
+                   class="list-group-item list-group-item-action {% if active_tab == 'ai_system' %}active{% endif %}">
+                    🧠 {{ _('AI System') }}
+                </a>
+                <a href="{{ url_for('admin.settings_integrations') }}" 
+                   class="list-group-item list-group-item-action {% if active_tab == 'integrations' %}active{% endif %}">
+                    🔗 {{ _('Chat Integrations') }}
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <!-- Content Area - Loaded via include or route -->
+            {% block settings_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .list-group-item.active {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
+    
+    .list-group-item:hover {
+        background-color: var(--bs-light);
+    }
+    
+    .sticky-top {
+        top: 70px;
+    }
+</style>
+{% endblock %}

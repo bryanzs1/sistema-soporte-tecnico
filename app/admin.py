@@ -433,3 +433,153 @@ def ai_system_settings():
     flash(_t('AI System Settings updated'), 'success')
     return redirect(url_for('admin.ai_system'))
 
+
+# ==================== SETTINGS AREA ====================
+# Nueva área de configuración centralizada
+
+@bp.route('/settings')
+@login_required
+@admin_required
+def settings():
+    """Página principal de configuración"""
+    return render_template('admin/settings/index.html')
+
+
+@bp.route('/settings/users')
+@login_required
+@admin_required
+def settings_users():
+    """Gestión de usuarios desde settings"""
+    users = User.query.order_by(User.username).all()
+    return render_template('admin/settings/users.html', users=users)
+
+
+@bp.route('/settings/ticket-options')
+@login_required
+@admin_required
+def settings_ticket_options():
+    """Gestión de opciones de tickets desde settings"""
+    form = TicketOptionForm()
+    categories = TicketOption.query.filter_by(option_type='category', active=True).all()
+    priorities = TicketOption.query.filter_by(option_type='priority', active=True).all()
+    
+    if form.validate_on_submit():
+        try:
+            existing = TicketOption.query.filter_by(
+                option_type=form.option_type.data,
+                value=form.value.data
+            ).first()
+            
+            if existing and existing.active:
+                flash(_t('Option already exists'), 'warning')
+            elif existing and not existing.active:
+                existing.active = True
+                db.session.commit()
+                flash(_t('Option already existed and was reactivated'), 'success')
+            else:
+                option = TicketOption(option_type=form.option_type.data, value=form.value.data)
+                db.session.add(option)
+                db.session.commit()
+                flash(_t('Option added'), 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(_t('Error adding option: {error}').format(error=str(e)), 'danger')
+        
+        return redirect(url_for('admin.settings_ticket_options'))
+    
+    return render_template('admin/settings/ticket_options.html', 
+                         form=form, 
+                         categories=categories, 
+                         priorities=priorities)
+
+
+@bp.route('/settings/ml')
+@login_required
+@admin_required
+def settings_ml():
+    """Configuración del sistema ML desde settings"""
+    try:
+        from app.ml_classifier import classifier, ML_AVAILABLE
+        
+        ml_available = ML_AVAILABLE
+        model_info = classifier.model_info() if ML_AVAILABLE else {}
+        ml_accuracy = classifier.accuracy if ML_AVAILABLE else 0
+        
+        # Get technician stats
+        from app.models import TechnicianStats
+        tech_stats = TechnicianStats.query.all()
+        
+        # Get recent tickets with ML predictions
+        from app.models import Ticket
+        ml_tickets = Ticket.query.filter(
+            Ticket.ml_suggested_technician_id.isnot(None)
+        ).order_by(Ticket.created_at.desc()).limit(10).all()
+        
+        return render_template('admin/settings/ml_system.html',
+                             ml_available=ml_available,
+                             model_info=model_info,
+                             ml_accuracy=ml_accuracy,
+                             tech_stats=tech_stats,
+                             ml_tickets=ml_tickets)
+    except Exception as e:
+        current_app.logger.error(f'Error loading ML settings: {e}')
+        return render_template('admin/settings/ml_system.html',
+                             ml_available=False,
+                             model_info={},
+                             ml_accuracy=0,
+                             tech_stats=[],
+                             ml_tickets=[])
+
+
+@bp.route('/settings/ai')
+@login_required
+@admin_required
+def settings_ai():
+    """Configuración del sistema IA desde settings"""
+    from app.ai_sentiment import get_analyzer
+    from app.ai_chatbot import get_chatbot
+    
+    # Get settings from session or DB
+    ai_settings = session.get('ai_settings', {
+        'sentiment_enabled': True,
+        'chatbot_enabled': True,
+        'chatbot_confidence_threshold': 0.75
+    })
+    
+    analyzer = get_analyzer()
+    chatbot = get_chatbot()
+    
+    return render_template('admin/settings/ai_system.html',
+                         ai_settings=ai_settings,
+                         sentiment_available=analyzer.available,
+                         chatbot_categories=chatbot.get_all_categories())
+
+
+@bp.route('/settings/ai/settings', methods=['POST'])
+@login_required
+@admin_required
+def settings_ai_update():
+    """Actualizar configuración de IA desde settings"""
+    ai_settings = {
+        'sentiment_enabled': request.form.get('sentiment_enabled') == 'on',
+        'chatbot_enabled': request.form.get('chatbot_enabled') == 'on',
+        'chatbot_confidence_threshold': float(request.form.get('chatbot_threshold', 0.75))
+    }
+    
+    session['ai_settings'] = ai_settings
+    flash(_t('AI System Settings updated'), 'success')
+    return redirect(url_for('admin.settings_ai'))
+
+
+@bp.route('/settings/integrations')
+@login_required
+@admin_required
+def settings_integrations():
+    """Gestión de integraciones desde settings"""
+    api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
+    integrations = Integration.query.order_by(Integration.created_at.desc()).all()
+    
+    return render_template('admin/settings/integrations.html',
+                         api_tokens=api_tokens,
+                         integrations=integrations)
+
