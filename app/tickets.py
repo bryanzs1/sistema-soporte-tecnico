@@ -368,6 +368,13 @@ def ticket_detail(ticket_id):
         flash(_t('You do not have access to this ticket'), 'danger')
         return redirect(url_for('tickets.list_tickets'))
 
+    # Direct chat permissions: owner, assigned technician, or admin.
+    can_chat = (
+        current_user.is_admin()
+        or ticket.user_id == current_user.id
+        or (current_user.is_technician() and ticket.technician_id == current_user.id)
+    )
+
     form = TicketUpdateForm()
     comment_form = TicketCommentForm(prefix='comment')
     # populate technician choices only for admin/tech
@@ -391,6 +398,9 @@ def ticket_detail(ticket_id):
         or comment_form.submit_comment.name in request.form
     )
     if comment_submit_pressed and comment_form.validate_on_submit():
+        if not can_chat:
+            flash(_t('Only the requester, assigned technician, or admin can chat on this ticket'), 'danger')
+            return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
         comment = TicketComment(ticket_id=ticket.id, user_id=current_user.id, message=comment_form.message.data.strip())
         db.session.add(comment)
         db.session.commit()
@@ -440,4 +450,4 @@ def ticket_detail(ticket_id):
     comments = ticket.comments.order_by(TicketComment.created_at.asc()).all()
     attachments = ticket.attachments.order_by(TicketAttachment.created_at.desc()).all()
     return render_template('tickets/detail.html', ticket=ticket, form=form, comment_form=comment_form,
-                           comments=comments, attachments=attachments)
+                           comments=comments, attachments=attachments, can_chat=can_chat)

@@ -103,29 +103,47 @@
       {% endif %}
     </div>
 
-    <!-- Comments Card -->
+    <!-- Direct Chat Card -->
     <div class="section-card mb-4">
-      <h3>{{ _('Comments') }}</h3>
+      <h3>{{ _('Direct chat') }}</h3>
+      <p class="text-muted mb-3">{{ _('Conversation between requester and assigned technician') }}</p>
       
-      <!-- Comment Form -->
-      <form method="post" class="mb-4">
-        {{ comment_form.hidden_tag() }}
-        <div class="mb-3">
-          {{ comment_form.message.label }}
-          {{ comment_form.message(class_='form-control input-enhanced', rows=3, placeholder=_('Add a comment...')) }}
+      <!-- Message Form -->
+      {% if can_chat %}
+        <form method="post" class="mb-4">
+          {{ comment_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ comment_form.message.label }}
+            {{ comment_form.message(class_='form-control input-enhanced', rows=3, placeholder=_('Write a message...')) }}
+          </div>
+          {{ comment_form.submit_comment(class_='btn btn-primary btn-animated') }}
+        </form>
+      {% else %}
+        <div class="alert alert-warning">
+          {{ _('Only requester, assigned technician, or admin can send messages in this chat') }}.
         </div>
-        {{ comment_form.submit_comment(class_='btn btn-primary btn-animated') }}
-      </form>
+      {% endif %}
       
       <hr>
       
-      <!-- Comments List -->
+      <!-- Messages List -->
       {% if comments %}
         <div class="comments-list">
           {% for c in comments %}
-            <div class="content-card mb-3">
+            {% set is_owner = c.user_id == ticket.user_id %}
+            {% set is_assigned_tech = ticket.technician_id and c.user_id == ticket.technician_id %}
+            <div class="content-card mb-3 chat-message {% if is_owner %}chat-client{% elif is_assigned_tech %}chat-tech{% else %}chat-admin{% endif %}">
               <div class="d-flex justify-content-between align-items-start mb-2">
-                <strong>{{ c.user.username if c.user else _('User') }}</strong>
+                <strong>
+                  {{ c.user.username if c.user else _('User') }}
+                  {% if is_owner %}
+                    <span class="badge bg-secondary ms-1">{{ _('Client') }}</span>
+                  {% elif is_assigned_tech %}
+                    <span class="badge bg-info ms-1">{{ _('Technician') }}</span>
+                  {% elif c.user and c.user.role == 'admin' %}
+                    <span class="badge bg-dark ms-1">{{ _('Admin') }}</span>
+                  {% endif %}
+                </strong>
                 <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
               </div>
               <p class="mb-0" style="color: #333;">{{ c.message }}</p>
@@ -133,7 +151,7 @@
           {% endfor %}
         </div>
       {% else %}
-        <p style="color: #333;">{{ _('No comments yet') }}.</p>
+        <p style="color: #333;">{{ _('No messages yet') }}.</p>
       {% endif %}
     </div>
 
@@ -171,6 +189,21 @@
     
     .comments-list .content-card {
       border-left: 4px solid #667eea;
+    }
+
+    .chat-message.chat-client {
+      border-left-color: #3b82f6;
+      background: #f0f7ff;
+    }
+
+    .chat-message.chat-tech {
+      border-left-color: #10b981;
+      background: #f0fff8;
+    }
+
+    .chat-message.chat-admin {
+      border-left-color: #6b7280;
+      background: #f9fafb;
     }
   </style>
 </div>
