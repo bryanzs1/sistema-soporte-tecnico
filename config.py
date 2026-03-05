@@ -36,10 +36,10 @@ class Config:
     TALISMAN_HSTS_PRELOAD = True
     TALISMAN_CONTENT_SECURITY_POLICY = {
         'default-src': "'self'",
-        'script-src': ["'self'", "'unsafe-inline'"],  # Allow Bootstrap inline
-        'style-src': ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
-        'font-src': ["'self'", "fonts.gstatic.com"],
-        'img-src': ["'self'", "data:"],
+        'script-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],  # Allow Bootstrap CDN
+        'style-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],  # Allow Bootswatch & Google Fonts
+        'font-src': ["'self'", "cdn.jsdelivr.net", "fonts.gstatic.com"],  # Allow Bootstrap Icons & Google Fonts
+        'img-src': ["'self'", "data:", "cdn.jsdelivr.net"],  # Allow data URIs and CDN images
     }
 
 
