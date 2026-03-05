@@ -136,7 +136,56 @@ def dashboard():
     return render_template('admin/dashboard.html', stats=stats, categories=cats)
 
 
-@bp.route('/ticket-options', methods=['GET', 'POST'])
+@bp.route('/chat-monitoring')
+@login_required
+@admin_required
+def chat_monitoring():
+    """Monitor all ticket chats with activity status"""
+    from app.models import Ticket, TicketComment
+    from datetime import datetime, timedelta
+    
+    # Get all tickets with their comment counts and last activity
+    tickets = Ticket.query.all()
+    chat_data = []
+    
+    for ticket in tickets:
+        comments_count = TicketComment.query.filter_by(ticket_id=ticket.id).count()
+        last_comment = TicketComment.query.filter_by(ticket_id=ticket.id).order_by(
+            TicketComment.created_at.desc()
+        ).first()
+        
+        last_activity = last_comment.created_at if last_comment else ticket.created_at
+        is_recent = (datetime.utcnow() - last_activity) < timedelta(hours=1)
+        
+        chat_data.append({
+            'ticket': ticket,
+            'message_count': comments_count,
+            'last_activity': last_activity,
+            'is_recent': is_recent,
+            'participant_names': _get_chat_participants(ticket),
+        })
+    
+    # Sort by last activity (most recent first)
+    chat_data.sort(key=lambda x: x['last_activity'], reverse=True)
+    
+    return render_template('admin/chat_monitoring.html', chat_data=chat_data)
+
+
+def _get_chat_participants(ticket):
+    """Get unique participants in a ticket's chat"""
+    from app.models import TicketComment
+    comments = TicketComment.query.filter_by(ticket_id=ticket.id).all()
+    participants = set()
+    if ticket.user:
+        participants.add(ticket.user.username)
+    if ticket.technician:
+        participants.add(ticket.technician.username)
+    for comment in comments:
+        if comment.user:
+            participants.add(comment.user.username)
+    return list(participants)
+
+
 @login_required
 @admin_required
 def ticket_options():

@@ -92,6 +92,9 @@
         <h3>{{ _('Quick Actions') }}</h3>
         <div class="d-flex flex-column gap-2">
           <a class="btn btn-primary btn-animated text-white" href="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</a>
+          <a class="btn btn-info btn-animated text-white" href="{{ url_for('admin.chat_monitoring') }}">
+            <i class="bi bi-chat-dots me-2"></i>{{ _('Chat Monitoring') }}
+          </a>
         </div>
       </div>
     </div>
