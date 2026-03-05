@@ -2,7 +2,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
@@ -451,3 +451,32 @@ def ticket_detail(ticket_id):
     attachments = ticket.attachments.order_by(TicketAttachment.created_at.desc()).all()
     return render_template('tickets/detail.html', ticket=ticket, form=form, comment_form=comment_form,
                            comments=comments, attachments=attachments, can_chat=can_chat)
+
+
+@bp.route('/<int:ticket_id>/chat-feed')
+@login_required
+def ticket_chat_feed(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if not (current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id):
+        return jsonify({'error': 'forbidden'}), 403
+
+    comments = ticket.comments.order_by(TicketComment.created_at.asc()).all()
+    payload = []
+    for c in comments:
+        user_role = c.user.role if c.user else 'user'
+        message_role = 'admin'
+        if c.user_id == ticket.user_id:
+            message_role = 'client'
+        elif ticket.technician_id and c.user_id == ticket.technician_id:
+            message_role = 'technician'
+
+        payload.append({
+            'id': c.id,
+            'username': c.user.username if c.user else _t('User'),
+            'user_role': user_role,
+            'message_role': message_role,
+            'message': c.message,
+            'created_at': c.created_at.strftime('%Y-%m-%d %H:%M'),
+        })
+
+    return jsonify({'comments': payload})

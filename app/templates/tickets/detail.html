@@ -128,11 +128,11 @@
       
       <!-- Messages List -->
       {% if comments %}
-        <div class="comments-list">
+        <div class="comments-list" id="chat-messages-list">
           {% for c in comments %}
             {% set is_owner = c.user_id == ticket.user_id %}
             {% set is_assigned_tech = ticket.technician_id and c.user_id == ticket.technician_id %}
-            <div class="content-card mb-3 chat-message {% if is_owner %}chat-client{% elif is_assigned_tech %}chat-tech{% else %}chat-admin{% endif %}">
+            <div class="content-card mb-3 chat-message {% if is_owner %}chat-client{% elif is_assigned_tech %}chat-tech{% else %}chat-admin{% endif %}" data-comment-id="{{ c.id }}">
               <div class="d-flex justify-content-between align-items-start mb-2">
                 <strong>
                   {{ c.user.username if c.user else _('User') }}
@@ -151,7 +151,8 @@
           {% endfor %}
         </div>
       {% else %}
-        <p style="color: #333;">{{ _('No messages yet') }}.</p>
+        <div class="comments-list" id="chat-messages-list"></div>
+        <p style="color: #333;" id="chat-empty-state">{{ _('No messages yet') }}.</p>
       {% endif %}
     </div>
 
@@ -206,5 +207,86 @@
       background: #f9fafb;
     }
   </style>
+
+  <script>
+    (function () {
+      const chatList = document.getElementById('chat-messages-list');
+      if (!chatList) return;
+
+      const emptyState = document.getElementById('chat-empty-state');
+      const feedUrl = "{{ url_for('tickets.ticket_chat_feed', ticket_id=ticket.id) }}";
+      let lastRenderedId = 0;
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+      }
+
+      function roleBadgeHtml(comment) {
+        if (comment.message_role === 'client') {
+          return '<span class="badge bg-secondary ms-1">{{ _('Client') }}</span>';
+        }
+        if (comment.message_role === 'technician') {
+          return '<span class="badge bg-info ms-1">{{ _('Technician') }}</span>';
+        }
+        if (comment.user_role === 'admin') {
+          return '<span class="badge bg-dark ms-1">{{ _('Admin') }}</span>';
+        }
+        return '';
+      }
+
+      function messageClass(comment) {
+        if (comment.message_role === 'client') return 'chat-client';
+        if (comment.message_role === 'technician') return 'chat-tech';
+        return 'chat-admin';
+      }
+
+      function renderMessages(comments) {
+        if (!comments || comments.length === 0) {
+          chatList.innerHTML = '';
+          if (emptyState) emptyState.style.display = 'block';
+          lastRenderedId = 0;
+          return;
+        }
+
+        if (emptyState) emptyState.style.display = 'none';
+        const newLastId = comments[comments.length - 1].id;
+        if (newLastId === lastRenderedId) return;
+
+        let html = '';
+        comments.forEach(function (comment) {
+          html += '<div class="content-card mb-3 chat-message ' + messageClass(comment) + '" data-comment-id="' + comment.id + '">';
+          html += '<div class="d-flex justify-content-between align-items-start mb-2">';
+          html += '<strong>' + escapeHtml(comment.username) + roleBadgeHtml(comment) + '</strong>';
+          html += '<small class="text-muted">' + escapeHtml(comment.created_at) + '</small>';
+          html += '</div>';
+          html += '<p class="mb-0" style="color: #333;">' + escapeHtml(comment.message) + '</p>';
+          html += '</div>';
+        });
+
+        chatList.innerHTML = html;
+        lastRenderedId = newLastId;
+      }
+
+      async function refreshChat() {
+        try {
+          const response = await fetch(feedUrl, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+          });
+          if (!response.ok) return;
+          const data = await response.json();
+          renderMessages(data.comments || []);
+        } catch (err) {
+          // Silent fail to avoid UI disruption if polling fails temporarily.
+        }
+      }
+
+      refreshChat();
+      setInterval(refreshChat, 5000);
+    })();
+  </script>
 </div>
 {% endblock %}
