@@ -18,7 +18,13 @@ def _t(text):
 
 
 def _attachments_dir():
-    upload_dir = os.path.join(current_app.instance_path, 'uploads')
+    # In Render, use persistent storage at /mnt/data
+    # In development, use instance/uploads
+    if os.environ.get('RENDER') == 'true':
+        upload_dir = '/mnt/data/uploads'
+    else:
+        upload_dir = os.path.join(current_app.instance_path, 'uploads')
+    
     os.makedirs(upload_dir, exist_ok=True)
     return upload_dir
 

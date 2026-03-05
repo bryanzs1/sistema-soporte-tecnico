@@ -4,8 +4,19 @@ services:
     env: python
     pythonVersion: 3.11
     buildCommand: bash build.sh
-        value: false
+    startCommand: gunicorn wsgi:app
+    envVars:
+      - key: RENDER
+        value: 'true'
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: 'false'
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
+    disk:
+      name: soporte-data
+      mountPath: /mnt/data
+      sizeGB: 1
