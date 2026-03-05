@@ -6,7 +6,6 @@ import qrcode
 from io import BytesIO
 import pyotp
 from flask import request
-import magic
 import base64
 from werkzeug.utils import secure_filename
 
