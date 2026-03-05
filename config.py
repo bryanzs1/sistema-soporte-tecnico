@@ -22,6 +22,25 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@localhost')
+    
+    # Security: Session & Cookie Configuration
+    SESSION_COOKIE_SECURE = True      # Only send cookie over HTTPS
+    SESSION_COOKIE_HTTPONLY = True    # No JavaScript access to cookie
+    SESSION_COOKIE_SAMESITE = 'Lax'   # CSRF protection
+    PERMANENT_SESSION_LIFETIME = 1800  # 30 minutes timeout
+    
+    # Security: Flask-Talisman Headers (CSP, X-Frame-Options, etc)
+    TALISMAN_FORCE_HTTPS = False  # Set per environment
+    TALISMAN_HSTS_MAX_AGE = 31536000  # 1 year in seconds
+    TALISMAN_HSTS_INCLUDE_SUBDOMAINS = True
+    TALISMAN_HSTS_PRELOAD = True
+    TALISMAN_CONTENT_SECURITY_POLICY = {
+        'default-src': "'self'",
+        'script-src': ["'self'", "'unsafe-inline'"],  # Allow Bootstrap inline
+        'style-src': ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
+        'font-src': ["'self'", "fonts.gstatic.com"],
+        'img-src': ["'self'", "data:"],
+    }
 
 
 class DevelopmentConfig(Config):
@@ -41,6 +60,10 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_ECHO = False
+    
+    # Security: Force HTTPS in production
+    TALISMAN_FORCE_HTTPS = True
+    SESSION_COOKIE_SECURE = True
     
     # In production, prefer PostgreSQL URL from env vars.
     # Render usually provides DATABASE_URL; some platforms use SQLALCHEMY_DATABASE_URI.

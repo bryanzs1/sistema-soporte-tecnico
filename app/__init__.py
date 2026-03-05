@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
 from dotenv import load_dotenv
 import os
 import logging
@@ -19,6 +22,8 @@ login = LoginManager()
 login.login_view = 'auth.login'  # redirects unauthorized users to /auth/login
 
 mail = Mail()
+limiter = Limiter(key_func=get_remote_address)
+talisman = Talisman()
 
 
 TRANSLATIONS = {
@@ -624,10 +629,23 @@ def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or 'config.Config')
 
+    # Validate SECRET_KEY is strong (not default)
+    secret_key = app.config.get('SECRET_KEY', '')
+    if not secret_key or secret_key == 'you-will-never-guess' or len(secret_key) < 16:
+        app_logger = logging.getLogger(__name__)
+        app_logger.error('❌ CRITICAL SECURITY: SECRET_KEY is weak or missing! Using temporary key.')
+        app.config['SECRET_KEY'] = os.urandom(32).hex()  # Generate random 64-char key
+        if not os.environ.get('SECRET_KEY'):
+            print('\n⚠️  WARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
+            print('   Minimum 32 characters, recommended 64+')
+            print(f'   Generated temporary key (won\'t persist across restarts)')
+
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
     mail.init_app(app)
+    limiter.init_app(app)
+    talisman.init_app(app, force_https=os.environ.get('RENDER') == 'true')
 
     # ensure loader registered (in case auth module import didn't run yet)
     @login.user_loader
