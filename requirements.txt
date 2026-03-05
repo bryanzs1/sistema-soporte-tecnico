@@ -8,6 +8,9 @@ Flask-Talisman
 psycopg2-binary
 gunicorn
 python-dotenv
+pyotp
+qrcode
+pillow
 
 # development/testing helpers
 requests
