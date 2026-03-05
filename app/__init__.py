@@ -12,6 +12,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from dotenv import load_dotenv
 import os
 import logging
+import hashlib
 from logging.handlers import RotatingFileHandler
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -637,12 +638,25 @@ def create_app(config_class=None):
     secret_key = app.config.get('SECRET_KEY', '')
     if not secret_key or secret_key == 'you-will-never-guess' or len(secret_key) < 16:
         app_logger = logging.getLogger(__name__)
-        app_logger.error('❌ CRITICAL SECURITY: SECRET_KEY is weak or missing! Using temporary key.')
-        app.config['SECRET_KEY'] = os.urandom(32).hex()  # Generate random 64-char key
-        if not os.environ.get('SECRET_KEY'):
+        app_logger.error('❌ CRITICAL SECURITY: SECRET_KEY is weak or missing! Using generated key.')
+        
+        # In production (Render), try to use DATABASE_URL as entropy source
+        if os.environ.get('RENDER'):
+            # Use DATABASE_URL as base for deterministic key generation
+            import hashlib
+            database_url = os.environ.get('DATABASE_URL', 'default-secret-base')
+            # Create a stable hash-based key
+            key_hash = hashlib.sha256(database_url.encode()).hexdigest()
+            app.config['SECRET_KEY'] = key_hash
+            app.logger.warning('⚠️  Generated SECRET_KEY from DATABASE_URL. This is temporary.')
+            app.logger.warning('    RECOMMENDED: Set SECRET_KEY environment variable in Render Dashboard.')
+            app.logger.warning('    Go to: Settings → Environment Variables → Add SECRET_KEY (32+ chars)')
+        else:
+            # Development: generate random key
+            app.config['SECRET_KEY'] = os.urandom(32).hex()
             print('\n⚠️  WARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
             print('   Minimum 32 characters, recommended 64+')
-            print(f'   Generated temporary key (won\'t persist across restarts)')
+            print(f'   Example: export SECRET_KEY="$(openssl rand -hex 32)"')
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -795,6 +809,49 @@ def create_app(config_class=None):
                     conn.commit()
                 app.logger.warning('Added last_activity column to user table')
 
+            # Add 2FA and security columns to user table
+            if 'totp_secret' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN totp_secret VARCHAR(32)'))
+                    conn.commit()
+                app.logger.warning('Added totp_secret column to user table')
+
+            if 'totp_enabled' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN totp_enabled BOOLEAN DEFAULT FALSE'))
+                    conn.commit()
+                app.logger.warning('Added totp_enabled column to user table')
+
+            if 'totp_backup_codes' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN totp_backup_codes TEXT'))
+                    conn.commit()
+                app.logger.warning('Added totp_backup_codes column to user table')
+
+            if 'password_changed_at' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN password_changed_at TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added password_changed_at column to user table')
+
+            if 'failed_login_attempts' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN failed_login_attempts INTEGER DEFAULT 0'))
+                    conn.commit()
+                app.logger.warning('Added failed_login_attempts column to user table')
+
+            if 'last_failed_login_at' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN last_failed_login_at TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added last_failed_login_at column to user table')
+
+            if 'locked_until' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN locked_until TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added locked_until column to user table')
+
             # Add ML-related columns to ticket table
             ticket_columns = [col['name'] for col in inspector.get_columns('ticket')]
             
@@ -889,6 +946,18 @@ def create_app(config_class=None):
                 from app.models import Integration
                 Integration.__table__.create(db.engine)
                 app.logger.warning('Created integration table')
+
+            # Create audit_log table if it doesn't exist
+            if not inspector.has_table('audit_log'):
+                from app.models import AuditLog
+                AuditLog.__table__.create(db.engine)
+                app.logger.warning('Created audit_log table')
+
+            # Create password_history table if it doesn't exist
+            if not inspector.has_table('password_history'):
+                from app.models import PasswordHistory
+                PasswordHistory.__table__.create(db.engine)
+                app.logger.warning('Created password_history table')
 
             default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
             default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
