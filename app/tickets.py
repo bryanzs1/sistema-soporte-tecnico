@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
-from flask_socketio import emit, join_room
+from flask_socketio import emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
@@ -61,7 +61,21 @@ def handle_join_ticket_room(data):
         return
 
     join_room(f'ticket_{ticket.id}')
+    emit('user_online', {
+        'ticket_id': ticket.id,
+        'user_id': current_user.id,
+        'username': current_user.username,
+        'user_role': current_user.role,
+    }, room=f'ticket_{ticket.id}')
     emit('chat_joined', {'ticket_id': ticket.id})
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    emit('user_offline', {
+        'user_id': current_user.id,
+        'username': current_user.username,
+    }, broadcast=True)
 
 
 @socketio.on('ticket_chat_message')
