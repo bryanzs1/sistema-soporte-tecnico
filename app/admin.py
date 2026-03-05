@@ -144,46 +144,72 @@ def chat_monitoring():
     from app.models import Ticket, TicketComment
     from datetime import datetime, timedelta
     
-    # Get all tickets with their comment counts and last activity
-    tickets = Ticket.query.all()
-    chat_data = []
-    
-    for ticket in tickets:
-        comments_count = TicketComment.query.filter_by(ticket_id=ticket.id).count()
-        last_comment = TicketComment.query.filter_by(ticket_id=ticket.id).order_by(
-            TicketComment.created_at.desc()
-        ).first()
+    try:
+        # Get all tickets with their comment counts and last activity
+        tickets = Ticket.query.all()
+        chat_data = []
         
-        last_activity = last_comment.created_at if last_comment else ticket.created_at
-        is_recent = (datetime.utcnow() - last_activity) < timedelta(hours=1)
+        for ticket in tickets:
+            comments_count = TicketComment.query.filter_by(ticket_id=ticket.id).count()
+            last_comment = TicketComment.query.filter_by(ticket_id=ticket.id).order_by(
+                TicketComment.created_at.desc()
+            ).first()
+            
+            last_activity = last_comment.created_at if last_comment else ticket.created_at
+            # Safe datetime comparison
+            try:
+                is_recent = (datetime.utcnow() - last_activity).total_seconds() < 3600  # 1 hour
+            except:
+                is_recent = False
+            
+            chat_data.append({
+                'ticket': ticket,
+                'message_count': comments_count,
+                'last_activity': last_activity,
+                'is_recent': is_recent,
+                'participant_names': _get_chat_participants(ticket),
+            })
         
-        chat_data.append({
-            'ticket': ticket,
-            'message_count': comments_count,
-            'last_activity': last_activity,
-            'is_recent': is_recent,
-            'participant_names': _get_chat_participants(ticket),
-        })
-    
-    # Sort by last activity (most recent first)
-    chat_data.sort(key=lambda x: x['last_activity'], reverse=True)
-    
-    return render_template('admin/chat_monitoring.html', chat_data=chat_data)
+        # Sort by last activity (most recent first)
+        chat_data.sort(key=lambda x: x['last_activity'], reverse=True)
+        
+        return render_template('admin/chat_monitoring.html', chat_data=chat_data)
+    except Exception as e:
+        current_app.logger.error(f'Chat monitoring error: {e}')
+        flash(_t('Error loading chat monitoring'), 'danger')
+        return redirect(url_for('admin.dashboard'))
 
 
 def _get_chat_participants(ticket):
-    """Get unique participants in a ticket's chat"""
+    """Get unique participants in a ticket's chat with separation by role"""
     from app.models import TicketComment
-    comments = TicketComment.query.filter_by(ticket_id=ticket.id).all()
-    participants = set()
-    if ticket.user:
-        participants.add(ticket.user.username)
-    if ticket.technician:
-        participants.add(ticket.technician.username)
-    for comment in comments:
-        if comment.user:
-            participants.add(comment.user.username)
-    return list(participants)
+    try:
+        comments = TicketComment.query.filter_by(ticket_id=ticket.id).all()
+        all_participants = set()
+        
+        if ticket.user:
+            all_participants.add(ticket.user.username)
+        if ticket.technician:
+            all_participants.add(ticket.technician.username)
+        for comment in comments:
+            if comment.user:
+                all_participants.add(comment.user.username)
+        
+        # Calculate "other" participants (excluding client and technician)
+        other_participants = []
+        if ticket.user:
+            other_participants = [p for p in all_participants if p != ticket.user.username and (not ticket.technician or p != ticket.technician.username)]
+        elif ticket.technician:
+            other_participants = [p for p in all_participants if p != ticket.technician.username]
+        else:
+            other_participants = list(all_participants)
+        
+        return {
+            'all': list(all_participants),
+            'others': other_participants,
+        }
+    except:
+        return {'all': [], 'others': []}
 
 
 @login_required

@@ -134,16 +134,15 @@
                   {% endif %}
 
                   <!-- Other commenters -->
-                  {% set other_participants = item.participant_names|difference([item.ticket.user.username if item.ticket.user else '', item.ticket.technician.username if item.ticket.technician else ''])|list %}
-                  {% if other_participants %}
-                    {% for participant in other_participants[:2] %}
+                  {% if item.participant_names.others %}
+                    {% for participant in item.participant_names.others[:2] %}
                       <span class="badge bg-dark">
                         <i class="bi bi-person me-1"></i>{{ participant }}
                       </span>
                     {% endfor %}
-                    {% if other_participants|length > 2 %}
+                    {% if item.participant_names.others|length > 2 %}
                       <span class="badge bg-secondary">
-                        +{{ other_participants|length - 2 }} {{ _('more') }}
+                        +{{ item.participant_names.others|length - 2 }} {{ _('more') }}
                       </span>
                     {% endif %}
                   {% endif %}
