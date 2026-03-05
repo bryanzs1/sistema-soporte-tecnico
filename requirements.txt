@@ -5,20 +5,12 @@ Flask-Login
 Flask-WTF
 Flask-Limiter
 Flask-Talisman
+Flask-CORS
 psycopg2-binary
 gunicorn
 python-dotenv
 pyotp
 qrcode
 pillow
-
-# development/testing helpers
-requests
-beautifulsoup4
-Flask-Mail
-pandas
-# Machine Learning dependencies
-scikit-learn>=1.3.0
-numpy>=1.24.0
-# AI & NLP dependencies
-textblob>=0.17.0
+sentry-sdk
+python-magic-bin

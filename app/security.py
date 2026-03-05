@@ -6,6 +6,31 @@ import qrcode
 from io import BytesIO
 import pyotp
 from flask import request
+import magic
+import base64
+from werkzeug.utils import secure_filename
+
+
+ALLOWED_EXTENSIONS = {
+    'png', 'jpg', 'jpeg', 'pdf', 'txt', 'doc', 'docx', 
+    'xlsx', 'csv', 'gif', 'bmp', 'zip'
+}
+
+DANGEROUS_EXTENSIONS = {
+    'exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js',
+    'jar', 'zip', 'rar', 'iso', 'dmg', 'app', 'deb', 'rpm',
+    'sh', 'bash', 'ps1', 'psm1', 'msi', 'dll', 'so', 'dylib'
+}
+
+ALLOWED_MIMETYPES = {
+    'image/png', 'image/jpeg', 'image/gif', 'image/bmp',
+    'application/pdf',
+    'text/plain',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/csv',
+    'application/zip'
+}
 
 
 class PasswordValidator:
@@ -127,6 +152,129 @@ class TOTPManager:
             return True, ','.join(codes)
         
         return False, codes_str
+
+
+class FileSecurityValidator:
+    """Validate uploaded files for security threats"""
+    
+    MAGIC_NUMBERS = {
+        b'\xFF\xD8\xFF': 'jpeg',           # JPEG
+        b'\x89\x50\x4E\x47': 'png',        # PNG
+        b'\x47\x49\x46': 'gif',            # GIF
+        b'\x42\x4D': 'bmp',                # BMP
+        b'\x25\x50\x44\x46': 'pdf',        # PDF
+        b'\x50\x4B\x03\x04': 'zip',        # ZIP
+        b'\x1F\x8B\x08': 'gzip',           # GZIP
+    }
+    
+    @staticmethod
+    def validate(file_storage):
+        """
+        Validate a file for security issues
+        Returns: (is_valid, error_message, file_type)
+        """
+        if not file_storage or not file_storage.filename:
+            return False, 'No file provided', None
+        
+        filename = secure_filename(file_storage.filename)
+        if not filename:
+            return False, 'Invalid filename', None
+        
+        # Check file extension
+        file_ext = filename.rsplit('.', 1)[-1].lower()
+        
+        if file_ext in DANGEROUS_EXTENSIONS:
+            return False, f'File type .{file_ext} is not allowed', None
+        
+        if file_ext not in ALLOWED_EXTENSIONS:
+            return False, f'File type .{file_ext} not in whitelist', None
+        
+        # Read file header for MIME type detection
+        file_storage.seek(0)
+        file_header = file_storage.read(512)
+        file_storage.seek(0)
+        
+        if not file_header:
+            return False, 'Empty file', None
+        
+        # Check magic numbers (file signatures)
+        detected_type = FileSecurityValidator._detect_mime_type(file_header, filename)
+        
+        if detected_type not in ALLOWED_MIMETYPES:
+            return False, f'File MIME type {detected_type} not allowed. Expected: {ALLOWED_EXTENSIONS}', None
+        
+        # Size check (max 20MB)
+        file_storage.seek(0, 2)  # Seek to end
+        file_size = file_storage.tell()
+        file_storage.seek(0)  # Reset
+        
+        if file_size > 20 * 1024 * 1024:
+            return False, 'File exceeds 20MB limit', None
+        
+        if file_size == 0:
+            return False, 'Empty file', None
+        
+        return True, 'File is safe', detected_type
+    
+    @staticmethod
+    def _detect_mime_type(file_header, filename):
+        """Detect MIME type from file header and extension"""
+        file_ext = filename.rsplit('.', 1)[-1].lower()
+        
+        # Try magic number detection
+        for magic_num, file_type in FileSecurityValidator.MAGIC_NUMBERS.items():
+            if file_header.startswith(magic_num):
+                return f'application/{file_type}' if file_type != 'jpeg' else 'image/jpeg'
+        
+        # Fallback to extension-based detection
+        mime_map = {
+            'pdf': 'application/pdf',
+            'txt': 'text/plain',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls': 'application/vnd.ms-excel',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'csv': 'text/csv',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'bmp': 'image/bmp',
+            'zip': 'application/zip',
+        }
+        
+        return mime_map.get(file_ext, 'application/octet-stream')
+    
+    @staticmethod
+    def scan_for_malware(file_path):
+        """
+        Scan file for malware (simple heuristic check)
+        In production, integrate with ClamAV or VirusTotal
+        
+        For now: Check for suspicious content in text files
+        """
+        suspicious_patterns = [
+            b'powershell',
+            b'cmd.exe',
+            b'/bin/bash',
+            b'wget ',
+            b'curl ',
+            b'eval(',
+            b'exec(',
+            b'system(',
+        ]
+        
+        try:
+            with open(file_path, 'rb') as f:
+                content = f.read(1024 * 1024)  # First 1MB
+                
+                for pattern in suspicious_patterns:
+                    if pattern in content.lower():
+                        return False, f'Suspicious pattern detected: {pattern.decode()}'
+            
+            return True, 'File passed malware scan'
+        except Exception as e:
+            return False, f'Error scanning file: {str(e)}'
 
 
 class AuditHelper:

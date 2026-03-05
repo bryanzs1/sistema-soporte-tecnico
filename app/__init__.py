@@ -6,6 +6,9 @@ from flask_mail import Mail, Message
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
+from flask_cors import CORS
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from dotenv import load_dotenv
 import os
 import logging
@@ -24,6 +27,7 @@ login.login_view = 'auth.login'  # redirects unauthorized users to /auth/login
 mail = Mail()
 limiter = Limiter(key_func=get_remote_address)
 talisman = Talisman()
+cors = CORS()
 
 
 TRANSLATIONS = {
@@ -646,6 +650,27 @@ def create_app(config_class=None):
     mail.init_app(app)
     limiter.init_app(app)
     talisman.init_app(app, force_https=os.environ.get('RENDER') == 'true')
+    
+    # CORS Configuration - Allow only your domain
+    cors_config = {
+        'origins': os.environ.get('CORS_ORIGINS', 'http://localhost:5000').split(','),
+        'allow_headers': ['Content-Type', 'Authorization', 'X-Requested-With'],
+        'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        'supports_credentials': True,
+        'max_age': 3600
+    }
+    cors.init_app(app, resources={r'/api/*': cors_config})
+    
+    # Sentry Monitoring (if configured)
+    sentry_dsn = os.environ.get('SENTRY_DSN')
+    if sentry_dsn:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=0.1,  # 10% of transactions
+            environment=os.environ.get('FLASK_ENV', 'production')
+        )
+        current_app.logger.info('✓ Sentry monitoring initialized')
 
     # ensure loader registered (in case auth module import didn't run yet)
     @login.user_loader

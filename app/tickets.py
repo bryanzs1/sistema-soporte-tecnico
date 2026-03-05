@@ -40,6 +40,13 @@ def _save_attachment(file_storage, ticket_id):
     if not file_storage or not file_storage.filename:
         return None
 
+    # Security: Validate file
+    from app.security import FileSecurityValidator
+    is_valid, error_msg, mime_type = FileSecurityValidator.validate(file_storage)
+    if not is_valid:
+        current_app.logger.warning(f'File upload validation failed: {error_msg}')
+        return None
+
     original_filename = secure_filename(file_storage.filename)
     if not original_filename:
         return None
@@ -47,7 +54,24 @@ def _save_attachment(file_storage, ticket_id):
     ext = os.path.splitext(original_filename)[1]
     stored_filename = f"ticket_{ticket_id}_{uuid.uuid4().hex}{ext}"
     full_path = os.path.join(_attachments_dir(), stored_filename)
-    file_storage.save(full_path)
+    
+    # Save file
+    try:
+        file_storage.save(full_path)
+    except Exception as e:
+        current_app.logger.error(f'Failed to save attachment: {e}')
+        return None
+    
+    # Security: Scan for malware patterns
+    is_safe, scan_msg = FileSecurityValidator.scan_for_malware(full_path)
+    if not is_safe:
+        # Delete file if malware detected
+        try:
+            os.remove(full_path)
+        except:
+            pass
+        current_app.logger.warning(f'Malware scan failed: {scan_msg}')
+        return None
 
     size = os.path.getsize(full_path) if os.path.exists(full_path) else 0
     attachment = TicketAttachment(
@@ -55,7 +79,7 @@ def _save_attachment(file_storage, ticket_id):
         uploaded_by_id=current_user.id,
         original_filename=original_filename,
         stored_filename=stored_filename,
-        content_type=file_storage.content_type,
+        content_type=mime_type or file_storage.content_type,
         file_size=size,
     )
     db.session.add(attachment)
