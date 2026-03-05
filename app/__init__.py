@@ -7,6 +7,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from flask_cors import CORS
+from flask_socketio import SocketIO
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from dotenv import load_dotenv
@@ -29,6 +30,7 @@ mail = Mail()
 limiter = Limiter(key_func=get_remote_address)
 talisman = Talisman()
 cors = CORS()
+socketio = SocketIO(async_mode='threading')
 
 
 TRANSLATIONS = {
@@ -663,6 +665,7 @@ def create_app(config_class=None):
     login.init_app(app)
     mail.init_app(app)
     limiter.init_app(app)
+    socketio.init_app(app, cors_allowed_origins=[])
     
     # Configure Talisman with proper CSP for CDN resources
     csp_policy = {
@@ -671,6 +674,7 @@ def create_app(config_class=None):
         'style-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
         'font-src': ["'self'", "cdn.jsdelivr.net", "fonts.gstatic.com"],
         'img-src': ["'self'", "data:", "cdn.jsdelivr.net"],
+        'connect-src': ["'self'", 'wss:', 'https:'],
     }
     talisman.init_app(
         app, 

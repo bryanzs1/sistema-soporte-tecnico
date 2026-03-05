@@ -208,6 +208,8 @@
     }
   </style>
 
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+
   <script>
     (function () {
       const chatList = document.getElementById('chat-messages-list');
@@ -285,6 +287,26 @@
       }
 
       refreshChat();
+
+      const socket = window.io ? window.io({
+        transports: ['websocket', 'polling'],
+        withCredentials: true
+      }) : null;
+
+      if (socket) {
+        socket.on('connect', function () {
+          socket.emit('join_ticket_room', { ticket_id: {{ ticket.id }} });
+        });
+
+        socket.on('ticket_chat_message', function () {
+          refreshChat();
+        });
+
+        socket.on('connect_error', function () {
+          // Keep polling fallback active if socket connection fails.
+        });
+      }
+
       setInterval(refreshChat, 5000);
     })();
   </script>

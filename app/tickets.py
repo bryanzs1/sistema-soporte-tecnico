@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
+from flask_socketio import emit, join_room
 from werkzeug.utils import secure_filename
 
-from app import db, translate
+from app import db, translate, socketio
 from app.models import Ticket, User, TicketComment, TicketAttachment
 from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm
 
@@ -15,6 +16,72 @@ bp = Blueprint('tickets', __name__)
 
 def _t(text):
     return translate(text, session.get('lang', 'en'))
+
+
+def _ticket_read_access(ticket):
+    return current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id
+
+
+def _ticket_chat_access(ticket):
+    return (
+        current_user.is_admin()
+        or ticket.user_id == current_user.id
+        or (current_user.is_technician() and ticket.technician_id == current_user.id)
+    )
+
+
+def _serialize_comment(ticket, comment):
+    user_role = comment.user.role if comment.user else 'user'
+    message_role = 'admin'
+    if comment.user_id == ticket.user_id:
+        message_role = 'client'
+    elif ticket.technician_id and comment.user_id == ticket.technician_id:
+        message_role = 'technician'
+
+    return {
+        'id': comment.id,
+        'username': comment.user.username if comment.user else _t('User'),
+        'user_role': user_role,
+        'message_role': message_role,
+        'message': comment.message,
+        'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
+    }
+
+
+@socketio.on('join_ticket_room')
+def handle_join_ticket_room(data):
+    ticket_id = (data or {}).get('ticket_id')
+    if not ticket_id:
+        emit('chat_error', {'error': 'missing_ticket_id'})
+        return
+
+    ticket = Ticket.query.get(ticket_id)
+    if not ticket or not _ticket_read_access(ticket):
+        emit('chat_error', {'error': 'forbidden'})
+        return
+
+    join_room(f'ticket_{ticket.id}')
+    emit('chat_joined', {'ticket_id': ticket.id})
+
+
+@socketio.on('ticket_chat_message')
+def handle_ticket_chat_message(data):
+    ticket_id = (data or {}).get('ticket_id')
+    message = ((data or {}).get('message') or '').strip()
+    if not ticket_id or not message:
+        emit('chat_error', {'error': 'invalid_payload'})
+        return
+
+    ticket = Ticket.query.get(ticket_id)
+    if not ticket or not _ticket_chat_access(ticket):
+        emit('chat_error', {'error': 'forbidden'})
+        return
+
+    comment = TicketComment(ticket_id=ticket.id, user_id=current_user.id, message=message)
+    db.session.add(comment)
+    db.session.commit()
+    payload = _serialize_comment(ticket, comment)
+    emit('ticket_chat_message', payload, room=f'ticket_{ticket.id}')
 
 
 def _attachments_dir():
@@ -364,16 +431,12 @@ def export_tickets():
 def ticket_detail(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     # authorization: owner or tech/admin
-    if not (current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id):
+    if not _ticket_read_access(ticket):
         flash(_t('You do not have access to this ticket'), 'danger')
         return redirect(url_for('tickets.list_tickets'))
 
     # Direct chat permissions: owner, assigned technician, or admin.
-    can_chat = (
-        current_user.is_admin()
-        or ticket.user_id == current_user.id
-        or (current_user.is_technician() and ticket.technician_id == current_user.id)
-    )
+    can_chat = _ticket_chat_access(ticket)
 
     form = TicketUpdateForm()
     comment_form = TicketCommentForm(prefix='comment')
@@ -404,6 +467,7 @@ def ticket_detail(ticket_id):
         comment = TicketComment(ticket_id=ticket.id, user_id=current_user.id, message=comment_form.message.data.strip())
         db.session.add(comment)
         db.session.commit()
+        socketio.emit('ticket_chat_message', _serialize_comment(ticket, comment), room=f'ticket_{ticket.id}')
         flash(_t('Comment added'), 'success')
         return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
@@ -457,26 +521,10 @@ def ticket_detail(ticket_id):
 @login_required
 def ticket_chat_feed(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
-    if not (current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id):
+    if not _ticket_read_access(ticket):
         return jsonify({'error': 'forbidden'}), 403
 
     comments = ticket.comments.order_by(TicketComment.created_at.asc()).all()
-    payload = []
-    for c in comments:
-        user_role = c.user.role if c.user else 'user'
-        message_role = 'admin'
-        if c.user_id == ticket.user_id:
-            message_role = 'client'
-        elif ticket.technician_id and c.user_id == ticket.technician_id:
-            message_role = 'technician'
-
-        payload.append({
-            'id': c.id,
-            'username': c.user.username if c.user else _t('User'),
-            'user_role': user_role,
-            'message_role': message_role,
-            'message': c.message,
-            'created_at': c.created_at.strftime('%Y-%m-%d %H:%M'),
-        })
+    payload = [_serialize_comment(ticket, c) for c in comments]
 
     return jsonify({'comments': payload})
