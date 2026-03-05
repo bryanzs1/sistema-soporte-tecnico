@@ -5,9 +5,11 @@ import secrets
 import qrcode
 from io import BytesIO
 import pyotp
-from flask import request
+from flask import request, current_app
 import base64
 from werkzeug.utils import secure_filename
+from cryptography.fernet import Fernet
+import os
 
 
 ALLOWED_EXTENSIONS = {
@@ -367,3 +369,56 @@ class AuditHelper:
             ip_address=ip_address,
             user_agent=user_agent
         )
+
+
+class EncryptionManager:
+    """Encrypt/decrypt sensitive data like API tokens"""
+    
+    @staticmethod
+    def get_cipher():
+        """Get Fernet cipher for encryption"""
+        try:
+            # Use SECRET_KEY for encryption key (derived from Flask config)
+            secret = current_app.config.get('SECRET_KEY', 'default-insecure-key')
+            
+            # Ensure key is exactly 32 bytes for Fernet
+            if isinstance(secret, str):
+                secret = secret.encode('utf-8')
+            
+            # If key is not 32 bytes, hash it
+            if len(secret) != 32:
+                import hashlib
+                secret = hashlib.sha256(secret).digest()
+            
+            # Base64 encode for Fernet
+            key = base64.urlsafe_b64encode(secret)
+            return Fernet(key)
+        except Exception as e:
+            raise RuntimeError(f'Failed to initialize encryption: {e}')
+    
+    @staticmethod
+    def encrypt(data):
+        """Encrypt string data"""
+        try:
+            if isinstance(data, str):
+                data = data.encode('utf-8')
+            
+            cipher = EncryptionManager.get_cipher()
+            encrypted = cipher.encrypt(data)
+            return encrypted.decode('utf-8')
+        except Exception as e:
+            raise RuntimeError(f'Encryption failed: {e}')
+    
+    @staticmethod
+    def decrypt(encrypted_data):
+        """Decrypt string data"""
+        try:
+            if isinstance(encrypted_data, str):
+                encrypted_data = encrypted_data.encode('utf-8')
+            
+            cipher = EncryptionManager.get_cipher()
+            decrypted = cipher.decrypt(encrypted_data)
+            return decrypted.decode('utf-8')
+        except Exception as e:
+            raise RuntimeError(f'Decryption failed: {e}')
+

@@ -14,3 +14,4 @@ qrcode
 pillow
 sentry-sdk
 marshmallow
+cryptography
