@@ -663,7 +663,24 @@ def create_app(config_class=None):
     login.init_app(app)
     mail.init_app(app)
     limiter.init_app(app)
-    talisman.init_app(app, force_https=os.environ.get('RENDER') == 'true')
+    
+    # Configure Talisman with proper CSP for CDN resources
+    csp_policy = {
+        'default-src': "'self'",
+        'script-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+        'style-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
+        'font-src': ["'self'", "cdn.jsdelivr.net", "fonts.gstatic.com"],
+        'img-src': ["'self'", "data:", "cdn.jsdelivr.net"],
+    }
+    talisman.init_app(
+        app, 
+        force_https=os.environ.get('RENDER') == 'true',
+        content_security_policy=csp_policy,
+        strict_transport_security=True,
+        strict_transport_security_max_age=31536000,
+        strict_transport_security_include_subdomains=True,
+        strict_transport_security_preload=True
+    )
     
     # CORS Configuration - Allow only your domain
     cors_config = {
