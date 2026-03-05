@@ -25,7 +25,14 @@ def _attachments_dir():
     else:
         upload_dir = os.path.join(current_app.instance_path, 'uploads')
     
-    os.makedirs(upload_dir, exist_ok=True)
+    try:
+        os.makedirs(upload_dir, exist_ok=True)
+    except (OSError, PermissionError) as e:
+        # If persistent storage unavailable, fallback to instance dir
+        current_app.logger.warning(f'Failed to create upload dir {upload_dir}: {e}. Using instance directory.')
+        upload_dir = os.path.join(current_app.instance_path, 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+    
     return upload_dir
 
 
