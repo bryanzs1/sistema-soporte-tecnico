@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_required, current_user
 
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
 from app import db, translate
 from app.models import User, TicketOption, ApiToken, Integration
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
@@ -55,10 +57,25 @@ def list_users():
 def create_user():
     form = NewUserForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data, role=form.role.data)
+        user = User(
+            username=form.username.data.strip(),
+            email=form.email.data.strip().lower(),
+            role=form.role.data,
+        )
         user.set_password(form.password.data)
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash(_t('Username or email already exists'), 'danger')
+            return render_template('admin/edit_user.html', user=None, form=form)
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error('Error creating user: %s', e)
+            flash(_t('Error creating user. Please try again.'), 'danger')
+            return render_template('admin/edit_user.html', user=None, form=form)
+
         flash(_t('User "{username}" created successfully with role: {role}').format(username=user.username, role=user.role), 'success')
         return redirect(url_for('admin.list_users'))
     return render_template('admin/edit_user.html', user=None, form=form)

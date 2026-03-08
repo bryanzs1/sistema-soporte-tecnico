@@ -5,7 +5,7 @@ from wtforms import ValidationError
 from flask_wtf.file import FileField, FileAllowed
 from flask import session
 from app import translate
-from app.models import Ticket
+from app.models import Ticket, User
 
 
 def tr(en_text, es_text):
@@ -122,6 +122,16 @@ class NewUserForm(FlaskForm):
         self.password2.label.text = tr('Repeat Password', 'Repetir contraseña')
         self.role.label.text = tr('Role', 'Rol')
         self.submit.label.text = tr('Create User', 'Crear usuario')
+
+    def validate_username(self, field):
+        username = (field.data or '').strip()
+        if User.query.filter_by(username=username).first() is not None:
+            raise ValidationError(tr('Username already exists', 'El usuario ya existe'))
+
+    def validate_email(self, field):
+        email = (field.data or '').strip().lower()
+        if User.query.filter_by(email=email).first() is not None:
+            raise ValidationError(tr('Email already exists', 'El correo ya existe'))
 
 
 class TicketOptionForm(FlaskForm):
