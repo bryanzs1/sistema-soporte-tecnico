@@ -123,10 +123,14 @@ def reset_user_password(user_id):
             old_hash = user.password_hash
             user.set_password(form.new_password.data)
             PasswordHistory.add_to_history(user.id, old_hash)
-            db.session.commit()
             
-            # Log the password reset
-            AuditHelper.log_password_change(user.id)
+            # Log the password reset BEFORE commit
+            try:
+                AuditHelper.log_password_change(user.id)
+            except Exception as audit_error:
+                current_app.logger.warning('Audit log failed for password reset: %s', audit_error)
+            
+            db.session.commit()
             
             flash(
                 _t('Password for user "{username}" was reset successfully').format(username=user.username),
@@ -137,6 +141,11 @@ def reset_user_password(user_id):
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error('Error resetting password for user %s: %s', user.username, e)
+            flash(_t('Error resetting password. Please try again.'), 'danger')
+            return render_template('admin/reset_user_password.html', user=user, form=form)
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error('Unexpected error resetting password for user %s: %s', user.username, e)
             flash(_t('Error resetting password. Please try again.'), 'danger')
             return render_template('admin/reset_user_password.html', user=user, form=form)
 
