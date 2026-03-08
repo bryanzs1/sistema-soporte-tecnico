@@ -455,6 +455,9 @@ TRANSLATIONS = {
         , 'Avoid common words or patterns': 'Evita palabras o patrones comunes'
         , 'Do not reuse recent passwords': 'No reutilices contraseñas recientes'
         , 'Minimum 8 characters': 'Mínimo 8 caracteres'
+        , 'Error resetting password. Please try again.': 'Error al restablecer la contraseña. Por favor intenta nuevamente.'
+        , 'Password does not meet security requirements: ': 'La contraseña no cumple los requisitos de seguridad: '
+        , 'This password was recently used. Please choose a different one.': 'Esta contraseña fue usada recientemente. Por favor elige una diferente.'
     },
     'en': {
         'Abierto': 'Open',

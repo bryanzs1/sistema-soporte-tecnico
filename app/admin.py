@@ -104,13 +104,41 @@ def reset_user_password(user_id):
     form = AdminResetPasswordForm()
 
     if form.validate_on_submit():
-        user.set_password(form.new_password.data)
-        db.session.commit()
-        flash(
-            _t('Password for user "{username}" was reset successfully').format(username=user.username),
-            'success'
-        )
-        return redirect(url_for('admin.list_users'))
+        try:
+            # Validate password strength
+            from app.security import PasswordValidator, AuditHelper
+            from app.models import PasswordHistory
+            
+            is_valid, message = PasswordValidator.validate(form.new_password.data)
+            if not is_valid:
+                flash(_t('Password does not meet security requirements: ') + message, 'warning')
+                return render_template('admin/reset_user_password.html', user=user, form=form)
+            
+            # Check for password reuse
+            if PasswordHistory.check_password_reuse(user.id, form.new_password.data):
+                flash(_t('This password was recently used. Please choose a different one.'), 'danger')
+                return render_template('admin/reset_user_password.html', user=user, form=form)
+            
+            # Update password and record in history
+            old_hash = user.password_hash
+            user.set_password(form.new_password.data)
+            PasswordHistory.add_to_history(user.id, old_hash)
+            db.session.commit()
+            
+            # Log the password reset
+            AuditHelper.log_password_change(user.id)
+            
+            flash(
+                _t('Password for user "{username}" was reset successfully').format(username=user.username),
+                'success'
+            )
+            return redirect(url_for('admin.list_users'))
+        
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error('Error resetting password for user %s: %s', user.username, e)
+            flash(_t('Error resetting password. Please try again.'), 'danger')
+            return render_template('admin/reset_user_password.html', user=user, form=form)
 
     return render_template('admin/reset_user_password.html', user=user, form=form)
 
