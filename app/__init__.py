@@ -688,6 +688,17 @@ def create_app(config_class=None):
     migrate.init_app(app, db)
     login.init_app(app)
     mail.init_app(app)
+
+    # Rate limiting storage: prefer Redis in production, fallback to memory for local/dev.
+    rate_limit_storage = (
+        os.environ.get('RATELIMIT_STORAGE_URI')
+        or os.environ.get('REDIS_URL')
+        or 'memory://'
+    )
+    app.config['RATELIMIT_STORAGE_URI'] = rate_limit_storage
+    if rate_limit_storage == 'memory://' and os.environ.get('RENDER') == 'true':
+        app.logger.warning('⚠️  Flask-Limiter using in-memory storage in production. Configure REDIS_URL to harden rate limits.')
+
     limiter.init_app(app)
     socketio.init_app(app, cors_allowed_origins=[])
     
