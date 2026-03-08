@@ -48,6 +48,18 @@ def _serialize_comment(ticket, comment):
     }
 
 
+@socketio.on('connect')
+def handle_connect():
+    """Register user as online when they connect"""
+    if current_user.is_authenticated:
+        from app import online_users
+        online_users[current_user.id] = {
+            'username': current_user.username,
+            'user_role': current_user.role,
+            'joined_at': datetime.utcnow(),
+        }
+
+
 @socketio.on('join_ticket_room')
 def handle_join_ticket_room(data):
     ticket_id = (data or {}).get('ticket_id')
@@ -72,6 +84,11 @@ def handle_join_ticket_room(data):
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    """Remove user from online registry when they disconnect"""
+    if current_user.is_authenticated:
+        from app import online_users
+        online_users.pop(current_user.id, None)
+    
     emit('user_offline', {
         'user_id': current_user.id,
         'username': current_user.username,

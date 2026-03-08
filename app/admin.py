@@ -229,6 +229,33 @@ def _get_chat_participants(ticket):
         return {'all': [], 'others': []}
 
 
+@bp.route('/online-users')
+@login_required
+@admin_required
+def online_users_list():
+    """Display all currently online users"""
+    from app import online_users
+    from datetime import datetime
+    
+    # Get list of online users with their info
+    users_list = []
+    for user_id, user_info in online_users.items():
+        user_obj = User.query.get(user_id)
+        if user_obj:
+            users_list.append({
+                'user_id': user_id,
+                'username': user_info.get('username', ''),
+                'user_role': user_info.get('user_role', ''),
+                'joined_at': user_info.get('joined_at', datetime.utcnow()),
+                'is_active': user_obj.is_active,
+            })
+    
+    # Sort by join time (most recent first)
+    users_list.sort(key=lambda x: x['joined_at'], reverse=True)
+    
+    return render_template('admin/online_users.html', online_users=users_list, count=len(users_list))
+
+
 @login_required
 @admin_required
 def ticket_options():

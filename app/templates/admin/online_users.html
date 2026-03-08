@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Online Users') }} - Admin{% endblock %}
+{% block content %}
+<div class="container mt-4 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>{{ _('Online Users') }}</h2>
+      <p class="text-muted mb-0">
+        <i class="bi bi-circle-fill text-success me-2" style="font-size: 0.6em;"></i>
+        {{ count }} {{ _('user(s) currently online') if count != 1 else _('user currently online') }}
+      </p>
+    </div>
+    <div>
+      <span class="badge bg-success">
+        <i class="bi bi-arrow-repeat"></i> {{ _('Live') }}
+      </span>
+    </div>
+  </div>
+
+  {% if online_users %}
+    <!-- Users Table -->
+    <div class="table-responsive">
+      <table class="table table-hover table-sm shadow-sm rounded-3 overflow-hidden" style="border: 1px solid #e0e0e0;">
+        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <tr>
+            <th>{{ _('Username') }}</th>
+            <th>{{ _('Role') }}</th>
+            <th>{{ _('Joined') }}</th>
+            <th>{{ _('Status') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in online_users %}
+            <tr class="align-middle">
+              <td>
+                <div class="d-flex align-items-center">
+                  <span class="badge rounded-circle bg-success me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                  <strong>{{ user.username }}</strong>
+                </div>
+              </td>
+              <td>
+                <span class="badge 
+                  {% if user.user_role == 'admin' %}
+                    bg-danger
+                  {% elif user.user_role == 'technician' %}
+                    bg-primary
+                  {% else %}
+                    bg-secondary
+                  {% endif %}
+                ">
+                  {{ _(user.user_role.capitalize()) }}
+                </span>
+              </td>
+              <td>
+                <small class="text-muted">
+                  {{ user.joined_at.strftime('%H:%M:%S') }}
+                </small>
+              </td>
+              <td>
+                {% if user.is_active %}
+                  <span class="badge bg-success">{{ _('Active') }}</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">{{ _('Inactive') }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mt-4 g-3">
+      {% set admin_count = online_users | selectattr('user_role', 'equalto', 'admin') | list | length %}
+      {% set tech_count = online_users | selectattr('user_role', 'equalto', 'technician') | list | length %}
+      {% set user_count = online_users | selectattr('user_role', 'equalto', 'user') | list | length %}
+      
+      <div class="col-md-3">
+        <div class="card shadow-sm" style="border-left: 4px solid #dc3545;">
+          <div class="card-body text-center">
+            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Administrators') }}</h5>
+            <div style="font-size: 1.8em; font-weight: bold; color: #dc3545;">{{ admin_count }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm" style="border-left: 4px solid #0d6efd;">
+          <div class="card-body text-center">
+            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Technicians') }}</h5>
+            <div style="font-size: 1.8em; font-weight: bold; color: #0d6efd;">{{ tech_count }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
+          <div class="card-body text-center">
+            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Users') }}</h5>
+            <div style="font-size: 1.8em; font-weight: bold; color: #6c757d;">{{ user_count }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm" style="border-left: 4px solid #198754;">
+          <div class="card-body text-center">
+            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Total Online') }}</h5>
+            <div style="font-size: 1.8em; font-weight: bold; color: #198754;">{{ count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="alert alert-info text-center py-5" style="border: 2px dashed #0d6efd;">
+      <i class="bi bi-info-circle" style="font-size: 3em; color: #0d6efd;"></i>
+      <h4 class="mt-3 mb-2">{{ _('No users online') }}</h4>
+      <p class="mb-0 text-muted">{{ _('Users will appear here when they connect to the system') }}</p>
+    </div>
+  {% endif %}
+
+  <!-- Back Button -->
+  <div class="mt-4">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-2"></i>{{ _('Back to Dashboard') }}
+    </a>
+  </div>
+</div>
+
+<style>
+  .badge.rounded-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+  }
+
+  .card {
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+</style>
+{% endblock %}

@@ -32,6 +32,9 @@ talisman = Talisman()
 cors = CORS()
 socketio = SocketIO(async_mode='threading')
 
+# Global registry of online users: {user_id: {'username': str, 'joined_at': datetime}}
+online_users = {}
+
 
 TRANSLATIONS = {
     'es': {
@@ -429,6 +432,17 @@ TRANSLATIONS = {
         , 'Tech': 'Técnico'
         , 'Unassigned': 'Sin asignar'
         , 'View Chat': 'Ver Chat'
+        , 'Online Users': 'Usuarios en línea'
+        , 'user(s) currently online': 'usuario(s) en línea actualmente'
+        , 'user currently online': 'usuario en línea actualmente'
+        , 'Joined': 'Conectado'
+        , 'Back to Dashboard': 'Volver al Dashboard'
+        , 'Administrators': 'Administradores'
+        , 'Technicians': 'Técnicos'
+        , 'Users': 'Usuarios'
+        , 'Total Online': 'Total en Línea'
+        , 'No users online': 'Sin usuarios en línea'
+        , 'Users will appear here when they connect to the system': 'Los usuarios aparecerán aquí cuando se conecten al sistema'
     },
     'en': {
         'Abierto': 'Open',
