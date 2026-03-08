@@ -51,6 +51,9 @@ def _serialize_comment(ticket, comment):
 @socketio.on('connect')
 def handle_connect():
     """Register user as online when they connect"""
+    from flask import current_app
+    current_app.logger.info(f'Socket.IO connect attempt - is_authenticated: {current_user.is_authenticated}')
+    
     if current_user.is_authenticated:
         from app import online_users
         online_users[current_user.id] = {
@@ -58,6 +61,16 @@ def handle_connect():
             'user_role': current_user.role,
             'joined_at': datetime.utcnow(),
         }
+        current_app.logger.info(f'User {current_user.username} (ID: {current_user.id}) registered as online. Total online: {len(online_users)}')
+        
+        # Emit confirmation to client
+        emit('user_registered', {
+            'user_id': current_user.id,
+            'username': current_user.username,
+            'total_online': len(online_users)
+        })
+    else:
+        current_app.logger.warning('Socket.IO connect attempt but user not authenticated')
 
 
 @socketio.on('join_ticket_room')
@@ -85,14 +98,21 @@ def handle_join_ticket_room(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     """Remove user from online registry when they disconnect"""
+    from flask import current_app
+    
     if current_user.is_authenticated:
         from app import online_users
-        online_users.pop(current_user.id, None)
-    
-    emit('user_offline', {
-        'user_id': current_user.id,
-        'username': current_user.username,
-    }, broadcast=True)
+        username = current_user.username
+        user_id = current_user.id
+        online_users.pop(user_id, None)
+        current_app.logger.info(f'User {username} (ID: {user_id}) disconnected. Total online: {len(online_users)}')
+        
+        emit('user_offline', {
+            'user_id': user_id,
+            'username': username,
+        }, broadcast=True)
+    else:
+        current_app.logger.warning('Socket.IO disconnect but user not authenticated')
 
 
 @socketio.on('ticket_chat_message')

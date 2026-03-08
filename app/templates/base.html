@@ -137,11 +137,21 @@
         });
         
         socket.on('connect', function() {
-          console.log('Connected to server - User registered as online');
+          console.log('✅ Connected to server - User registered as online');
+        });
+        
+        socket.on('user_registered', function(data) {
+          console.log('✅ User registration confirmed:', data);
+          console.log(`   - Username: ${data.username}`);
+          console.log(`   - Total online: ${data.total_online}`);
         });
         
         socket.on('disconnect', function() {
-          console.log('Disconnected from server - User removed from online');
+          console.log('❌ Disconnected from server - User removed from online');
+        });
+        
+        socket.on('connect_error', function(error) {
+          console.error('❌ Connection error:', error);
         });
       });
     </script>

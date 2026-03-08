@@ -729,7 +729,12 @@ def create_app(config_class=None):
         app.logger.warning('⚠️  Flask-Limiter using in-memory storage in production. Configure REDIS_URL to harden rate limits.')
 
     limiter.init_app(app)
-    socketio.init_app(app, cors_allowed_origins=[])
+    socketio.init_app(
+        app, 
+        cors_allowed_origins=[],
+        manage_session=False,  # Use Flask sessions for current_user
+        async_mode='threading'
+    )
     
     # Configure Talisman with proper CSP for CDN resources
     csp_policy = {
