@@ -443,6 +443,18 @@ TRANSLATIONS = {
         , 'Total Online': 'Total en Línea'
         , 'No users online': 'Sin usuarios en línea'
         , 'Users will appear here when they connect to the system': 'Los usuarios aparecerán aquí cuando se conecten al sistema'
+        , 'Current Password': 'Contraseña actual'
+        , 'Current password is incorrect': 'La contraseña actual es incorrecta'
+        , 'New password must be different from current password': 'La nueva contraseña debe ser diferente de la actual'
+        , 'Password changed successfully': 'Contraseña cambiada exitosamente'
+        , 'Update your account password': 'Actualiza la contraseña de tu cuenta'
+        , 'Cancel': 'Cancelar'
+        , 'Password Security Tips': 'Consejos de seguridad para contraseñas'
+        , 'Use at least 8 characters': 'Usa al menos 8 caracteres'
+        , 'Include numbers, letters and symbols': 'Incluye números, letras y símbolos'
+        , 'Avoid common words or patterns': 'Evita palabras o patrones comunes'
+        , 'Do not reuse recent passwords': 'No reutilices contraseñas recientes'
+        , 'Minimum 8 characters': 'Mínimo 8 caracteres'
     },
     'en': {
         'Abierto': 'Open',

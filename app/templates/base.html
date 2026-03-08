@@ -52,7 +52,7 @@
                   <li><a class="dropdown-item" href="{{ url_for('tickets.list_tickets') }}">
                     <i class="bi bi-ticket-perforated"></i> {{ _('My Tickets') }}
                   </a></li>
-                  <li><a class="dropdown-item" href="#" onclick="alert('{{ _('Feature coming soon') }}'); return false;">
+                  <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
                     <i class="bi bi-key"></i> {{ _('Change Password') }}
                   </a></li>
                   {% if current_user.is_admin() %}

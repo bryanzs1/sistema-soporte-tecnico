@@ -4,7 +4,7 @@ import os
 
 from app import db, login, translate, limiter
 from app.models import User
-from app.forms import LoginForm, ForcePasswordChangeForm
+from app.forms import LoginForm, ForcePasswordChangeForm, ChangePasswordForm
 from app.security import AuditHelper
 
 
@@ -121,6 +121,52 @@ def force_password_change():
 
 
     return render_template('auth/force_password_change.html', form=form)
+
+
+@bp.route('/change-password', methods=['GET', 'POST'], endpoint='change_password')
+@login_required
+def change_password():
+    """Allow users to change their password"""
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        # Verify current password
+        if not current_user.check_password(form.current_password.data):
+            flash(_t('Current password is incorrect'), 'danger')
+            return render_template('auth/change_password.html', form=form)
+        
+        # Validate password strength
+        from app.security import PasswordValidator
+        from app.models import PasswordHistory
+        
+        is_valid, message = PasswordValidator.validate(form.new_password.data)
+        if not is_valid:
+            flash(_t('Password does not meet security requirements: ') + message, 'warning')
+            return render_template('auth/change_password.html', form=form)
+        
+        # Check for password reuse
+        if PasswordHistory.check_password_reuse(current_user.id, form.new_password.data):
+            flash(_t('This password was recently used. Please choose a different one.'), 'danger')
+            return render_template('auth/change_password.html', form=form)
+        
+        # Check if new password is same as current
+        if current_user.check_password(form.new_password.data):
+            flash(_t('New password must be different from current password'), 'warning')
+            return render_template('auth/change_password.html', form=form)
+        
+        # Update password and record in history
+        old_hash = current_user.password_hash
+        current_user.set_password(form.new_password.data)
+        PasswordHistory.add_to_history(current_user.id, old_hash)
+        db.session.commit()
+        
+        # Log the change
+        AuditHelper.log_password_change(current_user.id)
+        
+        flash(_t('Password changed successfully'), 'success')
+        return redirect(url_for('main.index'))
+    
+    return render_template('auth/change_password.html', form=form)
 
 
 @bp.route('/verify-2fa', methods=['GET', 'POST'], endpoint='verify_totp')
