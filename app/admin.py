@@ -293,6 +293,32 @@ def online_users_list():
     return render_template('admin/online_users.html', online_users=users_list, count=len(users_list))
 
 
+@bp.route('/debug/online-users')
+@login_required
+@admin_required
+def debug_online_users_json():
+    """Debug endpoint to see raw online_users dict as JSON"""
+    from app import online_users
+    import json
+    from datetime import datetime
+    
+    # Convert online_users to JSON-serializable format
+    debug_data = {}
+    for user_id, info in online_users.items():
+        debug_data[str(user_id)] = {
+            'username': info.get('username'),
+            'user_role': info.get('user_role'),
+            'joined_at': info.get('joined_at').isoformat() if isinstance(info.get('joined_at'), datetime) else str(info.get('joined_at')),
+        }
+    
+    return {
+        'total_online': len(online_users),
+        'users': debug_data,
+        'timestamp': datetime.utcnow().isoformat(),
+        'message': f'Debug info for {len(online_users)} online users'
+    }
+
+
 @login_required
 @admin_required
 def ticket_options():

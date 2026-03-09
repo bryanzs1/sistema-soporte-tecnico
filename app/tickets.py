@@ -52,25 +52,38 @@ def _serialize_comment(ticket, comment):
 def handle_connect():
     """Register user as online when they connect"""
     from flask import current_app
-    current_app.logger.info(f'Socket.IO connect attempt - is_authenticated: {current_user.is_authenticated}')
+    from app import online_users
+    
+    current_app.logger.info(f'=== Socket.IO Connect Event ===')
+    current_app.logger.info(f'is_authenticated: {current_user.is_authenticated}')
+    current_app.logger.info(f'Online users dict before: {online_users}')
     
     if current_user.is_authenticated:
-        from app import online_users
-        online_users[current_user.id] = {
-            'username': current_user.username,
-            'user_role': current_user.role,
+        user_id = current_user.id
+        username = current_user.username
+        user_role = current_user.role
+        
+        # Register user
+        online_users[user_id] = {
+            'username': username,
+            'user_role': user_role,
             'joined_at': datetime.utcnow(),
         }
-        current_app.logger.info(f'User {current_user.username} (ID: {current_user.id}) registered as online. Total online: {len(online_users)}')
+        
+        current_app.logger.info(f'✅ User registered: {username} (ID: {user_id}, Role: {user_role})')
+        current_app.logger.info(f'Online users dict after: {online_users}')
+        current_app.logger.info(f'Total online: {len(online_users)}')
         
         # Emit confirmation to client
         emit('user_registered', {
-            'user_id': current_user.id,
-            'username': current_user.username,
+            'user_id': user_id,
+            'username': username,
             'total_online': len(online_users)
         })
     else:
-        current_app.logger.warning('Socket.IO connect attempt but user not authenticated')
+        current_app.logger.warning('⚠️ Connect attempt but user NOT authenticated')
+        current_app.logger.info(f'Current user: {current_user}')
+        current_app.logger.info(f'Current user is_authenticated: {getattr(current_user, "is_authenticated", "NO ATTRIBUTE")}')
 
 
 @socketio.on('join_ticket_room')
