@@ -737,10 +737,12 @@ def create_app(config_class=None):
     socketio.init_app(
         app, 
         cors_allowed_origins='*',  # Allow WebSocket connections from anywhere
-        manage_session=False,  # Use Flask sessions for current_user
+        manage_session=True,  # Allow access to Flask session and current_user
         async_mode='gevent',
         logger=True,
-        engineio_logger=True
+        engineio_logger=True,
+        ping_timeout=60,
+        ping_interval=25
     )
     
     # Configure Talisman with proper CSP for CDN resources
