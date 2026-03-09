@@ -8,6 +8,16 @@ from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from flask_cors import CORS
 from flask_socketio import SocketIO
+
+# Ensure eventlet monkey patching is applied (defensive, in case wsgi.py hasn't yet)
+try:
+    import eventlet
+    if not hasattr(eventlet, '_patched'):
+        eventlet.monkey_patch(all=True)
+        eventlet._patched = True
+except Exception:
+    pass
+
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from dotenv import load_dotenv
