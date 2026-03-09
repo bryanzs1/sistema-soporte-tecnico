@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Ticket {{ ticket.id }}{% endblock %}
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 ticket-detail-page">
   <div class="mb-5">
     <h2 class="mb-4">Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
     
@@ -34,7 +34,7 @@
         <div class="col-md-12 mb-3">
           <div class="detail-item">
             <strong>{{ _('Description') }}:</strong>
-            <p class="mt-2" style="color: #333;">{{ ticket.description }}</p>
+            <p class="mt-2 ticket-detail-text">{{ ticket.description }}</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@
           {% endfor %}
         </ul>
       {% else %}
-        <p style="color: #333;">{{ _('No attachments') }}.</p>
+        <p class="ticket-detail-text">{{ _('No attachments') }}.</p>
       {% endif %}
     </div>
 
@@ -151,13 +151,13 @@
                 </strong>
                 <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
               </div>
-              <p class="mb-0" style="color: #333;">{{ c.message }}</p>
+              <p class="mb-0 ticket-detail-text">{{ c.message }}</p>
             </div>
           {% endfor %}
         </div>
       {% else %}
         <div class="comments-list" id="chat-messages-list"></div>
-        <p style="color: #333;" id="chat-empty-state">{{ _('No messages yet') }}.</p>
+        <p class="ticket-detail-text" id="chat-empty-state">{{ _('No messages yet') }}.</p>
       {% endif %}
     </div>
 
@@ -182,36 +182,6 @@
       </div>
     {% endif %}
   </div>
-
-  <style>
-    .detail-item {
-      padding: 10px 0;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    
-    .detail-item:last-child {
-      border-bottom: none;
-    }
-    
-    .comments-list .content-card {
-      border-left: 4px solid #667eea;
-    }
-
-    .chat-message.chat-client {
-      border-left-color: #3b82f6;
-      background: #f0f7ff;
-    }
-
-    .chat-message.chat-tech {
-      border-left-color: #10b981;
-      background: #f0fff8;
-    }
-
-    .chat-message.chat-admin {
-      border-left-color: #6b7280;
-      background: #f9fafb;
-    }
-  </style>
 
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
 
@@ -268,7 +238,7 @@
           html += '<strong>' + escapeHtml(comment.username) + roleBadgeHtml(comment) + '</strong>';
           html += '<small class="text-muted">' + escapeHtml(comment.created_at) + '</small>';
           html += '</div>';
-          html += '<p class="mb-0" style="color: #333;">' + escapeHtml(comment.message) + '</p>';
+          html += '<p class="mb-0 ticket-detail-text">' + escapeHtml(comment.message) + '</p>';
           html += '</div>';
         });
 
@@ -301,7 +271,7 @@
         onlineUsers.forEach(function (username) {
           const badge = document.createElement('span');
           badge.className = 'badge bg-success';
-          badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size: 0.4em; margin-right: 4px;"></i>' + escapeHtml(username);
+          badge.innerHTML = '<i class="bi bi-circle-fill online-user-dot"></i>' + escapeHtml(username);
           onlineStatusContainer.appendChild(badge);
         });
       }

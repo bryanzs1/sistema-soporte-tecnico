@@ -1445,3 +1445,41 @@ footer {
     font-size: 3em;
     color: #0d6efd;
 }
+
+/* ===== TICKET DETAIL PAGE ===== */
+.ticket-detail-page .detail-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.ticket-detail-page .detail-item:last-child {
+    border-bottom: none;
+}
+
+.ticket-detail-text {
+    color: #333;
+}
+
+.ticket-detail-page .comments-list .content-card {
+    border-left: 4px solid #667eea;
+}
+
+.ticket-detail-page .chat-message.chat-client {
+    border-left-color: #3b82f6;
+    background: #f0f7ff;
+}
+
+.ticket-detail-page .chat-message.chat-tech {
+    border-left-color: #10b981;
+    background: #f0fff8;
+}
+
+.ticket-detail-page .chat-message.chat-admin {
+    border-left-color: #6b7280;
+    background: #f9fafb;
+}
+
+.online-user-dot {
+    font-size: 0.4em;
+    margin-right: 4px;
+}
