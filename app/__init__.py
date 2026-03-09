@@ -752,10 +752,13 @@ def create_app(config_class=None):
         'img-src': ["'self'", "data:", "cdn.jsdelivr.net"],
         'connect-src': ["'self'", 'wss:', 'https:'],
     }
+    # Configure Talisman - disable force_https to allow Render health checks
+    # Render's proxy handles HTTPS termination
     talisman.init_app(
         app, 
-        force_https=os.environ.get('RENDER') == 'true',
+        force_https=False,  # Render proxy handles HTTPS
         content_security_policy=csp_policy,
+        content_security_policy_nonce_in=['script-src'],
         strict_transport_security=True,
         strict_transport_security_max_age=31536000,
         strict_transport_security_include_subdomains=True,

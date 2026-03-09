@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, request, url_for
+from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify
 from flask_login import login_required
 
 bp = Blueprint('main', __name__)
@@ -7,6 +7,12 @@ bp = Blueprint('main', __name__)
 @bp.route('/')
 def index():
     return render_template('index.html')
+
+
+@bp.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({'status': 'healthy', 'service': 'soporte-tecnico'}), 200
 
 
 @bp.route('/lang/<lang>')

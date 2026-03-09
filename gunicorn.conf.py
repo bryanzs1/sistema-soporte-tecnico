@@ -6,3 +6,9 @@ workers = 1  # Socket.IO requires 1 worker with gevent
 worker_class = 'gevent'
 timeout = int(os.getenv('GUNICORN_TIMEOUT', '120'))
 worker_connections = 1000
+
+# Logging configuration
+accesslog = '-'  # Log to stdout
+errorlog = '-'   # Log to stdout
+loglevel = 'info'
+capture_output = True
