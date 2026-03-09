@@ -4,7 +4,7 @@ services:
     env: python
     pythonVersion: 3.11
     buildCommand: bash build.sh
-    startCommand: gunicorn wsgi:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app
     envVars:
       - key: RENDER
         value: 'true'
