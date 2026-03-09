@@ -758,7 +758,6 @@ def create_app(config_class=None):
         app, 
         force_https=False,  # Render proxy handles HTTPS
         content_security_policy=csp_policy,
-        content_security_policy_nonce_in=['script-src'],
         strict_transport_security=True,
         strict_transport_security_max_age=31536000,
         strict_transport_security_include_subdomains=True,
