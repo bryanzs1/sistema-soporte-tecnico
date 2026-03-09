@@ -123,8 +123,28 @@
     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
       <i class="bi bi-arrow-left me-2"></i>{{ _('Back to Dashboard') }}
     </a>
+    <small class="text-muted ms-3" id="last-refresh-label"></small>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const label = document.getElementById('last-refresh-label');
+
+    function updateLastRefreshLabel() {
+      const now = new Date();
+      label.textContent = 'Auto-refresh: ' + now.toLocaleTimeString();
+    }
+
+    updateLastRefreshLabel();
+
+    // Keep this page in sync with current online users.
+    setInterval(function () {
+      updateLastRefreshLabel();
+      window.location.reload();
+    }, 5000);
+  });
+</script>
 
 <style>
   .badge.rounded-circle {
