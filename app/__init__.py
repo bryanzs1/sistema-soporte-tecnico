@@ -30,7 +30,7 @@ mail = Mail()
 limiter = Limiter(key_func=get_remote_address)
 talisman = Talisman()
 cors = CORS()
-socketio = SocketIO(async_mode='threading')
+socketio = SocketIO(async_mode='gevent')
 
 # Global registry of online users: {user_id: {'username': str, 'joined_at': datetime}}
 online_users = {}
@@ -738,7 +738,7 @@ def create_app(config_class=None):
         app, 
         cors_allowed_origins=[],
         manage_session=False,  # Use Flask sessions for current_user
-        async_mode='threading'
+        async_mode='gevent'
     )
     
     # Configure Talisman with proper CSP for CDN resources

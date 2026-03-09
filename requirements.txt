@@ -9,6 +9,8 @@ Flask-CORS
 Flask-Mail
 Flask-SocketIO
 simple-websocket
+gevent
+gevent-websocket
 redis
 psycopg2-binary
 gunicorn
