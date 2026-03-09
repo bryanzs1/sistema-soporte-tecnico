@@ -736,9 +736,11 @@ def create_app(config_class=None):
     limiter.init_app(app)
     socketio.init_app(
         app, 
-        cors_allowed_origins=[],
+        cors_allowed_origins='*',  # Allow WebSocket connections from anywhere
         manage_session=False,  # Use Flask sessions for current_user
-        async_mode='gevent'
+        async_mode='gevent',
+        logger=True,
+        engineio_logger=True
     )
     
     # Configure Talisman with proper CSP for CDN resources

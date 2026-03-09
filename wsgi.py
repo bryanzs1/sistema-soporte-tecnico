@@ -1,9 +1,11 @@
 """
 WSGI entry point for production deployment.
-Use with Gunicorn: gunicorn -w 4 --timeout 120 wsgi:app
+Use with Gunicorn: gunicorn -k gevent -w 1 wsgi:app
 """
-from app import app, db
+from app import create_app, socketio, db
 from app.models import User, Ticket, TicketOption
+
+app = create_app()
 
 
 # CLI command for production setup
