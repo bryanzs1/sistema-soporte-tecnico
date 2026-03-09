@@ -15,6 +15,13 @@ def health_check():
     return jsonify({'status': 'healthy', 'service': 'soporte-tecnico'}), 200
 
 
+@bp.route('/presence-ping', methods=['GET'])
+@login_required
+def presence_ping():
+    """Lightweight endpoint to keep authenticated user presence up to date."""
+    return ('', 204)
+
+
 @bp.route('/lang/<lang>')
 def set_language(lang):
     if lang not in ('en', 'es'):

@@ -153,6 +153,20 @@
         socket.on('connect_error', function(error) {
           console.error('❌ Connection error:', error);
         });
+
+        // Fallback heartbeat: keeps online presence updated even if WebSocket fails.
+        function sendPresencePing() {
+          fetch("{{ url_for('main.presence_ping') }}", {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          }).catch(function() {
+            // Silent failure: heartbeat is best-effort.
+          });
+        }
+
+        sendPresencePing();
+        setInterval(sendPresencePing, 20000);
       });
     </script>
     {% endif %}

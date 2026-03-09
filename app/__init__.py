@@ -853,9 +853,28 @@ def create_app(config_class=None):
     @app.before_request
     def update_user_activity_and_enforce_password():
         if current_user.is_authenticated:
-            # Update last_activity timestamp for online tracking
-            from datetime import datetime
+            # Update last_activity timestamp and in-memory online presence.
+            from datetime import datetime, timedelta
             current_user.last_activity = datetime.utcnow()
+
+            # Fallback presence tracking in case Socket.IO is unavailable.
+            existing = online_users.get(current_user.id, {})
+            online_users[current_user.id] = {
+                'username': current_user.username,
+                'user_role': current_user.role,
+                'joined_at': existing.get('joined_at', datetime.utcnow()),
+                'last_seen': datetime.utcnow(),
+            }
+
+            # Cleanup stale users (no activity in last 90 seconds).
+            stale_after = datetime.utcnow() - timedelta(seconds=90)
+            stale_ids = [
+                uid for uid, info in online_users.items()
+                if info.get('last_seen', info.get('joined_at', datetime.utcnow())) < stale_after
+            ]
+            for uid in stale_ids:
+                online_users.pop(uid, None)
+
             try:
                 db.session.commit()
             except:
