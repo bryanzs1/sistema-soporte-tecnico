@@ -12,7 +12,7 @@
   </div>
 
   <!-- Filter Options -->
-  <div class="card mb-4" style="border: 1px solid #e0e0e0;">
+  <div class="card mb-4 monitor-filter-card">
     <div class="card-body">
       <div class="row g-3">
         <div class="col-md-4">
@@ -64,7 +64,7 @@
                       #{{ item.ticket.id }} - {{ item.ticket.title[:50] }}{% if item.ticket.title|length > 50 %}...{% endif %}
                     </a>
                   </h5>
-                  <p class="card-text text-muted mb-2" style="font-size: 0.9em;">
+                  <p class="card-text text-muted mb-2 monitor-meta-text">
                     {{ item.ticket.creator_name }}
                   </p>
                 </div>
@@ -72,7 +72,7 @@
                   <span class="badge 
                     {% if item.is_recent %}bg-success{% else %}bg-secondary{% endif %}">
                     {% if item.is_recent %}
-                      <i class="bi bi-circle-fill me-1" style="font-size: 0.4em;"></i>{{ _('Active') }}
+                      <i class="bi bi-circle-fill me-1 monitor-active-dot"></i>{{ _('Active') }}
                     {% else %}
                       {{ _('Inactive') }}
                     {% endif %}
@@ -91,7 +91,7 @@
               </div>
 
               <!-- Chat Activity -->
-              <div class="alert alert-light mb-3" style="border-left: 3px solid #3b82f6;">
+              <div class="alert alert-light mb-3 monitor-activity-alert">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <strong class="d-block text-primary">
@@ -105,7 +105,7 @@
                       {% endif %}
                     </small>
                   </div>
-                  <div class="badge bg-primary" style="font-size: 1.1em;">
+                  <div class="badge bg-primary monitor-message-count">
                     {{ item.message_count }}
                   </div>
                 </div>
@@ -169,39 +169,6 @@
     {% endif %}
   </div>
 </div>
-
-<style>
-  .ticket-badge-success { background-color: #10b981 !important; }
-  .ticket-badge-danger { background-color: #ef4444 !important; }
-  .ticket-badge-info { background-color: #0ea5e9 !important; }
-  .ticket-badge-warning { background-color: #f59e0b !important; color: #78350f !important; }
-
-  .priority-badge-danger { background-color: #ef4444 !important; }
-  .priority-badge-warning { background-color: #f59e0b !important; color: #78350f !important; }
-  .priority-badge-info { background-color: #0ea5e9 !important; }
-  .priority-badge-light { background-color: #f3f4f6 !important; color: #111827 !important; }
-
-  .chat-item {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .chat-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  .card {
-    transition: all 0.3s ease;
-  }
-
-  .chat-active {
-    border-left: 4px solid #10b981;
-  }
-
-  .chat-inactive {
-    border-left: 4px solid #9ca3af;
-  }
-</style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
