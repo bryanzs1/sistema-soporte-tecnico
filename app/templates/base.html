@@ -19,11 +19,11 @@
           <ul class="navbar-nav me-auto">
             {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">
-                🎫 {{ _('Tickets') }}
+                <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}
               </a></li>
               {% if current_user.is_admin() or current_user.is_technician() %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">
-                📊 {{ _('Dashboard') }}
+                <i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}
               </a></li>
               {% endif %}
             {% endif %}
@@ -75,10 +75,10 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
-                    🇺🇸 {{ _('English') }}
+                    <i class="bi bi-translate me-2"></i>{{ _('English') }}
                   </a></li>
                   <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
-                    🇪🇸 {{ _('Spanish') }}
+                    <i class="bi bi-translate me-2"></i>{{ _('Spanish') }}
                   </a></li>
                 </ul>
               </li>

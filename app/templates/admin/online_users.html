@@ -6,7 +6,7 @@
     <div>
       <h2>{{ _('Online Users') }}</h2>
       <p class="text-muted mb-0">
-        <i class="bi bi-circle-fill text-success me-2" style="font-size: 0.6em;"></i>
+        <i class="bi bi-circle-fill text-success me-2 online-indicator-dot"></i>
         <span id="online-count-text">{{ count }} {{ _('user(s) currently online') if count != 1 else _('user currently online') }}</span>
       </p>
     </div>
@@ -21,8 +21,8 @@
     {% if online_users %}
       <!-- Users Table -->
       <div class="table-responsive">
-        <table class="table table-hover table-sm shadow-sm rounded-3 overflow-hidden" style="border: 1px solid #e0e0e0;">
-          <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <table class="table table-hover table-sm shadow-sm rounded-3 overflow-hidden online-users-table">
+          <thead class="online-users-thead">
             <tr>
               <th>{{ _('Username') }}</th>
               <th>{{ _('Role') }}</th>
@@ -35,7 +35,7 @@
               <tr class="align-middle">
                 <td>
                   <div class="d-flex align-items-center">
-                    <span class="badge rounded-circle bg-success me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <span class="badge rounded-circle bg-success me-2 status-dot"></span>
                     <strong>{{ user.username }}</strong>
                   </div>
                 </td>
@@ -75,34 +75,34 @@
       {% set user_count = online_users | selectattr('user_role', 'equalto', 'user') | list | length %}
       
       <div class="col-md-3">
-        <div class="card shadow-sm" style="border-left: 4px solid #dc3545;">
+        <div class="card shadow-sm online-stat-card online-stat-admin">
           <div class="card-body text-center">
-            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Administrators') }}</h5>
-            <div id="admin-count" style="font-size: 1.8em; font-weight: bold; color: #dc3545;">{{ admin_count }}</div>
+            <h5 class="card-title text-muted mb-2 stat-title">{{ _('Administrators') }}</h5>
+            <div id="admin-count" class="stat-value stat-admin">{{ admin_count }}</div>
           </div>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="card shadow-sm" style="border-left: 4px solid #0d6efd;">
+        <div class="card shadow-sm online-stat-card online-stat-tech">
           <div class="card-body text-center">
-            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Technicians') }}</h5>
-            <div id="tech-count" style="font-size: 1.8em; font-weight: bold; color: #0d6efd;">{{ tech_count }}</div>
+            <h5 class="card-title text-muted mb-2 stat-title">{{ _('Technicians') }}</h5>
+            <div id="tech-count" class="stat-value stat-tech">{{ tech_count }}</div>
           </div>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
+        <div class="card shadow-sm online-stat-card online-stat-user">
           <div class="card-body text-center">
-            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Users') }}</h5>
-            <div id="user-count" style="font-size: 1.8em; font-weight: bold; color: #6c757d;">{{ user_count }}</div>
+            <h5 class="card-title text-muted mb-2 stat-title">{{ _('Users') }}</h5>
+            <div id="user-count" class="stat-value stat-user">{{ user_count }}</div>
           </div>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="card shadow-sm" style="border-left: 4px solid #198754;">
+        <div class="card shadow-sm online-stat-card online-stat-total">
           <div class="card-body text-center">
-            <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Total Online') }}</h5>
-            <div id="total-count" style="font-size: 1.8em; font-weight: bold; color: #198754;">{{ count }}</div>
+            <h5 class="card-title text-muted mb-2 stat-title">{{ _('Total Online') }}</h5>
+            <div id="total-count" class="stat-value stat-total">{{ count }}</div>
           </div>
         </div>
       </div>
@@ -110,8 +110,8 @@
 
     {% else %}
     <!-- Empty State -->
-    <div id="empty-state" class="alert alert-info text-center py-5" style="border: 2px dashed #0d6efd;">
-      <i class="bi bi-info-circle" style="font-size: 3em; color: #0d6efd;"></i>
+    <div id="empty-state" class="alert alert-info text-center py-5 online-empty-state">
+      <i class="bi bi-info-circle online-empty-icon"></i>
       <h4 class="mt-3 mb-2">{{ _('No users online') }}</h4>
       <p class="mb-0 text-muted">{{ _('Users will appear here when they connect to the system') }}</p>
     </div>
@@ -178,7 +178,7 @@
               <tr class="align-middle">
                 <td>
                   <div class="d-flex align-items-center">
-                    <span class="badge rounded-circle bg-success me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <span class="badge rounded-circle bg-success me-2 status-dot"></span>
                     <strong>${user.username}</strong>
                   </div>
                 </td>
@@ -215,27 +215,4 @@
     }, 5000);
   });
 </script>
-
-<style>
-  .badge.rounded-circle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .table-hover tbody tr:hover {
-    background-color: #f8f9fa;
-    transition: background-color 0.2s;
-  }
-
-  .card {
-    border: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  }
-</style>
 {% endblock %}
