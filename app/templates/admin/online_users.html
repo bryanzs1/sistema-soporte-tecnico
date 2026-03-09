@@ -7,7 +7,7 @@
       <h2>{{ _('Online Users') }}</h2>
       <p class="text-muted mb-0">
         <i class="bi bi-circle-fill text-success me-2" style="font-size: 0.6em;"></i>
-        {{ count }} {{ _('user(s) currently online') if count != 1 else _('user currently online') }}
+        <span id="online-count-text">{{ count }} {{ _('user(s) currently online') if count != 1 else _('user currently online') }}</span>
       </p>
     </div>
     <div>
@@ -17,59 +17,58 @@
     </div>
   </div>
 
-  {% if online_users %}
-    <!-- Users Table -->
-    <div class="table-responsive">
-      <table class="table table-hover table-sm shadow-sm rounded-3 overflow-hidden" style="border: 1px solid #e0e0e0;">
-        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-          <tr>
-            <th>{{ _('Username') }}</th>
-            <th>{{ _('Role') }}</th>
-            <th>{{ _('Joined') }}</th>
-            <th>{{ _('Status') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in online_users %}
-            <tr class="align-middle">
-              <td>
-                <div class="d-flex align-items-center">
-                  <span class="badge rounded-circle bg-success me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
-                  <strong>{{ user.username }}</strong>
-                </div>
-              </td>
-              <td>
-                <span class="badge 
-                  {% if user.user_role == 'admin' %}
-                    bg-danger
-                  {% elif user.user_role == 'technician' %}
-                    bg-primary
-                  {% else %}
-                    bg-secondary
-                  {% endif %}
-                ">
-                  {{ _(user.user_role.capitalize()) }}
-                </span>
-              </td>
-              <td>
-                <small class="text-muted">
-                  {{ user.joined_at.strftime('%H:%M:%S') }}
-                </small>
-              </td>
-              <td>
-                {% if user.is_active %}
-                  <span class="badge bg-success">{{ _('Active') }}</span>
-                {% else %}
-                  <span class="badge bg-warning text-dark">{{ _('Inactive') }}</span>
-                {% endif %}
-              </td>
+  <div id="online-users-container">
+    {% if online_users %}
+      <!-- Users Table -->
+      <div class="table-responsive">
+        <table class="table table-hover table-sm shadow-sm rounded-3 overflow-hidden" style="border: 1px solid #e0e0e0;">
+          <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <tr>
+              <th>{{ _('Username') }}</th>
+              <th>{{ _('Role') }}</th>
+              <th>{{ _('Joined') }}</th>
+              <th>{{ _('Status') }}</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody id="online-users-tbody">
+            {% for user in online_users %}
+              <tr class="align-middle">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="badge rounded-circle bg-success me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <strong>{{ user.username }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge 
+                    {% if user.user_role == 'admin' %}
+                      bg-danger
+                    {% elif user.user_role == 'technician' %}
+                      bg-primary
+                    {% else %}
+                      bg-secondary
+                    {% endif %}
+                  ">
+                    {{ _(user.user_role.capitalize()) }}
+                  </span>
+                </td>
+                <td>
+                  <small class="text-muted">{{ user.joined_at.strftime('%H:%M:%S') }}</small>
+                </td>
+                <td>
+                  {% if user.is_active %}
+                    <span class="badge bg-success">{{ _('Active') }}</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">{{ _('Inactive') }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-    <!-- Summary Stats -->
+      <!-- Summary Stats -->
     <div class="row mt-4 g-3">
       {% set admin_count = online_users | selectattr('user_role', 'equalto', 'admin') | list | length %}
       {% set tech_count = online_users | selectattr('user_role', 'equalto', 'technician') | list | length %}
@@ -79,7 +78,7 @@
         <div class="card shadow-sm" style="border-left: 4px solid #dc3545;">
           <div class="card-body text-center">
             <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Administrators') }}</h5>
-            <div style="font-size: 1.8em; font-weight: bold; color: #dc3545;">{{ admin_count }}</div>
+            <div id="admin-count" style="font-size: 1.8em; font-weight: bold; color: #dc3545;">{{ admin_count }}</div>
           </div>
         </div>
       </div>
@@ -87,7 +86,7 @@
         <div class="card shadow-sm" style="border-left: 4px solid #0d6efd;">
           <div class="card-body text-center">
             <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Technicians') }}</h5>
-            <div style="font-size: 1.8em; font-weight: bold; color: #0d6efd;">{{ tech_count }}</div>
+            <div id="tech-count" style="font-size: 1.8em; font-weight: bold; color: #0d6efd;">{{ tech_count }}</div>
           </div>
         </div>
       </div>
@@ -95,7 +94,7 @@
         <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
           <div class="card-body text-center">
             <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Users') }}</h5>
-            <div style="font-size: 1.8em; font-weight: bold; color: #6c757d;">{{ user_count }}</div>
+            <div id="user-count" style="font-size: 1.8em; font-weight: bold; color: #6c757d;">{{ user_count }}</div>
           </div>
         </div>
       </div>
@@ -103,20 +102,21 @@
         <div class="card shadow-sm" style="border-left: 4px solid #198754;">
           <div class="card-body text-center">
             <h5 class="card-title text-muted mb-2" style="font-size: 0.9em;">{{ _('Total Online') }}</h5>
-            <div style="font-size: 1.8em; font-weight: bold; color: #198754;">{{ count }}</div>
+            <div id="total-count" style="font-size: 1.8em; font-weight: bold; color: #198754;">{{ count }}</div>
           </div>
         </div>
       </div>
     </div>
 
-  {% else %}
+    {% else %}
     <!-- Empty State -->
-    <div class="alert alert-info text-center py-5" style="border: 2px dashed #0d6efd;">
+    <div id="empty-state" class="alert alert-info text-center py-5" style="border: 2px dashed #0d6efd;">
       <i class="bi bi-info-circle" style="font-size: 3em; color: #0d6efd;"></i>
       <h4 class="mt-3 mb-2">{{ _('No users online') }}</h4>
       <p class="mb-0 text-muted">{{ _('Users will appear here when they connect to the system') }}</p>
     </div>
-  {% endif %}
+    {% endif %}
+  </div>
 
   <!-- Back Button -->
   <div class="mt-4">
@@ -130,18 +130,88 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const label = document.getElementById('last-refresh-label');
+    const onlineCountText = document.getElementById('online-count-text');
+    const adminCount = document.getElementById('admin-count');
+    const techCount = document.getElementById('tech-count');
+    const userCount = document.getElementById('user-count');
+    const totalCount = document.getElementById('total-count');
+    const tbody = document.getElementById('online-users-tbody');
 
     function updateLastRefreshLabel() {
       const now = new Date();
-      label.textContent = 'Auto-refresh: ' + now.toLocaleTimeString();
+      label.textContent = 'Actualizado: ' + now.toLocaleTimeString();
+    }
+
+    function badgeClass(role) {
+      if (role === 'admin') return 'bg-danger';
+      if (role === 'technician') return 'bg-primary';
+      return 'bg-secondary';
+    }
+
+    function roleLabel(role) {
+      if (role === 'admin') return 'Admin';
+      if (role === 'technician') return 'Technician';
+      return 'User';
+    }
+
+    async function refreshOnlineUsers() {
+      try {
+        const response = await fetch("{{ url_for('admin.online_users_data') }}", {
+          headers: { 'Accept': 'application/json' },
+          credentials: 'same-origin'
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const count = data.count || 0;
+        const users = data.online_users || [];
+
+        if (onlineCountText) {
+          onlineCountText.textContent = count === 1
+            ? '1 user currently online'
+            : count + ' user(s) currently online';
+        }
+
+        if (tbody) {
+          tbody.innerHTML = users.map(function(user) {
+            return `
+              <tr class="align-middle">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="badge rounded-circle bg-success me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <strong>${user.username}</strong>
+                  </div>
+                </td>
+                <td><span class="badge ${badgeClass(user.user_role)}">${roleLabel(user.user_role)}</span></td>
+                <td><small class="text-muted">${user.joined_at}</small></td>
+                <td>${user.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-warning text-dark">Inactive</span>'}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        if (adminCount && techCount && userCount && totalCount) {
+          const admins = users.filter(function(u) { return u.user_role === 'admin'; }).length;
+          const techs = users.filter(function(u) { return u.user_role === 'technician'; }).length;
+          const normalUsers = users.filter(function(u) { return u.user_role === 'user'; }).length;
+
+          adminCount.textContent = admins;
+          techCount.textContent = techs;
+          userCount.textContent = normalUsers;
+          totalCount.textContent = count;
+        }
+
+        updateLastRefreshLabel();
+      } catch (error) {
+        console.error('Error refreshing online users:', error);
+      }
     }
 
     updateLastRefreshLabel();
+    refreshOnlineUsers();
 
-    // Keep this page in sync with current online users.
     setInterval(function () {
-      updateLastRefreshLabel();
-      window.location.reload();
+      refreshOnlineUsers();
     }, 5000);
   });
 </script>

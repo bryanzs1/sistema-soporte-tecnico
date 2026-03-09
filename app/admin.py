@@ -293,6 +293,35 @@ def online_users_list():
     return render_template('admin/online_users.html', online_users=users_list, count=len(users_list))
 
 
+@bp.route('/online-users/data')
+@login_required
+@admin_required
+def online_users_data():
+    """JSON data for live online users dashboard without full-page reload."""
+    from app import online_users
+    from datetime import datetime
+
+    users_list = []
+    for user_id, user_info in online_users.items():
+        user_obj = User.query.get(user_id)
+        if user_obj:
+            joined_at = user_info.get('joined_at', datetime.utcnow())
+            users_list.append({
+                'user_id': user_id,
+                'username': user_info.get('username', ''),
+                'user_role': user_info.get('user_role', ''),
+                'joined_at': joined_at.strftime('%H:%M:%S'),
+                'is_active': user_obj.is_active,
+            })
+
+    users_list.sort(key=lambda x: x['joined_at'], reverse=True)
+
+    return {
+        'count': len(users_list),
+        'online_users': users_list,
+    }
+
+
 @bp.route('/debug/online-users')
 @login_required
 @admin_required

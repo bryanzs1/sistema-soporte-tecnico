@@ -2,6 +2,9 @@
 WSGI entry point for production deployment with Flask-SocketIO.
 For use with Gunicorn eventlet workers: gunicorn -k eventlet -w 1 wsgi:app
 """
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import sys
 

@@ -27,7 +27,17 @@ login = LoginManager()
 login.login_view = 'auth.login'  # redirects unauthorized users to /auth/login
 
 mail = Mail()
-limiter = Limiter(key_func=get_remote_address)
+
+
+def _rate_limit_key():
+    """Use real client IP behind reverse proxies (Render) before fallback."""
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return get_remote_address()
+
+
+limiter = Limiter(key_func=_rate_limit_key)
 talisman = Talisman()
 cors = CORS()
 socketio = SocketIO(async_mode='eventlet')
