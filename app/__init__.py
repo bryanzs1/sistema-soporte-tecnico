@@ -691,27 +691,26 @@ def create_app(config_class=None):
 
     # Validate SECRET_KEY is strong (not default)
     secret_key = app.config.get('SECRET_KEY', '')
-    if not secret_key or secret_key == 'you-will-never-guess' or len(secret_key) < 16:
+    secret_key_invalid = (
+        not secret_key
+        or secret_key == 'you-will-never-guess'
+        or len(secret_key) < 32
+    )
+    if secret_key_invalid:
         app_logger = logging.getLogger(__name__)
-        app_logger.error('❌ CRITICAL SECURITY: SECRET_KEY is weak or missing! Using generated key.')
-        
-        # In production (Render), try to use DATABASE_URL as entropy source
-        if os.environ.get('RENDER'):
-            # Use DATABASE_URL as base for deterministic key generation
-            import hashlib
-            database_url = os.environ.get('DATABASE_URL', 'default-secret-base')
-            # Create a stable hash-based key
-            key_hash = hashlib.sha256(database_url.encode()).hexdigest()
-            app.config['SECRET_KEY'] = key_hash
-            app.logger.warning('⚠️  Generated SECRET_KEY from DATABASE_URL. This is temporary.')
-            app.logger.warning('    RECOMMENDED: Set SECRET_KEY environment variable in Render Dashboard.')
-            app.logger.warning('    Go to: Settings → Environment Variables → Add SECRET_KEY (32+ chars)')
-        else:
-            # Development: generate random key
-            app.config['SECRET_KEY'] = os.urandom(32).hex()
-            print('\n⚠️  WARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
-            print('   Minimum 32 characters, recommended 64+')
-            print(f'   Example: export SECRET_KEY="$(openssl rand -hex 32)"')
+
+        # Production must never run with a weak/missing secret.
+        if os.environ.get('RENDER') == 'true':
+            app_logger.critical('❌ CRITICAL SECURITY: SECRET_KEY is weak or missing in production.')
+            app_logger.critical('Set SECRET_KEY in Render Environment (minimum 32 chars).')
+            raise RuntimeError('Missing or weak SECRET_KEY in production environment')
+
+        # Development fallback for local convenience.
+        app_logger.warning('⚠️  SECRET_KEY is weak or missing in development. Generating temporary key.')
+        app.config['SECRET_KEY'] = os.urandom(32).hex()
+        print('\n⚠️  WARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
+        print('   Minimum 32 characters, recommended 64+')
+        print(f'   Example: export SECRET_KEY="$(openssl rand -hex 32)"')
 
     db.init_app(app)
     migrate.init_app(app, db)
