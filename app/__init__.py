@@ -682,6 +682,33 @@ def send_webhook(message: str):
         current_app.logger.error('webhook send failed: %s', e)
 
 
+def _validate_secret_key(app):
+    """Validate SECRET_KEY and enforce stricter rules in production."""
+    secret_key = app.config.get('SECRET_KEY', '')
+    secret_key_invalid = (
+        not secret_key
+        or secret_key == 'you-will-never-guess'
+        or len(secret_key) < 12
+    )
+    if not secret_key_invalid:
+        return
+
+    app_logger = logging.getLogger(__name__)
+
+    # Production must never run with a weak/missing secret.
+    if os.environ.get('RENDER') == 'true':
+        app_logger.critical('CRITICAL SECURITY: SECRET_KEY is weak or missing in production.')
+        app_logger.critical('Set SECRET_KEY in Render Environment (minimum 12 chars).')
+        raise RuntimeError('Missing or weak SECRET_KEY in production environment')
+
+    # Development fallback for local convenience.
+    app_logger.warning('SECRET_KEY is weak or missing in development. Generating temporary key.')
+    app.config['SECRET_KEY'] = os.urandom(32).hex()
+    print('\nWARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
+    print('   Minimum 12 characters, recommended 24+')
+    print('   Example: export SECRET_KEY="$(python -c "import secrets; print(secrets.token_hex(6))")"')
+
+
 def create_app(config_class=None):
     # Load environment variables from .env file
     load_dotenv()
@@ -689,28 +716,7 @@ def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or 'config.Config')
 
-    # Validate SECRET_KEY is strong (not default)
-    secret_key = app.config.get('SECRET_KEY', '')
-    secret_key_invalid = (
-        not secret_key
-        or secret_key == 'you-will-never-guess'
-        or len(secret_key) < 12
-    )
-    if secret_key_invalid:
-        app_logger = logging.getLogger(__name__)
-
-        # Production must never run with a weak/missing secret.
-        if os.environ.get('RENDER') == 'true':
-            app_logger.critical('❌ CRITICAL SECURITY: SECRET_KEY is weak or missing in production.')
-            app_logger.critical('Set SECRET_KEY in Render Environment (minimum 12 chars).')
-            raise RuntimeError('Missing or weak SECRET_KEY in production environment')
-
-        # Development fallback for local convenience.
-        app_logger.warning('⚠️  SECRET_KEY is weak or missing in development. Generating temporary key.')
-        app.config['SECRET_KEY'] = os.urandom(32).hex()
-        print('\n⚠️  WARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
-        print('   Minimum 12 characters, recommended 24+')
-        print(f'   Example: export SECRET_KEY="$(python -c \"import secrets; print(secrets.token_hex(6))\")"')
+    _validate_secret_key(app)
 
     db.init_app(app)
     migrate.init_app(app, db)
