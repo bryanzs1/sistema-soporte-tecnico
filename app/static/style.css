@@ -36,6 +36,8 @@
     --color-border: #E5E7EB;
     --color-text-primary: #111827;
     --color-text-secondary: #6B7280;
+    --font-body: "Segoe UI Variable", "Trebuchet MS", "Helvetica Neue", sans-serif;
+    --font-heading: "Bahnschrift", "Franklin Gothic Medium", "Segoe UI", sans-serif;
     
     /* Bootstrap Override */
     --bs-primary: #1E40AF;
@@ -170,6 +172,13 @@ body {
     min-height: 100vh;
     background-color: var(--color-bg-general);
     color: var(--color-text-primary);
+    font-family: var(--font-body);
+    line-height: 1.55;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    letter-spacing: 0.01em;
 }
 
 /* Remove padding for home page */
@@ -180,6 +189,17 @@ body {
 /* Ensure navbar is above hero section */
 .navbar.fixed-top {
     z-index: 1030;
+    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+    outline: 3px solid rgba(30, 64, 175, 0.28);
+    outline-offset: 2px;
 }
 
 /* Login button highlight effect */
@@ -699,7 +719,7 @@ footer {
 .section-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #222;
+    color: var(--color-text-primary);
     text-align: center;
     margin-bottom: 10px;
     animation: fadeInUp 0.8s ease-out;
@@ -707,7 +727,7 @@ footer {
 
 .section-subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--color-text-secondary);
     text-align: center;
     margin-bottom: 50px;
     animation: fadeInUp 0.8s ease-out 0.1s both;
@@ -1112,7 +1132,8 @@ footer {
 /* Responsive */
 @media (max-width: 768px) {
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.05rem;
+        line-height: 1.15;
     }
     
     .hero-subtitle {
@@ -1120,7 +1141,7 @@ footer {
     }
     
     .hero-section {
-        padding: 60px 0;
+        padding: 92px 0 60px;
         min-height: 400px;
     }
     
@@ -1131,6 +1152,10 @@ footer {
     .btn-animated {
         font-size: 0.9rem;
         padding: 10px 25px !important;
+    }
+
+    .hero-buttons .btn {
+        width: min(320px, 92vw);
     }
     
     .section-title {
@@ -1151,6 +1176,20 @@ footer {
     
     .cta-section h2 {
         font-size: 1.8rem;
+    }
+
+    .alert-container {
+        width: 94%;
+        top: 76px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 
