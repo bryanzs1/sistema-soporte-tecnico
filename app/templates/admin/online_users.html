@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ _('Online Users') }} - Admin{% endblock %}
+{% block title %}{{ _('Online Users') }} - {{ _('Admin') }}{% endblock %}
 {% block content %}
 <div class="container mt-4 mb-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -136,10 +136,18 @@
     const userCount = document.getElementById('user-count');
     const totalCount = document.getElementById('total-count');
     const tbody = document.getElementById('online-users-tbody');
+    const updatedLabel = {{ _('Updated') | tojson }};
+    const oneOnlineText = {{ _('user currently online') | tojson }};
+    const manyOnlineText = {{ _('user(s) currently online') | tojson }};
+    const roleAdmin = {{ _('Admin') | tojson }};
+    const roleTechnician = {{ _('Technician') | tojson }};
+    const roleUser = {{ _('User') | tojson }};
+    const activeText = {{ _('Active') | tojson }};
+    const inactiveText = {{ _('Inactive') | tojson }};
 
     function updateLastRefreshLabel() {
       const now = new Date();
-      label.textContent = 'Actualizado: ' + now.toLocaleTimeString();
+      label.textContent = updatedLabel + ': ' + now.toLocaleTimeString();
     }
 
     function badgeClass(role) {
@@ -149,9 +157,9 @@
     }
 
     function roleLabel(role) {
-      if (role === 'admin') return 'Admin';
-      if (role === 'technician') return 'Technician';
-      return 'User';
+      if (role === 'admin') return roleAdmin;
+      if (role === 'technician') return roleTechnician;
+      return roleUser;
     }
 
     async function refreshOnlineUsers() {
@@ -168,8 +176,8 @@
 
         if (onlineCountText) {
           onlineCountText.textContent = count === 1
-            ? '1 user currently online'
-            : count + ' user(s) currently online';
+            ? '1 ' + oneOnlineText
+            : count + ' ' + manyOnlineText;
         }
 
         if (tbody) {
@@ -184,7 +192,7 @@
                 </td>
                 <td><span class="badge ${badgeClass(user.user_role)}">${roleLabel(user.user_role)}</span></td>
                 <td><small class="text-muted">${user.joined_at}</small></td>
-                <td>${user.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-warning text-dark">Inactive</span>'}</td>
+                <td>${user.is_active ? `<span class="badge bg-success">${activeText}</span>` : `<span class="badge bg-warning text-dark">${inactiveText}</span>`}</td>
               </tr>
             `;
           }).join('');

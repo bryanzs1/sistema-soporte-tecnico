@@ -5,13 +5,13 @@
 <!-- AI Settings -->
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">🧠 {{ _('AI System Settings') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-cpu me-2"></i>{{ _('AI System Settings') }}</h5>
     </div>
     <div class="card-body">
         <form method="POST" action="{{ url_for('admin.ai_system_settings') }}">
             <!-- Sentiment Analysis -->
             <div class="mb-4">
-                <h6>📊 {{ _('Sentiment Analysis') }}</h6>
+                <h6><i class="bi bi-bar-chart-line me-2"></i>{{ _('Sentiment Analysis') }}</h6>
                 <p class="text-muted small">{{ _('Automatically detects customer sentiment and urgency level') }}</p>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="sentiment_enabled" 
@@ -22,7 +22,7 @@
                 </div>
                 {% if not sentiment_available %}
                 <div class="alert alert-warning mt-2">
-                    <small>⚠️ TextBlob library not available. Sentiment analysis will use keyword matching only.</small>
+                    <small><i class="bi bi-exclamation-triangle me-1"></i>TextBlob library not available. Sentiment analysis will use keyword matching only.</small>
                 </div>
                 {% endif %}
             </div>
@@ -31,7 +31,7 @@
             
             <!-- Chatbot -->
             <div class="mb-4">
-                <h6>💬 {{ _('Auto-Response Chatbot') }}</h6>
+                <h6><i class="bi bi-chat-dots me-2"></i>{{ _('Auto-Response Chatbot') }}</h6>
                 <p class="text-muted small">{{ _('Provides automatic responses to common questions and issues') }}</p>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="chatbot_enabled" 
@@ -53,7 +53,7 @@
             </div>
             
             <hr>
-            <button type="submit" class="btn btn-primary text-white">💾 {{ _('Save Settings') }}</button>
+            <button type="submit" class="btn btn-primary text-white"><i class="bi bi-floppy me-2"></i>{{ _('Save Settings') }}</button>
         </form>
     </div>
 </div>
@@ -61,7 +61,7 @@
 <!-- Sentiment Analysis Info -->
 <div class="card mb-4">
     <div class="card-header bg-info text-white">
-        <h5 class="mb-0">📊 {{ _('Sentiment Analysis') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>{{ _('Sentiment Analysis') }}</h5>
     </div>
     <div class="card-body">
         <p>{{ _('Analyzes ticket content to detect customer sentiment and urgency levels.') }}</p>
@@ -99,7 +99,7 @@
 <!-- Chatbot Info -->
 <div class="card">
     <div class="card-header bg-success text-white">
-        <h5 class="mb-0">💬 {{ _('Auto-Response Chatbot') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>{{ _('Auto-Response Chatbot') }}</h5>
     </div>
     <div class="card-body">
         <p>{{ _('Responds automatically to common questions from our knowledge base.') }}</p>
@@ -115,10 +115,10 @@
         
         <h6 class="mt-4">{{ _('Benefits:') }}</h6>
         <ul>
-            <li>✅ {{ _('Instant answers to common problems') }}</li>
-            <li>✅ {{ _('Reduces ticket queue by handling FAQs') }}</li>
-            <li>✅ {{ _('Improves customer satisfaction') }}</li>
-            <li>✅ {{ _('Frees up technicians for complex issues') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Instant answers to common problems') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Reduces ticket queue by handling FAQs') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Improves customer satisfaction') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Frees up technicians for complex issues') }}</li>
         </ul>
     </div>
 </div>
