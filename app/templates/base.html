@@ -124,7 +124,7 @@
     
     <!-- Socket.IO for user online tracking (global connection) -->
     {% if current_user.is_authenticated %}
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.4/dist/socket.io.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         // Connect to Socket.IO to register as online
