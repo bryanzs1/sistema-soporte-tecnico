@@ -1,6 +1,6 @@
 """
 WSGI entry point for production deployment with Flask-SocketIO.
-For use with Gunicorn gevent workers: gunicorn -k gevent -w 1 wsgi:app
+For use with Gunicorn eventlet workers: gunicorn -k eventlet -w 1 wsgi:app
 """
 import os
 import sys

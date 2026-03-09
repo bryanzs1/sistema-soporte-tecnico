@@ -30,7 +30,7 @@ mail = Mail()
 limiter = Limiter(key_func=get_remote_address)
 talisman = Talisman()
 cors = CORS()
-socketio = SocketIO(async_mode='gevent')
+socketio = SocketIO(async_mode='eventlet')
 
 # Global registry of online users: {user_id: {'username': str, 'joined_at': datetime}}
 online_users = {}
@@ -738,7 +738,7 @@ def create_app(config_class=None):
         app, 
         cors_allowed_origins='*',  # Allow WebSocket connections from anywhere
         manage_session=True,  # Allow access to Flask session and current_user
-        async_mode='gevent',
+        async_mode='eventlet',
         logger=True,
         engineio_logger=True,
         ping_timeout=60,
