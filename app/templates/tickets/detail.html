@@ -263,7 +263,14 @@
                     <span class="badge bg-dark ms-1">{{ _('Admin') }}</span>
                   {% endif %}
                 </strong>
-                <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                <div class="d-flex align-items-center gap-2">
+                  {% if current_user.is_admin() and c.user and c.user.role in ['technician', 'admin'] %}
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.kb_from_comment', comment_id=c.id) }}">
+                      <i class="bi bi-journal-plus me-1"></i>{{ _('Save to KB') }}
+                    </a>
+                  {% endif %}
+                  <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
               </div>
               <p class="mb-0 ticket-detail-text">{{ c.message }}</p>
             </div>

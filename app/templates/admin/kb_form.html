@@ -20,17 +20,17 @@
       <div class="mb-3">
         <label class="form-label fw-semibold">{{ _('Title') }}</label>
         <input type="text" name="title" class="form-control" required maxlength="200"
-               value="{{ article.title if article else '' }}">
+               value="{{ article.title if article else (prefill_title or '') }}">
       </div>
       <div class="mb-3">
         <label class="form-label fw-semibold">{{ _('Category') }} <small class="text-muted">({{ _('optional') }})</small></label>
         <input type="text" name="category" class="form-control" maxlength="100"
-               value="{{ article.category if article else '' }}"
+               value="{{ article.category if article else (prefill_category or '') }}"
                placeholder="{{ _('e.g. Network, Hardware, Software') }}">
       </div>
       <div class="mb-4">
         <label class="form-label fw-semibold">{{ _('Content') }}</label>
-        <textarea name="content" class="form-control" rows="12" required>{{ article.content if article else '' }}</textarea>
+        <textarea name="content" class="form-control" rows="12" required>{{ article.content if article else (prefill_content or '') }}</textarea>
         <small class="text-muted">{{ _('This text will be inserted into ticket comments when technicians use it.') }}</small>
       </div>
       <div class="d-flex gap-2">

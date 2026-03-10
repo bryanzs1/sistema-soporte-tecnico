@@ -311,6 +311,7 @@ TRANSLATIONS = {
         , 'SLA Deadline': 'Límite SLA'
         , 'optional': 'opcional'
         , 'Updated': 'Actualizado'
+        , 'Save to KB': 'Guardar en KB'
         , 'Comment added': 'Comentario agregado'
         , 'Welcome back, {username}!': '¡Bienvenido de nuevo, {username}!'
         , 'You have been logged out successfully': 'Has cerrado sesión correctamente'

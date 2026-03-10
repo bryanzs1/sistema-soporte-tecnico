@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, TicketOption, ApiToken, Integration, KBArticle
+from app.models import User, TicketOption, ApiToken, Integration, KBArticle, TicketComment
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -881,15 +881,39 @@ def kb_search():
         found = KBArticle.query.filter_by(is_active=True).filter(
             (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
         ).limit(8).all()
-        results = [{'id': a.id, 'title': a.title, 'content': a.content[:160] + ('...' if len(a.content) > 160 else '')} for a in found]
+        results = [{
+            'id': a.id,
+            'title': a.title,
+            'preview': a.content[:160] + ('...' if len(a.content) > 160 else ''),
+            'content': a.content,
+        } for a in found]
     from flask import jsonify
     return jsonify(results)
+
+
+@bp.route('/kb/from-comment/<int:comment_id>')
+@login_required
+@admin_required
+def kb_from_comment(comment_id):
+    comment = TicketComment.query.get_or_404(comment_id)
+    ticket = comment.ticket
+    title = f"{ticket.subject} - Respuesta"
+    return redirect(url_for(
+        'admin.kb_create',
+        title=title,
+        category=ticket.category or '',
+        content=comment.message,
+    ))
 
 
 @bp.route('/kb/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def kb_create():
+    prefill_title = request.args.get('title', '').strip()
+    prefill_category = request.args.get('category', '').strip()
+    prefill_content = request.args.get('content', '').strip()
+
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
@@ -897,7 +921,10 @@ def kb_create():
         if not title or not content:
             flash(_t('Title and content are required'), 'warning')
             return render_template('admin/kb_form.html', article=None,
-                                   categories=KBArticle.query.with_entities(KBArticle.category).distinct().all())
+                                   categories=KBArticle.query.with_entities(KBArticle.category).distinct().all(),
+                                   prefill_title=title,
+                                   prefill_category=category,
+                                   prefill_content=content)
         article = KBArticle(
             title=title, content=content,
             category=category or None,
@@ -908,7 +935,10 @@ def kb_create():
         flash(_t('Article created successfully'), 'success')
         return redirect(url_for('admin.kb_list'))
     cats = [r[0] for r in db.session.query(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
-    return render_template('admin/kb_form.html', article=None, categories=cats)
+    return render_template('admin/kb_form.html', article=None, categories=cats,
+                           prefill_title=prefill_title,
+                           prefill_category=prefill_category,
+                           prefill_content=prefill_content)
 
 
 @bp.route('/kb/<int:article_id>/edit', methods=['GET', 'POST'])
