@@ -164,8 +164,19 @@ class Ticket(db.Model):
     def is_closed(self):
         return self.status == 'Cerrado'
 
+    def sla_warning_window_hours(self):
+        # Alert window scales by priority and stays bounded for predictable operations.
+        total_sla_hours = self.sla_hours_by_priority(self.priority)
+        return max(1, min(8, int(round(total_sla_hours * 0.25))))
+
     def is_overdue(self):
         return bool(self.sla_due_at and not self.is_closed() and datetime.utcnow() > self.sla_due_at)
+
+    def is_due_soon(self):
+        if not self.sla_due_at or self.is_closed() or self.is_overdue():
+            return False
+        warning_window = timedelta(hours=self.sla_warning_window_hours())
+        return datetime.utcnow() >= (self.sla_due_at - warning_window)
 
 
 class TicketComment(db.Model):

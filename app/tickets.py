@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
 from flask_socketio import emit, join_room, leave_room
+from sqlalchemy import and_, case
 from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
@@ -259,7 +260,21 @@ def list_tickets():
             kw = f"%{keyword}%"
             q = q.filter((Ticket.title.ilike(kw)) | (Ticket.description.ilike(kw)))
 
-        tickets = q.order_by(Ticket.created_at.desc()).all()
+        now = datetime.utcnow()
+        closed_rank = case((Ticket.status == 'Cerrado', 1), else_=0)
+        overdue_rank = case(
+            (and_(Ticket.sla_due_at.is_not(None), Ticket.status != 'Cerrado', Ticket.sla_due_at < now), 0),
+            else_=1,
+        )
+        missing_sla_rank = case((Ticket.sla_due_at.is_(None), 1), else_=0)
+
+        tickets = q.order_by(
+            closed_rank.asc(),
+            overdue_rank.asc(),
+            missing_sla_rank.asc(),
+            Ticket.sla_due_at.asc(),
+            Ticket.created_at.desc(),
+        ).all()
 
         # Get categories and priorities safely
         categories = Ticket.categories()

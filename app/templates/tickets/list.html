@@ -106,12 +106,14 @@
             </td>
             <td>
               {% if ticket.sla_due_at %}
-                {% if ticket.is_overdue() %}
-                  <span class="badge bg-danger" title="{{ _('Overdue') }}">{{ _('Overdue') }}</span>
-                {% elif ticket.status != 'Cerrado' %}
-                  <span class="badge bg-success" title="{{ _('On time') }}">{{ _('On time') }}</span>
-                {% else %}
+                {% if ticket.status == 'Cerrado' %}
                   <span class="badge bg-secondary">{{ _('Closed') }}</span>
+                {% elif ticket.is_overdue() %}
+                  <span class="badge bg-danger" title="{{ _('Overdue') }}">{{ _('Overdue') }}</span>
+                {% elif ticket.is_due_soon() %}
+                  <span class="badge bg-warning text-dark" title="{{ _('Due soon') }}">{{ _('Due soon') }}</span>
+                {% else %}
+                  <span class="badge bg-success" title="{{ _('On time') }}">{{ _('On time') }}</span>
                 {% endif %}
               {% else %}
                 <span class="badge bg-light text-dark">—</span>

@@ -132,6 +132,7 @@ TRANSLATIONS = {
         'SLA': 'SLA',
         'SLA Due': 'Vencimiento SLA',
         'Overdue': 'Vencido',
+        'Due soon': 'Por vencer',
         'On time': 'En tiempo',
         'No tickets found': 'No se encontraron tickets',
         'Comments': 'Comentarios',
