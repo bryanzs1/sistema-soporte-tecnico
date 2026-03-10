@@ -106,6 +106,15 @@
         <div class="mt-1"><small class="text-muted">{{ _('Average user satisfaction (1–5)') }}</small></div>
       </div>
     </div>
+    <div class="col-lg-4 col-md-6">
+      <a href="{{ url_for('admin.kb_list') }}" class="text-decoration-none">
+        <div class="metric-card metric-info">
+          <div class="metric-label">{{ _('KB pending') }}</div>
+          <div class="metric-value">{{ stats.pending_kb }}</div>
+          <div class="mt-1"><small class="text-muted">{{ _('Articles waiting for approval') }}</small></div>
+        </div>
+      </a>
+    </div>
   </div>
 
   <!-- Categories Section -->
@@ -136,6 +145,9 @@
           </a>
           <a class="btn btn-secondary btn-animated text-white" href="{{ url_for('admin.kb_list') }}">
             <i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}
+            {% if stats.pending_kb > 0 %}
+              <span class="badge bg-warning text-dark ms-2">{{ stats.pending_kb }}</span>
+            {% endif %}
           </a>
           <a class="btn btn-dark btn-animated text-white" href="{{ url_for('admin.executive_report') }}">
             <i class="bi bi-bar-chart-line me-2"></i>{{ _('Executive Report') }}
@@ -144,5 +156,47 @@
       </div>
     </div>
   </div>
+
+  {% if current_user.is_admin() and pending_kb_articles %}
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="section-card">
+        <h3>{{ _('Pending KB Proposals') }}</h3>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>{{ _('Title') }}</th>
+                <th>{{ _('Category') }}</th>
+                <th>{{ _('Created by') }}</th>
+                <th>{{ _('Updated') }}</th>
+                <th class="text-end">{{ _('Actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for article in pending_kb_articles %}
+              <tr>
+                <td>{{ article.title }}</td>
+                <td>{{ article.category or '—' }}</td>
+                <td>{{ article.created_by.username if article.created_by else '—' }}</td>
+                <td>{{ article.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-1">
+                    <a href="{{ url_for('admin.kb_edit', article_id=article.id) }}" class="btn btn-sm btn-outline-primary" title="{{ _('Edit') }}"><i class="bi bi-pencil"></i></a>
+                    <form method="post" action="{{ url_for('admin.kb_approve', article_id=article.id) }}">
+                      {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                      <button type="submit" class="btn btn-sm btn-outline-success" title="{{ _('Approve') }}"><i class="bi bi-check2"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

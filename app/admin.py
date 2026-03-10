@@ -207,6 +207,14 @@ def dashboard():
     else:
         sla_compliance_pct = None
 
+    pending_kb_count = 0
+    pending_kb_articles = []
+    if current_user.is_admin():
+        pending_kb_count = KBArticle.query.filter_by(is_active=False).count()
+        pending_kb_articles = KBArticle.query.filter_by(is_active=False).order_by(KBArticle.updated_at.desc()).limit(6).all()
+    elif current_user.is_technician():
+        pending_kb_count = KBArticle.query.filter_by(is_active=False, created_by_id=current_user.id).count()
+
     stats = {
         'total': Ticket.query.count(),
         'open': Ticket.query.filter_by(status='Abierto').count(),
@@ -219,10 +227,12 @@ def dashboard():
         'due_soon': due_soon_count,
         'csat_avg': csat_avg,
         'sla_compliance_pct': sla_compliance_pct,
+        'pending_kb': pending_kb_count,
     }
     # breakdown by category
     cats = {c: Ticket.query.filter_by(category=c).count() for c in Ticket.categories()}
-    return render_template('admin/dashboard.html', stats=stats, categories=cats)
+    return render_template('admin/dashboard.html', stats=stats, categories=cats,
+                           pending_kb_articles=pending_kb_articles)
 
 
 @bp.route('/chat-monitoring')
