@@ -116,6 +116,8 @@
               <a href="{{ url_for('main.about_us') }}" class="text-decoration-none">{{ _('Who We Are') }}</a>
               <span class="mx-2">|</span>
               <a href="{{ url_for('main.terms_and_conditions') }}" class="text-decoration-none">{{ _('Terms and Conditions') }}</a>
+              <span class="mx-2">|</span>
+              <a href="#" id="cookie-preferences-link" class="text-decoration-none">{{ _('Cookie Preferences') }}</a>
             </small>
           </div>
         </div>
@@ -210,6 +212,7 @@
 
         const acceptBtn = document.getElementById('cookie-accept-btn');
         const rejectBtn = document.getElementById('cookie-reject-btn');
+        const preferencesLink = document.getElementById('cookie-preferences-link');
         const storageKey = 'cookie_consent_choice';
 
         function setCookie(name, value, days) {
@@ -224,6 +227,11 @@
           }, 260);
         }
 
+        function showBanner() {
+          consentBox.hidden = false;
+          consentBox.classList.remove('cookie-consent-hidden');
+        }
+
         function saveChoice(value) {
           localStorage.setItem(storageKey, value);
           setCookie('cookie_consent', value, 180);
@@ -232,7 +240,7 @@
 
         const savedChoice = localStorage.getItem(storageKey);
         if (!savedChoice) {
-          consentBox.hidden = false;
+          showBanner();
         }
 
         if (acceptBtn) {
@@ -244,6 +252,13 @@
         if (rejectBtn) {
           rejectBtn.addEventListener('click', function() {
             saveChoice('rejected');
+          });
+        }
+
+        if (preferencesLink) {
+          preferencesLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            showBanner();
           });
         }
       });

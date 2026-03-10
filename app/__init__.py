@@ -221,6 +221,7 @@ TRANSLATIONS = {
         , 'Who We Are': 'Quiénes Somos'
         , 'Terms and Conditions': 'Términos y Condiciones'
         , 'Cookie Notice': 'Aviso de Cookies'
+        , 'Cookie Preferences': 'Preferencias de Cookies'
         , 'We use essential cookies to keep the platform secure and functional. You can accept or reject optional cookies.': 'Usamos cookies esenciales para mantener la plataforma segura y funcional. Puede aceptar o rechazar las cookies opcionales.'
         , 'Reject': 'Rechazar'
         , 'Accept': 'Aceptar'
