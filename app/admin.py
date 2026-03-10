@@ -46,8 +46,14 @@ def tech_or_admin_required(func):
 @login_required
 @admin_required
 def list_users():
-    users = User.query.order_by(User.username).all()
-    return render_template('admin/users.html', users=users)
+    try:
+        users = User.query.order_by(User.username).all()
+        return render_template('admin/users.html', users=users)
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception('Error loading users list: %s', e)
+        flash(_t('An unexpected error occurred'), 'danger')
+        return render_template('admin/users.html', users=[])
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
@@ -662,8 +668,20 @@ def settings():
 @admin_required
 def settings_users():
     """Gestión de usuarios desde settings"""
-    users = User.query.order_by(User.username).all()
-    return render_template('admin/settings/users.html', users=users)
+    try:
+        users = User.query.order_by(User.username).all()
+        return render_template('admin/settings/users.html', users=users)
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception('Error loading settings users: %s', e)
+        # Fallback to legacy users view to avoid breaking admin workflow.
+        try:
+            users = User.query.order_by(User.username).all()
+        except Exception:
+            db.session.rollback()
+            users = []
+        flash(_t('An unexpected error occurred'), 'danger')
+        return render_template('admin/users.html', users=users)
 
 
 @bp.route('/settings/ticket-options')
