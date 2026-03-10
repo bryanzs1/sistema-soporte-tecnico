@@ -286,7 +286,8 @@ class AuditLog(db.Model):
             db.session.add(log)
             db.session.commit()
         except Exception as e:
-            # Don't let logging fail the application
+            # Don't let logging fail the application and always reset session state.
+            db.session.rollback()
             print(f'Failed to record audit log: {e}')
 
 
