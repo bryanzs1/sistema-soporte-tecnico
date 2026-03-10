@@ -167,10 +167,76 @@
           {{ comment_form.hidden_tag() }}
           <div class="mb-3">
             {{ comment_form.message.label }}
-            {{ comment_form.message(class_='form-control input-enhanced', rows=3, placeholder=_('Write a message...')) }}
+            {% if current_user.role in ['admin','technician'] %}
+              <div class="d-flex justify-content-end mb-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#kbModal">
+                  <i class="bi bi-journal-richtext me-1"></i>{{ _('Use from KB') }}
+                </button>
+              </div>
+            {% endif %}
+            {{ comment_form.message(class_='form-control input-enhanced', rows=3, placeholder=_('Write a message...'), id='comment-textarea') }}
           </div>
           {{ comment_form.submit_comment(class_='btn btn-primary btn-animated') }}
         </form>
+
+        <!-- KB Search Modal -->
+        {% if current_user.role in ['admin','technician'] %}
+        <div class="modal fade" id="kbModal" tabindex="-1" aria-labelledby="kbModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="kbModalLabel"><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input type="text" id="kb-search-input" class="form-control mb-3" placeholder="{{ _('Search articles...') }}" autocomplete="off">
+                <div id="kb-results">
+                  <p class="text-muted">{{ _('Type to search articles...') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+        (function(){
+          const kbInput = document.getElementById('kb-search-input');
+          const kbResults = document.getElementById('kb-results');
+          let kbTimer;
+          if(kbInput){
+            kbInput.addEventListener('input', function(){
+              clearTimeout(kbTimer);
+              const q = this.value.trim();
+              if(q.length < 2){ kbResults.innerHTML = '<p class="text-muted">{{ _("Type to search articles...") }}</p>'; return; }
+              kbTimer = setTimeout(function(){
+                fetch('/admin/kb/search?q=' + encodeURIComponent(q))
+                  .then(r => r.json())
+                  .then(data => {
+                    if(!data.length){ kbResults.innerHTML = '<p class="text-muted">{{ _("No articles found") }}</p>'; return; }
+                    kbResults.innerHTML = data.map(a => `
+                      <div class="border rounded p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <strong>${a.title}</strong>
+                            <p class="text-muted small mb-0 mt-1">${a.preview}</p>
+                          </div>
+                          <button class="btn btn-sm btn-primary text-white ms-3 flex-shrink-0 kb-insert-btn" data-content="${a.content.replace(/"/g,'&quot;')}">{{ _('Insert') }}</button>
+                        </div>
+                      </div>`).join('');
+                    document.querySelectorAll('.kb-insert-btn').forEach(btn => {
+                      btn.addEventListener('click', function(){
+                        const ta = document.getElementById('comment-textarea');
+                        const cur = ta.value;
+                        ta.value = cur ? cur + '\n\n' + this.dataset.content : this.dataset.content;
+                        bootstrap.Modal.getInstance(document.getElementById('kbModal')).hide();
+                      });
+                    });
+                  });
+              }, 350);
+            });
+          }
+        })();
+        </script>
+        {% endif %}
       {% else %}
         <div class="alert alert-warning">
           {{ _('Only requester, assigned technician, or admin can send messages in this chat') }}.

@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, TicketOption, ApiToken, Integration
+from app.models import User, TicketOption, ApiToken, Integration, KBArticle
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -852,3 +852,164 @@ def settings_integrations():
                          api_tokens=api_tokens,
                          integrations=integrations)
 
+
+# ===== KNOWLEDGE BASE =====
+
+@bp.route('/kb')
+@login_required
+@tech_or_admin_required
+def kb_list():
+    q = request.args.get('q', '').strip()
+    arts = KBArticle.query.filter_by(is_active=True)
+    if q:
+        like = f'%{q}%'
+        arts = arts.filter(
+            (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
+        )
+    articles = arts.order_by(KBArticle.updated_at.desc()).all()
+    return render_template('admin/kb_list.html', articles=articles, q=q)
+
+
+@bp.route('/kb/search')
+@login_required
+@tech_or_admin_required
+def kb_search():
+    q = request.args.get('q', '').strip()
+    results = []
+    if q:
+        like = f'%{q}%'
+        found = KBArticle.query.filter_by(is_active=True).filter(
+            (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
+        ).limit(8).all()
+        results = [{'id': a.id, 'title': a.title, 'content': a.content[:160] + ('...' if len(a.content) > 160 else '')} for a in found]
+    from flask import jsonify
+    return jsonify(results)
+
+
+@bp.route('/kb/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def kb_create():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        category = request.form.get('category', '').strip()
+        if not title or not content:
+            flash(_t('Title and content are required'), 'warning')
+            return render_template('admin/kb_form.html', article=None,
+                                   categories=KBArticle.query.with_entities(KBArticle.category).distinct().all())
+        article = KBArticle(
+            title=title, content=content,
+            category=category or None,
+            created_by_id=current_user.id,
+        )
+        db.session.add(article)
+        db.session.commit()
+        flash(_t('Article created successfully'), 'success')
+        return redirect(url_for('admin.kb_list'))
+    cats = [r[0] for r in db.session.query(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
+    return render_template('admin/kb_form.html', article=None, categories=cats)
+
+
+@bp.route('/kb/<int:article_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def kb_edit(article_id):
+    article = KBArticle.query.get_or_404(article_id)
+    if request.method == 'POST':
+        article.title = request.form.get('title', '').strip() or article.title
+        article.content = request.form.get('content', '').strip() or article.content
+        article.category = request.form.get('category', '').strip() or None
+        db.session.commit()
+        flash(_t('Article updated successfully'), 'success')
+        return redirect(url_for('admin.kb_list'))
+    cats = [r[0] for r in db.session.query(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
+    return render_template('admin/kb_form.html', article=article, categories=cats)
+
+
+@bp.route('/kb/<int:article_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def kb_delete(article_id):
+    article = KBArticle.query.get_or_404(article_id)
+    article.is_active = False
+    db.session.commit()
+    flash(_t('Article removed from knowledge base'), 'success')
+    return redirect(url_for('admin.kb_list'))
+
+
+# ===== EXECUTIVE REPORT =====
+
+@bp.route('/report')
+@login_required
+@tech_or_admin_required
+def executive_report():
+    from app.models import Ticket, User
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
+
+    now = datetime.utcnow()
+    week_start = now - timedelta(days=7)
+    prev_week_start = now - timedelta(days=14)
+
+    all_tickets = Ticket.query.all()
+    open_tickets = [t for t in all_tickets if t.status != 'Cerrado']
+    closed_tickets = [t for t in all_tickets if t.status == 'Cerrado']
+
+    # SLA compliance
+    closed_with_sla = [t for t in closed_tickets if t.sla_due_at and t.resolved_at]
+    sla_compliance = round(100 * sum(1 for t in closed_with_sla if t.resolved_at <= t.sla_due_at) / len(closed_with_sla), 1) if closed_with_sla else None
+
+    # Avg resolution hours
+    res_hours = [(t.resolved_at - t.created_at).total_seconds() / 3600 for t in closed_tickets if t.resolved_at and t.created_at]
+    avg_resolution_hours = round(sum(res_hours) / len(res_hours), 1) if res_hours else None
+
+    # CSAT
+    csat_result = db.session.query(func.avg(Ticket.satisfaction_rating)).filter(Ticket.satisfaction_rating.isnot(None)).scalar()
+    csat_avg = round(float(csat_result), 1) if csat_result else None
+
+    # Overdue & due soon
+    overdue = [t for t in open_tickets if t.is_overdue()]
+    due_soon = [t for t in open_tickets if t.is_due_soon()]
+
+    # By category
+    by_category = {}
+    for t in all_tickets:
+        by_category[t.category or '—'] = by_category.get(t.category or '—', 0) + 1
+
+    # By priority
+    by_priority = {}
+    for t in all_tickets:
+        by_priority[t.priority or '—'] = by_priority.get(t.priority or '—', 0) + 1
+
+    # By technician (closed tickets)
+    by_tech = {}
+    for t in closed_tickets:
+        name = t.technician.username if t.technician else '—'
+        by_tech[name] = by_tech.get(name, 0) + 1
+
+    # This week vs last week
+    this_week = [t for t in all_tickets if t.created_at >= week_start]
+    prev_week = [t for t in all_tickets if prev_week_start <= t.created_at < week_start]
+    this_week_closed = [t for t in this_week if t.status == 'Cerrado']
+    prev_week_closed = [t for t in prev_week if t.status == 'Cerrado']
+
+    return render_template('admin/executive_report.html',
+        now=now,
+        total=len(all_tickets),
+        open_count=len(open_tickets),
+        closed_count=len(closed_tickets),
+        overdue_count=len(overdue),
+        due_soon_count=len(due_soon),
+        sla_compliance=sla_compliance,
+        avg_resolution_hours=avg_resolution_hours,
+        csat_avg=csat_avg,
+        by_category=by_category,
+        by_priority=by_priority,
+        by_tech=by_tech,
+        this_week_created=len(this_week),
+        this_week_closed=len(this_week_closed),
+        prev_week_created=len(prev_week),
+        prev_week_closed=len(prev_week_closed),
+        overdue_tickets=overdue,
+    )

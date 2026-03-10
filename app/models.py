@@ -228,6 +228,21 @@ class TechnicianStats(db.Model):
     technician = db.relationship('User', backref=db.backref('stats', uselist=False))
 
 
+class KBArticle(db.Model):
+    """Knowledge Base articles for technicians."""
+    __tablename__ = 'kb_article'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(64))
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    created_by = db.relationship('User', backref=db.backref('kb_articles', lazy='dynamic'))
+
+
 class ApiToken(db.Model):
     """Tokens de API para integraciones externas"""
     id = db.Column(db.Integer, primary_key=True)

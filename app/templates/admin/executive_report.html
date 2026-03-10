@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Executive Report') }}{% endblock %}
+{% block content %}
+<div class="container mt-4" id="report-wrapper">
+
+  <!-- Print toolbar (hidden when printing) -->
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print flex-wrap gap-2">
+    <h2 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>{{ _('Executive Report') }}</h2>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('Back') }}
+      </a>
+      <button class="btn btn-primary btn-sm text-white" onclick="window.print()">
+        <i class="bi bi-printer me-1"></i>{{ _('Print / Export PDF') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Report header (visible in print) -->
+  <div class="text-center mb-4">
+    <h3 class="fw-bold">{{ _('IT Support — Executive Report') }}</h3>
+    <p class="text-muted mb-0">{{ _('Generated on') }}: {{ generated_on }}</p>
+  </div>
+
+  <!-- KPI summary row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold text-primary">{{ total }}</div>
+        <div class="text-muted small">{{ _('Total Tickets') }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold text-warning">{{ open_count }}</div>
+        <div class="text-muted small">{{ _('Open') }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold text-success">{{ closed_count }}</div>
+        <div class="text-muted small">{{ _('Closed') }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold text-danger">{{ overdue_count }}</div>
+        <div class="text-muted small">{{ _('SLA Overdue') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold {{ 'text-success' if sla_compliance >= 80 else 'text-warning' if sla_compliance >= 60 else 'text-danger' }}">
+          {{ sla_compliance }}%
+        </div>
+        <div class="text-muted small">{{ _('SLA Compliance') }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold text-info">
+          {% if avg_resolution is not none %}{{ avg_resolution }}h{% else %}—{% endif %}
+        </div>
+        <div class="text-muted small">{{ _('Avg. Resolution Time') }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="section-card text-center py-3">
+        <div class="fs-2 fw-bold text-warning">
+          {% if csat_avg is not none %}
+            {{ csat_avg }}/5
+            {% for i in range(csat_avg|int) %}<i class="bi bi-star-fill text-warning fs-6"></i>{% endfor %}
+          {% else %}—{% endif %}
+        </div>
+        <div class="text-muted small">{{ _('CSAT Average') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- This week vs Last week -->
+  <div class="section-card mb-4">
+    <h5 class="mb-3"><i class="bi bi-calendar-week me-2"></i>{{ _('Weekly Comparison') }}</h5>
+    <div class="row text-center g-3">
+      <div class="col-6">
+        <div class="fw-bold fs-4 text-primary">{{ this_week_created }}</div>
+        <div class="text-muted small">{{ _('This week — Tickets created') }}</div>
+      </div>
+      <div class="col-6">
+        <div class="fw-bold fs-4 text-secondary">{{ prev_week_created }}</div>
+        <div class="text-muted small">{{ _('Previous week — Tickets created') }}</div>
+      </div>
+      <div class="col-6">
+        <div class="fw-bold fs-4 text-success">{{ this_week_closed }}</div>
+        <div class="text-muted small">{{ _('This week — Tickets closed') }}</div>
+      </div>
+      <div class="col-6">
+        <div class="fw-bold fs-4 text-secondary">{{ prev_week_closed }}</div>
+        <div class="text-muted small">{{ _('Previous week — Tickets closed') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <!-- By Category -->
+    <div class="col-md-4">
+      <div class="section-card h-100">
+        <h5 class="mb-3"><i class="bi bi-tag me-2"></i>{{ _('By Category') }}</h5>
+        {% if by_category %}
+          <table class="table table-sm mb-0">
+            <thead><tr><th>{{ _('Category') }}</th><th class="text-end">{{ _('Count') }}</th></tr></thead>
+            <tbody>
+              {% for cat, cnt in by_category.items() %}
+                <tr><td>{{ _(cat) }}</td><td class="text-end">{{ cnt }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}<p class="text-muted mb-0">—</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- By Priority -->
+    <div class="col-md-4">
+      <div class="section-card h-100">
+        <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>{{ _('By Priority') }}</h5>
+        {% if by_priority %}
+          <table class="table table-sm mb-0">
+            <thead><tr><th>{{ _('Priority') }}</th><th class="text-end">{{ _('Count') }}</th></tr></thead>
+            <tbody>
+              {% for prio, cnt in by_priority.items() %}
+                <tr>
+                  <td>
+                    <span class="badge {{ 'bg-danger' if prio=='critical' else 'bg-warning text-dark' if prio=='high' else 'bg-info' if prio=='medium' else 'bg-secondary' }}">
+                      {{ _(prio) }}
+                    </span>
+                  </td>
+                  <td class="text-end">{{ cnt }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}<p class="text-muted mb-0">—</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- By Technician -->
+    <div class="col-md-4">
+      <div class="section-card h-100">
+        <h5 class="mb-3"><i class="bi bi-person-badge me-2"></i>{{ _('By Technician') }}</h5>
+        {% if by_tech %}
+          <table class="table table-sm mb-0">
+            <thead><tr><th>{{ _('Technician') }}</th><th class="text-end">{{ _('Count') }}</th></tr></thead>
+            <tbody>
+              {% for tech, cnt in by_tech.items() %}
+                <tr><td>{{ tech }}</td><td class="text-end">{{ cnt }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}<p class="text-muted mb-0">{{ _('No assignments yet') }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue tickets -->
+  {% if overdue_tickets %}
+  <div class="section-card mb-4">
+    <h5 class="mb-3 text-danger"><i class="bi bi-alarm me-2"></i>{{ _('SLA Overdue Tickets') }}</h5>
+    <div class="table-responsive">
+      <table class="table table-sm excel-table mb-0">
+        <thead>
+          <tr>
+            <th>{{ _('ID') }}</th>
+            <th>{{ _('Subject') }}</th>
+            <th>{{ _('Priority') }}</th>
+            <th>{{ _('Assigned To') }}</th>
+            <th>{{ _('Created') }}</th>
+            <th>{{ _('SLA Deadline') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in overdue_tickets %}
+            <tr>
+              <td>#{{ t.id }}</td>
+              <td>
+                <a href="{{ url_for('tickets.ticket_detail', ticket_id=t.id) }}" class="no-print">{{ t.subject }}</a>
+                <span class="print-only">{{ t.subject }}</span>
+              </td>
+              <td><span class="badge {{ 'bg-danger' if t.priority=='critical' else 'bg-warning text-dark' if t.priority=='high' else 'bg-info' if t.priority=='medium' else 'bg-secondary' }}">{{ _(t.priority) }}</span></td>
+              <td>{{ t.assigned_to.username if t.assigned_to else '—' }}</td>
+              <td>{{ t.created_at.strftime('%Y-%m-%d') }}</td>
+              <td class="text-danger fw-semibold">{{ t.sla_deadline.strftime('%Y-%m-%d %H:%M') if t.sla_deadline else '—' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: inline !important; }
+  body { background: white !important; }
+  .section-card { border: 1px solid #ddd; box-shadow: none !important; }
+  nav, footer { display: none !important; }
+}
+.print-only { display: none; }
+</style>
+{% endblock %}
