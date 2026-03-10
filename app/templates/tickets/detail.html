@@ -104,6 +104,19 @@
       </div>
     </div>
 
+    {% if ticket.status == 'Cerrado' and current_user.is_admin() %}
+    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
+      <div>
+        <i class="bi bi-lightbulb me-2"></i>
+        <strong>{{ _('Capture this resolution in the Knowledge Base') }}</strong>
+        <div class="small text-muted">{{ _('Create a reusable article from this closed ticket with one click.') }}</div>
+      </div>
+      <a class="btn btn-primary btn-sm text-white" href="{{ url_for('admin.kb_from_ticket', ticket_id=ticket.id) }}">
+        <i class="bi bi-journal-plus me-1"></i>{{ _('Create KB Article') }}
+      </a>
+    </div>
+    {% endif %}
+
     <!-- CSAT Card (only ticket creator, only when closed) -->
     {% if ticket.status == 'Cerrado' and ticket.user and ticket.user_id == current_user.id %}
     <div class="section-card mb-4">

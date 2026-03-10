@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, TicketOption, ApiToken, Integration, KBArticle, TicketComment
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, TicketComment
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -903,6 +903,31 @@ def kb_from_comment(comment_id):
         title=title,
         category=ticket.category or '',
         content=comment.message,
+    ))
+
+
+@bp.route('/kb/from-ticket/<int:ticket_id>')
+@login_required
+@admin_required
+def kb_from_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if ticket.status != 'Cerrado':
+        flash(_t('Ticket must be closed before creating a KB article'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    best_comment = TicketComment.query.filter(
+        TicketComment.ticket_id == ticket.id,
+        TicketComment.user.has(User.role.in_(['admin', 'technician']))
+    ).order_by(TicketComment.created_at.desc()).first()
+
+    prefill_content = best_comment.message if best_comment else ticket.description
+    title = f"{ticket.title} - Solucion"
+
+    return redirect(url_for(
+        'admin.kb_create',
+        title=title,
+        category=ticket.category or '',
+        content=prefill_content,
     ))
 
 
