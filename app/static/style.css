@@ -1479,6 +1479,113 @@ footer {
     background: #f9fafb;
 }
 
+/* ===== COOKIE CONSENT ===== */
+.cookie-consent {
+    position: fixed;
+    right: 18px;
+    bottom: 20px;
+    width: min(430px, calc(100vw - 24px));
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(17, 24, 39, 0.18);
+    padding: 14px 14px 12px;
+    z-index: 2500;
+    animation: cookieSlideIn 0.28s ease-out;
+}
+
+.cookie-consent-hidden {
+    animation: cookieSlideOut 0.22s ease-in forwards;
+}
+
+.cookie-consent-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.cookie-consent-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cookie-consent-text strong {
+    display: block;
+    color: var(--color-text-primary);
+    margin-bottom: 3px;
+}
+
+.cookie-consent-text p {
+    color: var(--color-text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.42;
+}
+
+.cookie-consent-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.cookie-consent-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.86rem;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.cookie-consent-link:hover {
+    text-decoration: underline;
+}
+
+@keyframes cookieSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes cookieSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+}
+
+@media (max-width: 576px) {
+    .cookie-consent {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        padding: 12px;
+    }
+
+    .cookie-consent-actions {
+        justify-content: stretch;
+    }
+
+    .cookie-consent-actions .btn {
+        flex: 1;
+    }
+}
+
 .online-user-dot {
     font-size: 0.4em;
     margin-right: 4px;

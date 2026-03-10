@@ -121,6 +121,21 @@
         </div>
       </div>
     </footer>
+
+    <div id="cookie-consent" class="cookie-consent" role="dialog" aria-live="polite" aria-label="{{ _('Cookie Notice') }}" hidden>
+      <div class="cookie-consent-content">
+        <div class="cookie-consent-icon"><i class="bi bi-shield-check"></i></div>
+        <div class="cookie-consent-text">
+          <strong>{{ _('Cookie Notice') }}</strong>
+          <p class="mb-0">{{ _('We use essential cookies to keep the platform secure and functional. You can accept or reject optional cookies.') }}</p>
+        </div>
+      </div>
+      <div class="cookie-consent-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="cookie-reject-btn">{{ _('Reject') }}</button>
+        <button type="button" class="btn btn-sm btn-primary" id="cookie-accept-btn">{{ _('Accept') }}</button>
+      </div>
+      <a href="{{ url_for('main.terms_and_conditions') }}" class="cookie-consent-link">{{ _('Terms and Conditions') }}</a>
+    </div>
     <!-- Bootstrap JS bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -183,6 +198,54 @@
             bsAlert.close();
           }, 5000);
         });
+      });
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const consentBox = document.getElementById('cookie-consent');
+        if (!consentBox) {
+          return;
+        }
+
+        const acceptBtn = document.getElementById('cookie-accept-btn');
+        const rejectBtn = document.getElementById('cookie-reject-btn');
+        const storageKey = 'cookie_consent_choice';
+
+        function setCookie(name, value, days) {
+          const maxAge = days * 24 * 60 * 60;
+          document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; samesite=lax`;
+        }
+
+        function hideBanner() {
+          consentBox.classList.add('cookie-consent-hidden');
+          setTimeout(function() {
+            consentBox.hidden = true;
+          }, 260);
+        }
+
+        function saveChoice(value) {
+          localStorage.setItem(storageKey, value);
+          setCookie('cookie_consent', value, 180);
+          hideBanner();
+        }
+
+        const savedChoice = localStorage.getItem(storageKey);
+        if (!savedChoice) {
+          consentBox.hidden = false;
+        }
+
+        if (acceptBtn) {
+          acceptBtn.addEventListener('click', function() {
+            saveChoice('accepted');
+          });
+        }
+
+        if (rejectBtn) {
+          rejectBtn.addEventListener('click', function() {
+            saveChoice('rejected');
+          });
+        }
       });
     </script>
   </body>
