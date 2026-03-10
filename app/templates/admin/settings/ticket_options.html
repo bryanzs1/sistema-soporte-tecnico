@@ -4,7 +4,7 @@
 {% block settings_content %}
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">📋 {{ _('Ticket Options') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-card-checklist me-2"></i>{{ _('Ticket Options') }}</h5>
     </div>
     <div class="card-body">
         <p class="text-muted">{{ _('Configure categories and priority levels for tickets') }}</p>
@@ -12,7 +12,7 @@
         <!-- Add New Option Form -->
         <div class="card mb-4 bg-light">
             <div class="card-body">
-                <h6 class="card-title">➕ {{ _('Add New Option') }}</h6>
+                <h6 class="card-title"><i class="bi bi-plus-circle me-2"></i>{{ _('Add New Option') }}</h6>
                 <form method="post" class="row g-3">
                     {{ form.hidden_tag() }}
                     <div class="col-md-4">
@@ -37,7 +37,7 @@
             <div class="col-md-6">
                 <div class="card border-primary">
                     <div class="card-header bg-info bg-opacity-10">
-                        <h6 class="mb-0">📁 {{ _('Categories') }}</h6>
+                        <h6 class="mb-0"><i class="bi bi-folder me-2"></i>{{ _('Categories') }}</h6>
                     </div>
                     <div class="card-body">
                         {% if categories %}
@@ -49,7 +49,7 @@
                                     <form method="post" action="{{ url_for('admin.delete_ticket_option', option_id=item.id) }}" class="d-inline">
                                         <button class="btn btn-sm btn-outline-danger" type="submit" 
                                                 onclick="return confirm('Are you sure?')">
-                                            🗑️ {{ _('Delete') }}
+                                            <i class="bi bi-trash me-1"></i>{{ _('Delete') }}
                                         </button>
                                     </form>
                                 </div>
@@ -67,7 +67,7 @@
             <div class="col-md-6">
                 <div class="card border-warning">
                     <div class="card-header bg-warning bg-opacity-10">
-                        <h6 class="mb-0">⚡ {{ _('Priorities') }}</h6>
+                        <h6 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>{{ _('Priorities') }}</h6>
                     </div>
                     <div class="card-body">
                         {% if priorities %}
@@ -78,19 +78,19 @@
                                     <span>
                                         <strong>{{ item.value }}</strong>
                                         {% if item.value == 'Crítica' or item.value == 'Critical' %}
-                                            <span class="badge bg-danger">🚨</span>
+                                            <span class="badge bg-danger"><i class="bi bi-exclamation-octagon"></i></span>
                                         {% elif item.value == 'Alta' or item.value == 'High' %}
-                                            <span class="badge bg-warning text-dark">⚠️</span>
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i></span>
                                         {% elif item.value == 'Media' or item.value == 'Medium' %}
-                                            <span class="badge bg-info">ℹ️</span>
+                                            <span class="badge bg-info"><i class="bi bi-info-circle"></i></span>
                                         {% else %}
-                                            <span class="badge bg-secondary">📌</span>
+                                            <span class="badge bg-secondary"><i class="bi bi-pin-angle"></i></span>
                                         {% endif %}
                                     </span>
                                     <form method="post" action="{{ url_for('admin.delete_ticket_option', option_id=item.id) }}" class="d-inline">
                                         <button class="btn btn-sm btn-outline-danger" type="submit"
                                                 onclick="return confirm('Are you sure?')">
-                                            🗑️ {{ _('Delete') }}
+                                            <i class="bi bi-trash me-1"></i>{{ _('Delete') }}
                                         </button>
                                     </form>
                                 </div>

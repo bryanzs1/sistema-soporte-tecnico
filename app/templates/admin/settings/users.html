@@ -4,13 +4,13 @@
 {% block settings_content %}
 <div class="card">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">👥 {{ _('User Management') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-people me-2"></i>{{ _('User Management') }}</h5>
     </div>
     <div class="card-body">
         <p class="text-muted">{{ _('Create, edit, and manage system users and their roles') }}</p>
         
         <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">
-            ➕ {{ _('Create User') }}
+            <i class="bi bi-person-plus me-1"></i>{{ _('Create User') }}
         </a>
         
         <div class="table-responsive">
@@ -49,10 +49,10 @@
                         </td>
                         <td>
                             <a class="btn btn-sm btn-info text-white" href="{{ url_for('admin.edit_user', user_id=u.id) }}">
-                                ✏️ {{ _('Edit') }}
+                                <i class="bi bi-pencil-square me-1"></i>{{ _('Edit') }}
                             </a>
                             <a class="btn btn-sm btn-warning text-dark" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">
-                                🔑 {{ _('Reset Password') }}
+                                <i class="bi bi-key me-1"></i>{{ _('Reset Password') }}
                             </a>
                         </td>
                     </tr>

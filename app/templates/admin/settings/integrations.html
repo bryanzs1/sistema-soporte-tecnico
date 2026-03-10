@@ -5,7 +5,7 @@
 <!-- API Tokens Section -->
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">🔑 {{ _('API Tokens') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-key me-2"></i>{{ _('API Tokens') }}</h5>
     </div>
     <div class="card-body">
         <p class="text-muted">{{ _('API tokens allow external applications to create tickets programmatically.') }}</p>
@@ -63,7 +63,7 @@
         <!-- Create Token Form -->
         <div class="card bg-light">
             <div class="card-body">
-                <h6 class="card-title">➕ {{ _('Create New Token') }}</h6>
+                <h6 class="card-title"><i class="bi bi-plus-circle me-2"></i>{{ _('Create New Token') }}</h6>
                 <form method="POST" action="{{ url_for('admin.create_api_token') }}" class="row g-3">
                     <div class="col-md-6">
                         <input type="text" name="name" class="form-control" placeholder="{{ _('Token Name') }}" required>
@@ -81,7 +81,7 @@
 <!-- Integrations Section -->
 <div class="card mb-4">
     <div class="card-header bg-success text-white">
-        <h5 class="mb-0">🔗 {{ _('Active Integrations') }}</h5>
+        <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>{{ _('Active Integrations') }}</h5>
     </div>
     <div class="card-body">
         <p class="text-muted">{{ _('Configure webhooks for Slack, Microsoft Teams, and other platforms.') }}</p>
@@ -152,7 +152,7 @@
         <!-- Create Integration Form -->
         <div class="card bg-light">
             <div class="card-body">
-                <h6 class="card-title">➕ {{ _('Create New Integration') }}</h6>
+                <h6 class="card-title"><i class="bi bi-plus-circle me-2"></i>{{ _('Create New Integration') }}</h6>
                 <form method="POST" action="{{ url_for('admin.create_integration') }}" class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">{{ _('Platform') }}</label>

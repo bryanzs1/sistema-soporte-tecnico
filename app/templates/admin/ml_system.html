@@ -4,12 +4,12 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">🤖 {{ _('Intelligent Ticket Classification System') }}</h1>
+    <h1 class="mb-4"><i class="bi bi-cpu me-2"></i>{{ _('Intelligent Ticket Classification System') }}</h1>
     
     <!-- ML Dependencies Warning -->
     {% if not ml_available %}
     <div class="alert alert-danger mb-4">
-        <strong>⚠️ {{ _('Machine Learning dependencies not available') }}</strong>
+        <strong><i class="bi bi-exclamation-triangle me-1"></i>{{ _('Machine Learning dependencies not available') }}</strong>
         <p class="mb-0">{{ _('ML dependencies are not installed. Install them manually:') }}</p>
         <code class="ml-install-code">
             pip install scikit-learn numpy
@@ -26,12 +26,12 @@
         <div class="card-body">
             {% if not ml_available %}
                 <div class="alert alert-danger">
-                    <strong>❌ {{ _('ML System Not Available') }}</strong>
+                    <strong><i class="bi bi-x-octagon me-1"></i>{{ _('ML System Not Available') }}</strong>
                     <p class="mb-0">{{ _('Please install ML dependencies') }}</p>
                 </div>
             {% elif model_info.trained %}
                 <div class="alert alert-success">
-                    <strong>✅ {{ _('Model is trained and ready') }}</strong>
+                    <strong><i class="bi bi-check-circle me-1"></i>{{ _('Model is trained and ready') }}</strong>
                 </div>
                 
                 <div class="row">
@@ -55,18 +55,18 @@
                 
                 <form method="POST" action="{{ url_for('admin.ml_train') }}" class="mt-3">
                     <button type="submit" class="btn btn-warning text-dark" onclick="return confirm('Retrain ML model with current data?')">
-                        🔄 {{ _('Retrain Model') }}
+                        <i class="bi bi-arrow-repeat me-1"></i>{{ _('Retrain Model') }}
                     </button>
                 </form>
             {% else %}
                 <div class="alert alert-warning">
-                    <strong>⚠️ {{ _('Model not trained yet') }}</strong>
+                    <strong><i class="bi bi-exclamation-triangle me-1"></i>{{ _('Model not trained yet') }}</strong>
                     <p class="mb-0">{{ _('You need at least 10 closed tickets to train the model.') }}</p>
                 </div>
                 
                 <form method="POST" action="{{ url_for('admin.ml_train') }}" class="mt-3">
                     <button type="submit" class="btn btn-primary text-white">
-                        🚀 {{ _('Train Model Now') }}
+                        <i class="bi bi-rocket-takeoff me-1"></i>{{ _('Train Model Now') }}
                     </button>
                 </form>
             {% endif %}
@@ -92,7 +92,7 @@
     <!-- Technician Statistics -->
     <div class="card mb-4">
         <div class="card-header bg-success text-white">
-            <h5 class="mb-0">👥 {{ _('Technician Performance Statistics') }}</h5>
+            <h5 class="mb-0"><i class="bi bi-people me-2"></i>{{ _('Technician Performance Statistics') }}</h5>
         </div>
         <div class="card-body">
             {% if tech_stats %}
@@ -122,7 +122,7 @@
                                     <td>
                                         {% if stat.avg_satisfaction %}
                                             <span class="badge bg-warning text-dark">
-                                                {{ "%.1f"|format(stat.avg_satisfaction) }} ⭐
+                                                {{ "%.1f"|format(stat.avg_satisfaction) }} <i class="bi bi-star-fill"></i>
                                             </span>
                                         {% else %}
                                             -
@@ -155,7 +155,7 @@
     {% if ml_tickets %}
     <div class="card mb-4">
         <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">🎯 {{ _('Recent ML Predictions') }}</h5>
+            <h5 class="mb-0"><i class="bi bi-bullseye me-2"></i>{{ _('Recent ML Predictions') }}</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -197,7 +197,7 @@
                                     {% if ticket.technician %}
                                         {{ ticket.technician.username }}
                                         {% if ticket.auto_assigned %}
-                                            <span class="badge bg-info" title="{{ _('Auto-assigned by ML') }}">🤖</span>
+                                            <span class="badge bg-info" title="{{ _('Auto-assigned by ML') }}"><i class="bi bi-cpu"></i></span>
                                         {% endif %}
                                     {% else %}
                                         <em class="text-muted">{{ _('Unassigned') }}</em>
