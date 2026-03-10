@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField
-from wtforms.validators import DataRequired, EqualTo, Length
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, HiddenField
+from wtforms.validators import DataRequired, EqualTo, Length, NumberRange
 from wtforms import ValidationError
 from flask_wtf.file import FileField, FileAllowed
 from flask import session
@@ -78,6 +78,11 @@ class TicketUpdateForm(FlaskForm):
 class TicketCommentForm(FlaskForm):
     message = TextAreaField('Comment', validators=[DataRequired(), Length(min=2, max=2000)])
     submit_comment = SubmitField('Add comment')
+
+
+class CSATForm(FlaskForm):
+    rating = HiddenField('Rating', validators=[DataRequired()])
+    submit_csat = SubmitField('Submit rating')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

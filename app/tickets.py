@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
 from app.models import Ticket, User, TicketComment, TicketAttachment
-from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm
+from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
 
 bp = Blueprint('tickets', __name__)
 
@@ -592,8 +592,37 @@ def ticket_detail(ticket_id):
     form.technician.data = ticket.technician_id or 0
     comments = ticket.comments.order_by(TicketComment.created_at.asc()).all()
     attachments = ticket.attachments.order_by(TicketAttachment.created_at.desc()).all()
+    csat_form = CSATForm(prefix='csat')
     return render_template('tickets/detail.html', ticket=ticket, form=form, comment_form=comment_form,
-                           comments=comments, attachments=attachments, can_chat=can_chat)
+                           comments=comments, attachments=attachments, can_chat=can_chat,
+                           csat_form=csat_form)
+
+
+@bp.route('/<int:ticket_id>/csat', methods=['POST'])
+@login_required
+def submit_csat(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if ticket.user_id != current_user.id:
+        abort(403)
+    if ticket.status != 'Cerrado':
+        flash(_t('You can only rate closed tickets'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+    if ticket.satisfaction_rating:
+        flash(_t('You have already submitted a rating for this ticket'), 'info')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+    form = CSATForm(prefix='csat')
+    if form.validate_on_submit():
+        try:
+            rating = int(form.rating.data)
+        except (TypeError, ValueError):
+            rating = None
+        if not rating or rating < 1 or rating > 5:
+            flash(_t('Please select a valid rating'), 'warning')
+            return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+        ticket.satisfaction_rating = rating
+        db.session.commit()
+        flash(_t('Thank you for your feedback!'), 'success')
+    return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
 
 @bp.route('/<int:ticket_id>/chat-feed')

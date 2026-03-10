@@ -164,6 +164,7 @@ def dashboard():
     # gather some ticket statistics
     from app.models import Ticket
     from datetime import datetime
+    from sqlalchemy import func
 
     closed_tickets = Ticket.query.filter_by(status='Cerrado').all()
     resolution_hours = []
@@ -173,12 +174,38 @@ def dashboard():
             resolution_hours.append(delta.total_seconds() / 3600)
 
     avg_resolution_hours = round(sum(resolution_hours) / len(resolution_hours), 2) if resolution_hours else 0
+    now = datetime.utcnow()
     overdue_count = Ticket.query.filter(
         Ticket.sla_due_at.isnot(None),
         Ticket.status != 'Cerrado',
-        Ticket.sla_due_at < datetime.utcnow(),
+        Ticket.sla_due_at < now,
     ).count()
     reopened_total = Ticket.query.filter(Ticket.reopened_count > 0).count()
+
+    # Due soon (uses model logic — load only open tickets with sla_due_at set)
+    open_with_sla = Ticket.query.filter(
+        Ticket.status != 'Cerrado',
+        Ticket.sla_due_at.isnot(None),
+    ).all()
+    due_soon_count = sum(1 for t in open_with_sla if t.is_due_soon())
+
+    # CSAT average
+    csat_result = db.session.query(func.avg(Ticket.satisfaction_rating)).filter(
+        Ticket.satisfaction_rating.isnot(None)
+    ).scalar()
+    csat_avg = round(float(csat_result), 1) if csat_result else None
+
+    # SLA compliance % (closed on time / total closed with SLA)
+    closed_with_sla = Ticket.query.filter(
+        Ticket.status == 'Cerrado',
+        Ticket.sla_due_at.isnot(None),
+        Ticket.resolved_at.isnot(None),
+    ).all()
+    if closed_with_sla:
+        on_time = sum(1 for t in closed_with_sla if t.resolved_at <= t.sla_due_at)
+        sla_compliance_pct = round(100 * on_time / len(closed_with_sla), 1)
+    else:
+        sla_compliance_pct = None
 
     stats = {
         'total': Ticket.query.count(),
@@ -189,6 +216,9 @@ def dashboard():
         'overdue': overdue_count,
         'avg_resolution_hours': avg_resolution_hours,
         'reopened': reopened_total,
+        'due_soon': due_soon_count,
+        'csat_avg': csat_avg,
+        'sla_compliance_pct': sla_compliance_pct,
     }
     # breakdown by category
     cats = {c: Ticket.query.filter_by(category=c).count() for c in Ticket.categories()}

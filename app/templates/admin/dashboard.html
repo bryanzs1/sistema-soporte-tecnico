@@ -72,6 +72,42 @@
     </div>
   </div>
 
+  <!-- SLA & CSAT KPIs Row -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-4 col-md-6">
+      <div class="metric-card metric-warning">
+        <div class="metric-label">{{ _('Due soon') }}</div>
+        <div class="metric-value">{{ stats.due_soon }}</div>
+        <div class="mt-1"><small class="text-muted">{{ _('Tickets approaching SLA deadline') }}</small></div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+      <div class="metric-card metric-success">
+        <div class="metric-label">{{ _('SLA Compliance') }}</div>
+        <div class="metric-value">
+          {% if stats.sla_compliance_pct is not none %}{{ stats.sla_compliance_pct }}%{% else %}—{% endif %}
+        </div>
+        <div class="mt-1"><small class="text-muted">{{ _('Closed tickets resolved on time') }}</small></div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+      <div class="metric-card">
+        <div class="metric-label">{{ _('CSAT avg') }}</div>
+        <div class="metric-value d-flex align-items-center gap-2">
+          {% if stats.csat_avg is not none %}
+            {{ stats.csat_avg }}
+            <span class="fs-5">
+              {% for i in range(1, 6) %}
+                <i class="bi bi-star{% if i <= stats.csat_avg|round %}-fill text-warning{% else %} text-secondary{% endif %}"></i>
+              {% endfor %}
+            </span>
+          {% else %}—{% endif %}
+        </div>
+        <div class="mt-1"><small class="text-muted">{{ _('Average user satisfaction (1–5)') }}</small></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Categories Section -->
   <div class="row">
     <div class="col-lg-6">

@@ -3,6 +3,22 @@
 {% block content %}
 <div class="container mt-4 ticket-detail-page">
   <div class="mb-5">
+    {% if not ticket.is_closed() and (ticket.is_overdue() or (ticket.is_due_soon() and not ticket.technician)) %}
+    <div class="alert alert-{{ 'danger' if ticket.is_overdue() else 'warning' }} d-flex align-items-center gap-3 mb-4" role="alert">
+      <i class="bi bi-{{ 'exclamation-octagon-fill' if ticket.is_overdue() else 'exclamation-triangle-fill' }} fs-4 flex-shrink-0"></i>
+      <div>
+        <strong>{{ _('Escalation Alert') }}:</strong>
+        {% if ticket.is_overdue() %}
+          {{ _('This ticket has exceeded its SLA deadline.') }}
+          {% if not ticket.technician and (current_user.is_admin() or current_user.is_technician()) %}
+            {{ _('No technician is assigned — assign one immediately.') }}
+          {% endif %}
+        {% else %}
+          {{ _('SLA deadline is approaching and no technician is assigned.') }}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
     <h2 class="mb-4">Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
     
     <!-- Main Details Card -->
@@ -49,12 +65,14 @@
             <strong>{{ _('SLA Due') }}:</strong>
             {% if ticket.sla_due_at %}
               {{ ticket.sla_due_at.strftime('%Y-%m-%d %H:%M') }}
-              {% if ticket.is_overdue() %}
-                <span class="badge bg-danger ms-2">{{ _('Overdue') }}</span>
-              {% elif ticket.status != 'Cerrado' %}
-                <span class="badge bg-success ms-2">{{ _('On time') }}</span>
-              {% else %}
+              {% if ticket.status == 'Cerrado' %}
                 <span class="badge bg-secondary ms-2">{{ _('Closed') }}</span>
+              {% elif ticket.is_overdue() %}
+                <span class="badge bg-danger ms-2">{{ _('Overdue') }}</span>
+              {% elif ticket.is_due_soon() %}
+                <span class="badge bg-warning text-dark ms-2">{{ _('Due soon') }}</span>
+              {% else %}
+                <span class="badge bg-success ms-2">{{ _('On time') }}</span>
               {% endif %}
             {% else %}
               N/A
@@ -85,6 +103,36 @@
         {% endif %}
       </div>
     </div>
+
+    <!-- CSAT Card (only ticket creator, only when closed) -->
+    {% if ticket.status == 'Cerrado' and ticket.user and ticket.user_id == current_user.id %}
+    <div class="section-card mb-4">
+      <h3><i class="bi bi-star-half me-2"></i>{{ _('Rate your experience') }}</h3>
+      {% if ticket.satisfaction_rating %}
+        <div class="d-flex align-items-center gap-1 mb-1">
+          {% for i in range(1, 6) %}
+            <i class="bi bi-star{% if i <= ticket.satisfaction_rating %}-fill text-warning{% else %} text-secondary{% endif %} fs-4"></i>
+          {% endfor %}
+          <span class="ms-2 fw-bold fs-5">{{ ticket.satisfaction_rating }}/5</span>
+        </div>
+        <p class="text-muted mb-0"><small>{{ _('Thank you for your feedback!') }}</small></p>
+      {% else %}
+        <p class="text-muted mb-3">{{ _('How was the support experience? Your feedback helps us improve.') }}</p>
+        <form method="post" action="{{ url_for('tickets.submit_csat', ticket_id=ticket.id) }}" class="csat-form">
+          {{ csat_form.hidden_tag() }}
+          {{ csat_form.rating(id='csat-rating-value') }}
+          <div class="csat-stars mb-3" role="group" aria-label="{{ _('Rate your experience') }}">
+            {% for i in [1,2,3,4,5] %}
+              <button type="button" class="csat-star-btn" data-value="{{ i }}" aria-label="{{ i }} {{ _('stars') }}" title="{{ i }}/5">
+                <i class="bi bi-star-fill"></i>
+              </button>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary btn-animated" id="csat-submit-btn" disabled>{{ _('Submit rating') }}</button>
+        </form>
+      {% endif %}
+    </div>
+    {% endif %}
 
     <!-- Attachments Card -->
     <div class="section-card mb-4">
@@ -309,6 +357,38 @@
       }
 
       setInterval(refreshChat, 5000);
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var starButtons = document.querySelectorAll('.csat-star-btn');
+      var ratingInput = document.getElementById('csat-rating-value');
+      var submitBtn = document.getElementById('csat-submit-btn');
+      if (!starButtons.length || !ratingInput) return;
+      var starsContainer = document.querySelector('.csat-stars');
+
+      function highlightStars(val) {
+        starButtons.forEach(function(b, i) { b.classList.toggle('active', i < val); });
+      }
+
+      starButtons.forEach(function(btn) {
+        btn.addEventListener('mouseover', function() {
+          highlightStars(parseInt(btn.dataset.value));
+        });
+        btn.addEventListener('click', function() {
+          var val = parseInt(btn.dataset.value);
+          ratingInput.value = val;
+          highlightStars(val);
+          if (submitBtn) submitBtn.disabled = false;
+        });
+      });
+
+      if (starsContainer) {
+        starsContainer.addEventListener('mouseleave', function() {
+          highlightStars(ratingInput.value ? parseInt(ratingInput.value) : 0);
+        });
+      }
     })();
   </script>
 </div>
