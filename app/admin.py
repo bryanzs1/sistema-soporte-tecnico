@@ -715,8 +715,8 @@ def settings_ml():
         from app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
         
         ml_available = ML_AVAILABLE
-        model_info = classifier.model_info() if ML_AVAILABLE else {}
-        ml_accuracy = classifier.accuracy if ML_AVAILABLE else 0
+        model_info = classifier.get_model_info() if ML_AVAILABLE else {}
+        ml_accuracy = 0
         
         # Get technician stats
         from app.models import TechnicianStats
@@ -727,6 +727,13 @@ def settings_ml():
         ml_tickets = Ticket.query.filter(
             Ticket.ml_suggested_technician_id.isnot(None)
         ).order_by(Ticket.created_at.desc()).limit(10).all()
+
+        if ml_tickets:
+            correct_predictions = sum(
+                1 for t in ml_tickets
+                if t.technician_id and t.technician_id == t.ml_suggested_technician_id
+            )
+            ml_accuracy = (correct_predictions / len(ml_tickets)) * 100
         
         return render_template('admin/settings/ml_system.html',
                              ml_available=ml_available,
