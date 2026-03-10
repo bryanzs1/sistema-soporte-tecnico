@@ -20,9 +20,10 @@ try:
     from sklearn.preprocessing import LabelEncoder
     from sklearn.metrics import accuracy_score, classification_report
     ML_AVAILABLE = True
+    ML_IMPORT_ERROR = None
 except ImportError as e:
     ML_AVAILABLE = False
-    _ml_import_error = str(e)
+    ML_IMPORT_ERROR = str(e)
 
 from app import db
 from app.models import Ticket, User, TechnicianStats

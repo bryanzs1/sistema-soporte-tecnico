@@ -415,7 +415,7 @@ def edit_ticket_option(option_id):
 def ml_system():
     """Página de administración del sistema ML"""
     try:
-        from app.ml_classifier import classifier, ML_AVAILABLE
+        from app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
         from app.models import TechnicianStats
         
         if not ML_AVAILABLE:
@@ -426,7 +426,8 @@ def ml_system():
                 tech_stats=[],
                 ml_tickets=[],
                 ml_accuracy=0,
-                ml_available=False
+                ml_available=False,
+                ml_import_error=ML_IMPORT_ERROR
             )
         
         # Obtener información del modelo
@@ -456,7 +457,8 @@ def ml_system():
             tech_stats=tech_stats,
             ml_tickets=ml_tickets,
             ml_accuracy=ml_accuracy,
-            ml_available=True
+            ml_available=True,
+            ml_import_error=ML_IMPORT_ERROR
         )
     except Exception as e:
         current_app.logger.error(f'Error in ML system: {e}')
@@ -710,7 +712,7 @@ def settings_ticket_options():
 def settings_ml():
     """Configuración del sistema ML desde settings"""
     try:
-        from app.ml_classifier import classifier, ML_AVAILABLE
+        from app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
         
         ml_available = ML_AVAILABLE
         model_info = classifier.model_info() if ML_AVAILABLE else {}
@@ -728,6 +730,7 @@ def settings_ml():
         
         return render_template('admin/settings/ml_system.html',
                              ml_available=ml_available,
+                             ml_import_error=ML_IMPORT_ERROR,
                              model_info=model_info,
                              ml_accuracy=ml_accuracy,
                              tech_stats=tech_stats,
@@ -736,6 +739,7 @@ def settings_ml():
         current_app.logger.error(f'Error loading ML settings: {e}')
         return render_template('admin/settings/ml_system.html',
                              ml_available=False,
+                             ml_import_error=str(e),
                              model_info={},
                              ml_accuracy=0,
                              tech_stats=[],

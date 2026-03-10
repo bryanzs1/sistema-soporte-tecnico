@@ -10,6 +10,9 @@
     <code class="ml-install-code">
         pip install scikit-learn numpy
     </code>
+    {% if ml_import_error %}
+    <p class="text-muted mt-2 mb-0 small-note">{{ _('Import error:') }} {{ ml_import_error }}</p>
+    {% endif %}
 </div>
 {% endif %}
 
