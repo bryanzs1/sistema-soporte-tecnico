@@ -107,10 +107,10 @@ def force_password_change():
             flash(_t('This password was recently used. Please choose a different one.'), 'danger')
             return render_template('auth/force_password_change.html', form=form)
         
-        # Update password and record in history
+        # Update password and record in history using one transaction.
         old_hash = current_user.password_hash
         current_user.set_password(form.new_password.data)
-        PasswordHistory.add_to_history(current_user.id, old_hash)
+        PasswordHistory.add_to_history(current_user.id, old_hash, commit=False)
         db.session.commit()
         
         # Log the change
@@ -154,10 +154,10 @@ def change_password():
             flash(_t('New password must be different from current password'), 'warning')
             return render_template('auth/change_password.html', form=form)
         
-        # Update password and record in history
+        # Update password and record in history using one transaction.
         old_hash = current_user.password_hash
         current_user.set_password(form.new_password.data)
-        PasswordHistory.add_to_history(current_user.id, old_hash)
+        PasswordHistory.add_to_history(current_user.id, old_hash, commit=False)
         db.session.commit()
         
         # Log the change

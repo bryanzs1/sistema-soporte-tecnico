@@ -119,18 +119,17 @@ def reset_user_password(user_id):
                 flash(_t('This password was recently used. Please choose a different one.'), 'danger')
                 return render_template('admin/reset_user_password.html', user=user, form=form)
             
-            # Update password and record in history
+            # Update password and record in history using one transaction.
             old_hash = user.password_hash
             user.set_password(form.new_password.data)
-            PasswordHistory.add_to_history(user.id, old_hash)
-            
-            # Log the password reset BEFORE commit
+            PasswordHistory.add_to_history(user.id, old_hash, commit=False)
+            db.session.commit()
+
+            # Log the password reset after persistence. Audit failures should not fail the request.
             try:
                 AuditHelper.log_password_change(user.id)
             except Exception as audit_error:
                 current_app.logger.warning('Audit log failed for password reset: %s', audit_error)
-            
-            db.session.commit()
             
             flash(
                 _t('Password for user "{username}" was reset successfully').format(username=user.username),

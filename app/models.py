@@ -314,9 +314,21 @@ class PasswordHistory(db.Model):
         return False
     
     @staticmethod
-    def add_to_history(user_id, password_hash):
-        """Add password to history"""
+    def add_to_history(user_id, password_hash, commit=True):
+        """Add password to history.
+
+        Args:
+            user_id: User identifier.
+            password_hash: Previous password hash to record.
+            commit: Whether to commit immediately (default True for backward compatibility).
+        """
+        if not password_hash:
+            # Some legacy users may not have an old hash yet.
+            return False
+
         history = PasswordHistory(user_id=user_id, password_hash=password_hash)
         db.session.add(history)
-        db.session.commit()
+        if commit:
+            db.session.commit()
+        return True
 
