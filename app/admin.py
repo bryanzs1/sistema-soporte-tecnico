@@ -135,7 +135,7 @@ def reset_user_password(user_id):
                 _t('Password for user "{username}" was reset successfully').format(username=user.username),
                 'success'
             )
-            return redirect(url_for('admin.list_users'))
+            return redirect(url_for('admin.settings_users'))
         
         except SQLAlchemyError as e:
             db.session.rollback()
