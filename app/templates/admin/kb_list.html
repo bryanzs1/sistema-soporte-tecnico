@@ -46,7 +46,9 @@
                     <i class="bi bi-pencil"></i>
                   </a>
                   <form method="post" action="{{ url_for('admin.kb_delete', article_id=article.id) }}" onsubmit="return confirm(this.dataset.msg)" data-msg="{{ _('Delete this article?') }}">
+                    {% if csrf_token is defined %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                   </form>
                 </div>

@@ -14,7 +14,9 @@
 
   <div class="section-card">
     <form method="post">
+      {% if csrf_token is defined %}
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% endif %}
       <div class="mb-3">
         <label class="form-label fw-semibold">{{ _('Title') }}</label>
         <input type="text" name="title" class="form-control" required maxlength="200"
