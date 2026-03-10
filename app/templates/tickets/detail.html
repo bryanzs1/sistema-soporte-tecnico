@@ -104,7 +104,7 @@
       </div>
     </div>
 
-    {% if ticket.status == 'Cerrado' and current_user.is_admin() %}
+    {% if ticket.status == 'Cerrado' and (current_user.is_admin() or current_user.is_technician()) %}
     <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
       <div>
         <i class="bi bi-lightbulb me-2"></i>
@@ -277,7 +277,7 @@
                   {% endif %}
                 </strong>
                 <div class="d-flex align-items-center gap-2">
-                  {% if current_user.is_admin() and c.user and c.user.role in ['technician', 'admin'] %}
+                  {% if (current_user.is_admin() or current_user.is_technician()) and c.user and c.user.role in ['technician', 'admin'] %}
                     <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.kb_from_comment', comment_id=c.id) }}">
                       <i class="bi bi-journal-plus me-1"></i>{{ _('Save to KB') }}
                     </a>

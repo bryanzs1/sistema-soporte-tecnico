@@ -860,13 +860,18 @@ def settings_integrations():
 @tech_or_admin_required
 def kb_list():
     q = request.args.get('q', '').strip()
-    arts = KBArticle.query.filter_by(is_active=True)
+    arts = KBArticle.query
+    if not current_user.is_admin():
+        arts = arts.filter(
+            (KBArticle.is_active.is_(True)) |
+            ((KBArticle.is_active.is_(False)) & (KBArticle.created_by_id == current_user.id))
+        )
     if q:
         like = f'%{q}%'
         arts = arts.filter(
             (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
         )
-    articles = arts.order_by(KBArticle.updated_at.desc()).all()
+    articles = arts.order_by(KBArticle.is_active.desc(), KBArticle.updated_at.desc()).all()
     return render_template('admin/kb_list.html', articles=articles, q=q)
 
 
@@ -893,7 +898,7 @@ def kb_search():
 
 @bp.route('/kb/from-comment/<int:comment_id>')
 @login_required
-@admin_required
+@tech_or_admin_required
 def kb_from_comment(comment_id):
     comment = TicketComment.query.get_or_404(comment_id)
     ticket = comment.ticket
@@ -908,7 +913,7 @@ def kb_from_comment(comment_id):
 
 @bp.route('/kb/from-ticket/<int:ticket_id>')
 @login_required
-@admin_required
+@tech_or_admin_required
 def kb_from_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     if ticket.status != 'Cerrado':
@@ -933,7 +938,7 @@ def kb_from_ticket(ticket_id):
 
 @bp.route('/kb/create', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@tech_or_admin_required
 def kb_create():
     prefill_title = request.args.get('title', '').strip()
     prefill_category = request.args.get('category', '').strip()
@@ -954,10 +959,11 @@ def kb_create():
             title=title, content=content,
             category=category or None,
             created_by_id=current_user.id,
+            is_active=current_user.is_admin(),
         )
         db.session.add(article)
         db.session.commit()
-        flash(_t('Article created successfully'), 'success')
+        flash(_t('Article created successfully') if current_user.is_admin() else _t('Article submitted for admin approval'), 'success')
         return redirect(url_for('admin.kb_list'))
     cats = [r[0] for r in db.session.query(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
     return render_template('admin/kb_form.html', article=None, categories=cats,
@@ -968,13 +974,18 @@ def kb_create():
 
 @bp.route('/kb/<int:article_id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@tech_or_admin_required
 def kb_edit(article_id):
     article = KBArticle.query.get_or_404(article_id)
+    if not current_user.is_admin() and (article.created_by_id != current_user.id or article.is_active):
+        flash(_t('You can only edit your own pending KB proposals'), 'warning')
+        return redirect(url_for('admin.kb_list'))
     if request.method == 'POST':
         article.title = request.form.get('title', '').strip() or article.title
         article.content = request.form.get('content', '').strip() or article.content
         article.category = request.form.get('category', '').strip() or None
+        if not current_user.is_admin():
+            article.is_active = False
         db.session.commit()
         flash(_t('Article updated successfully'), 'success')
         return redirect(url_for('admin.kb_list'))
@@ -987,9 +998,21 @@ def kb_edit(article_id):
 @admin_required
 def kb_delete(article_id):
     article = KBArticle.query.get_or_404(article_id)
-    article.is_active = False
+    db.session.delete(article)
+    db.session.flush()
     db.session.commit()
     flash(_t('Article removed from knowledge base'), 'success')
+    return redirect(url_for('admin.kb_list'))
+
+
+@bp.route('/kb/<int:article_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def kb_approve(article_id):
+    article = KBArticle.query.get_or_404(article_id)
+    article.is_active = True
+    db.session.commit()
+    flash(_t('Article approved and published'), 'success')
     return redirect(url_for('admin.kb_list'))
 
 

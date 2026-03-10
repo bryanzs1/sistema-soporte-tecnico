@@ -4,7 +4,7 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h2><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</h2>
-    {% if current_user.is_admin() %}
+    {% if current_user.is_admin() or current_user.is_technician() %}
       <a class="btn btn-primary btn-animated text-white" href="{{ url_for('admin.kb_create') }}">
         <i class="bi bi-plus-circle me-1"></i>{{ _('New Article') }}
       </a>
@@ -37,20 +37,35 @@
                 {% if article.category %}
                   <span class="badge bg-primary mb-2">{{ _(article.category) }}</span>
                 {% endif %}
+                {% if article.is_active %}
+                  <span class="badge bg-success mb-2 ms-1">{{ _('Published') }}</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark mb-2 ms-1">{{ _('Pending Approval') }}</span>
+                {% endif %}
                 <p class="text-muted mb-0" style="white-space:pre-line;">{{ article.content[:300] }}{% if article.content|length > 300 %}…{% endif %}</p>
                 <small class="text-muted d-block mt-2">{{ _('Updated') }}: {{ article.updated_at.strftime('%Y-%m-%d') }} — {{ article.created_by.username }}</small>
               </div>
-              {% if current_user.is_admin() %}
+              {% if current_user.is_admin() or (current_user.is_technician() and article.created_by_id == current_user.id and not article.is_active) %}
                 <div class="d-flex gap-2 flex-shrink-0">
                   <a href="{{ url_for('admin.kb_edit', article_id=article.id) }}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-pencil"></i>
                   </a>
+                  {% if current_user.is_admin() and not article.is_active %}
+                  <form method="post" action="{{ url_for('admin.kb_approve', article_id=article.id) }}">
+                    {% if csrf_token is defined %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-sm btn-outline-success" title="{{ _('Approve') }}"><i class="bi bi-check2"></i></button>
+                  </form>
+                  {% endif %}
+                  {% if current_user.is_admin() %}
                   <form method="post" action="{{ url_for('admin.kb_delete', article_id=article.id) }}" onsubmit="return confirm(this.dataset.msg)" data-msg="{{ _('Delete this article?') }}">
                     {% if csrf_token is defined %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% endif %}
                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                   </form>
+                  {% endif %}
                 </div>
               {% endif %}
             </div>
