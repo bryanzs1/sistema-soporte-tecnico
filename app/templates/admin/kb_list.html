@@ -37,13 +37,21 @@
                 {% if article.category %}
                   <span class="badge bg-primary mb-2">{{ _(article.category) }}</span>
                 {% endif %}
+                {% set article_rejection = rejection_map.get(article.id) if rejection_map else none %}
                 {% if article.is_active %}
                   <span class="badge bg-success mb-2 ms-1">{{ _('Published') }}</span>
+                {% elif article_rejection %}
+                  <span class="badge bg-danger mb-2 ms-1">{{ _('Rejected') }}</span>
                 {% else %}
                   <span class="badge bg-warning text-dark mb-2 ms-1">{{ _('Pending Approval') }}</span>
                 {% endif %}
                 <p class="text-muted mb-0" style="white-space:pre-line;">{{ article.content[:300] }}{% if article.content|length > 300 %}…{% endif %}</p>
                 <small class="text-muted d-block mt-2">{{ _('Updated') }}: {{ article.updated_at.strftime('%Y-%m-%d') }} — {{ article.created_by.username }}</small>
+                {% if article_rejection and (current_user.is_admin() or article.created_by_id == current_user.id) %}
+                  <div class="alert alert-danger py-2 px-3 mt-2 mb-0 small">
+                    <strong>{{ _('Rejection reason') }}:</strong> {{ article_rejection.reason }}
+                  </div>
+                {% endif %}
               </div>
               {% if current_user.is_admin() or (current_user.is_technician() and article.created_by_id == current_user.id and not article.is_active) %}
                 <div class="d-flex gap-2 flex-shrink-0">
@@ -56,6 +64,13 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% endif %}
                     <button type="submit" class="btn btn-sm btn-outline-success" title="{{ _('Approve') }}"><i class="bi bi-check2"></i></button>
+                  </form>
+                  <form method="post" action="{{ url_for('admin.kb_reject', article_id=article.id) }}" onsubmit="return kbRejectWithReason(this)">
+                    {% if csrf_token is defined %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+                    <input type="hidden" name="reason" value="">
+                    <button type="submit" class="btn btn-sm btn-outline-warning" title="{{ _('Reject with feedback') }}"><i class="bi bi-x-lg"></i></button>
                   </form>
                   {% endif %}
                   {% if current_user.is_admin() %}
@@ -80,4 +95,12 @@
     </div>
   {% endif %}
 </div>
+<script>
+function kbRejectWithReason(form) {
+  const reason = window.prompt("{{ _('Enter rejection reason') }}");
+  if (!reason) return false;
+  form.querySelector('input[name="reason"]').value = reason.trim();
+  return form.querySelector('input[name="reason"]').value.length > 0;
+}
+</script>
 {% endblock %}

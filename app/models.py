@@ -243,6 +243,19 @@ class KBArticle(db.Model):
     created_by = db.relationship('User', backref=db.backref('kb_articles', lazy='dynamic'))
 
 
+class KBArticleRejection(db.Model):
+    """Tracks admin rejection reasons for KB proposals."""
+    __tablename__ = 'kb_article_rejection'
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey('kb_article.id'), nullable=False, unique=True, index=True)
+    reason = db.Column(db.Text, nullable=False)
+    rejected_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rejected_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    article = db.relationship('KBArticle', backref=db.backref('rejection', uselist=False, cascade='all, delete-orphan'))
+    rejected_by = db.relationship('User', backref=db.backref('kb_rejections', lazy='dynamic'))
+
+
 class ApiToken(db.Model):
     """Tokens de API para integraciones externas"""
     id = db.Column(db.Integer, primary_key=True)

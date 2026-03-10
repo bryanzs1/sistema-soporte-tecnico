@@ -187,6 +187,11 @@
                       {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
                       <button type="submit" class="btn btn-sm btn-outline-success" title="{{ _('Approve') }}"><i class="bi bi-check2"></i></button>
                     </form>
+                    <form method="post" action="{{ url_for('admin.kb_reject', article_id=article.id) }}" onsubmit="return dashboardKbRejectWithReason(this)">
+                      {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                      <input type="hidden" name="reason" value="">
+                      <button type="submit" class="btn btn-sm btn-outline-warning" title="{{ _('Reject with feedback') }}"><i class="bi bi-x-lg"></i></button>
+                    </form>
                   </div>
                 </td>
               </tr>
@@ -199,4 +204,12 @@
   </div>
   {% endif %}
 </div>
+<script>
+function dashboardKbRejectWithReason(form) {
+  const reason = window.prompt("{{ _('Enter rejection reason') }}");
+  if (!reason) return false;
+  form.querySelector('input[name="reason"]').value = reason.trim();
+  return form.querySelector('input[name="reason"]').value.length > 0;
+}
+</script>
 {% endblock %}

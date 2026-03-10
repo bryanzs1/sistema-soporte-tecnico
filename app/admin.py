@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, TicketComment
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -210,10 +210,17 @@ def dashboard():
     pending_kb_count = 0
     pending_kb_articles = []
     if current_user.is_admin():
-        pending_kb_count = KBArticle.query.filter_by(is_active=False).count()
-        pending_kb_articles = KBArticle.query.filter_by(is_active=False).order_by(KBArticle.updated_at.desc()).limit(6).all()
+        pending_kb_query = KBArticle.query.filter_by(is_active=False).outerjoin(
+            KBArticleRejection,
+            KBArticleRejection.article_id == KBArticle.id,
+        ).filter(KBArticleRejection.id.is_(None))
+        pending_kb_count = pending_kb_query.count()
+        pending_kb_articles = pending_kb_query.order_by(KBArticle.updated_at.desc()).limit(6).all()
     elif current_user.is_technician():
-        pending_kb_count = KBArticle.query.filter_by(is_active=False, created_by_id=current_user.id).count()
+        pending_kb_count = KBArticle.query.filter_by(is_active=False, created_by_id=current_user.id).outerjoin(
+            KBArticleRejection,
+            KBArticleRejection.article_id == KBArticle.id,
+        ).filter(KBArticleRejection.id.is_(None)).count()
 
     stats = {
         'total': Ticket.query.count(),
@@ -882,7 +889,12 @@ def kb_list():
             (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
         )
     articles = arts.order_by(KBArticle.is_active.desc(), KBArticle.updated_at.desc()).all()
-    return render_template('admin/kb_list.html', articles=articles, q=q)
+    article_ids = [a.id for a in articles]
+    rejection_map = {}
+    if article_ids:
+        rej_rows = KBArticleRejection.query.filter(KBArticleRejection.article_id.in_(article_ids)).all()
+        rejection_map = {r.article_id: r for r in rej_rows}
+    return render_template('admin/kb_list.html', articles=articles, q=q, rejection_map=rejection_map)
 
 
 @bp.route('/kb/search')
@@ -996,6 +1008,9 @@ def kb_edit(article_id):
         article.category = request.form.get('category', '').strip() or None
         if not current_user.is_admin():
             article.is_active = False
+            existing_rejection = KBArticleRejection.query.filter_by(article_id=article.id).first()
+            if existing_rejection:
+                db.session.delete(existing_rejection)
         db.session.commit()
         flash(_t('Article updated successfully'), 'success')
         return redirect(url_for('admin.kb_list'))
@@ -1021,8 +1036,37 @@ def kb_delete(article_id):
 def kb_approve(article_id):
     article = KBArticle.query.get_or_404(article_id)
     article.is_active = True
+    existing_rejection = KBArticleRejection.query.filter_by(article_id=article.id).first()
+    if existing_rejection:
+        db.session.delete(existing_rejection)
     db.session.commit()
     flash(_t('Article approved and published'), 'success')
+    return redirect(url_for('admin.kb_list'))
+
+
+@bp.route('/kb/<int:article_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def kb_reject(article_id):
+    article = KBArticle.query.get_or_404(article_id)
+    reason = request.form.get('reason', '').strip()
+    if not reason:
+        flash(_t('Please provide a rejection reason'), 'warning')
+        return redirect(url_for('admin.kb_list'))
+
+    article.is_active = False
+    existing_rejection = KBArticleRejection.query.filter_by(article_id=article.id).first()
+    if existing_rejection:
+        existing_rejection.reason = reason
+        existing_rejection.rejected_by_id = current_user.id
+    else:
+        db.session.add(KBArticleRejection(
+            article_id=article.id,
+            reason=reason,
+            rejected_by_id=current_user.id,
+        ))
+    db.session.commit()
+    flash(_t('Article rejected with feedback'), 'info')
     return redirect(url_for('admin.kb_list'))
 
 
