@@ -268,7 +268,7 @@ def list_tickets():
         now = datetime.utcnow()
         closed_rank = case((Ticket.status == 'Cerrado', 1), else_=0)
         overdue_rank = case(
-            (and_(Ticket.sla_due_at.is_not(None), Ticket.status != 'Cerrado', Ticket.sla_due_at < now), 0),
+            (and_(Ticket.sla_due_at.isnot(None), Ticket.status != 'Cerrado', Ticket.sla_due_at < now), 0),
             else_=1,
         )
         missing_sla_rank = case((Ticket.sla_due_at.is_(None), 1), else_=0)
