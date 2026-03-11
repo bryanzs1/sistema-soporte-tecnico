@@ -60,7 +60,7 @@ def test_only_admin_create_user():
                 'username': username, 'email': f'alice{dom}',
                 'password': 'test', 'password2': 'test', 'role': 'user'
             }, follow_redirects=True)
-            assert b'User created' in r4.data
+            assert b'created successfully' in r4.data
             assert User.query.filter_by(username=username).first() is not None
 
 

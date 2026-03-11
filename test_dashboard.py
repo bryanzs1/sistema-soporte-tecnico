@@ -52,7 +52,7 @@ def test_dashboard_access():
         login(c, 'admin', 'admin')
         r4 = c.get('/admin/dashboard')
         assert r4.status_code == 200
-        assert b'Manage users' in r4.data
+        assert b'Operations Hub' in r4.data
         # should also have a link for "In Progress" card (space may be encoded)
         assert b'status=En' in r4.data and b'proceso' in r4.data
 

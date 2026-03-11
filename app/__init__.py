@@ -22,6 +22,7 @@ import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from dotenv import load_dotenv
 import os
+import sys
 import logging
 import hashlib
 from logging.handlers import RotatingFileHandler
@@ -50,7 +51,7 @@ def _rate_limit_key():
 limiter = Limiter(key_func=_rate_limit_key)
 talisman = Talisman()
 cors = CORS()
-socketio = SocketIO(async_mode='eventlet')
+socketio = SocketIO()
 
 # Global registry of online users: {user_id: {'username': str, 'joined_at': datetime}}
 online_users = {}
@@ -891,6 +892,12 @@ def create_app(config_class=None):
         app.logger.warning('⚠️  Flask-Limiter using in-memory storage in production. Configure REDIS_URL to harden rate limits.')
 
     limiter.init_app(app)
+    configured_async_mode = os.environ.get('SOCKETIO_ASYNC_MODE', '').strip().lower()
+    if configured_async_mode:
+        socketio_async_mode = configured_async_mode
+    else:
+        # Eventlet is preferred in production, but Python 3.13 compatibility may require fallback.
+        socketio_async_mode = 'threading' if sys.version_info >= (3, 13) else 'eventlet'
     socketio_logging_env = os.environ.get('SOCKETIO_LOGGING')
     if socketio_logging_env is None:
         # Keep logs quiet by default in Render production; verbose locally for troubleshooting.
@@ -902,7 +909,7 @@ def create_app(config_class=None):
         app, 
         cors_allowed_origins='*',  # Allow WebSocket connections from anywhere
         manage_session=True,  # Allow access to Flask session and current_user
-        async_mode='eventlet',
+        async_mode=socketio_async_mode,
         logger=socketio_logging,
         engineio_logger=socketio_logging,
         ping_timeout=60,

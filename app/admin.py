@@ -404,6 +404,7 @@ def debug_online_users_json():
     }
 
 
+@bp.route('/ticket-options', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def ticket_options():
