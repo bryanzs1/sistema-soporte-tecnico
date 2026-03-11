@@ -142,13 +142,20 @@
         <i class="bi bi-arrow-counterclockwise me-2"></i>
         <strong>{{ _('Need more help?') }}</strong>
         <div class="small text-muted">{{ _('You can reopen this ticket with a reason so the team can continue support.') }}</div>
+        {% if reopen_deadline %}
+        <div class="small text-muted">{{ _('Reopen available until') }}: {{ reopen_deadline.strftime('%Y-%m-%d %H:%M') }}</div>
+        {% endif %}
       </div>
-      <form method="post" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}" data-unsaved-guard="false" onsubmit="return submitReopenReason(this)">
-        <input type="hidden" name="reopen_reason" value="">
-        <button type="submit" class="btn btn-outline-warning">
-          <i class="bi bi-arrow-repeat me-1"></i>{{ _('Reopen ticket') }}
-        </button>
-      </form>
+      {% if can_reopen_window %}
+        <form method="post" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}" data-unsaved-guard="false" onsubmit="return submitReopenReason(this)">
+          <input type="hidden" name="reopen_reason" value="">
+          <button type="submit" class="btn btn-outline-warning">
+            <i class="bi bi-arrow-repeat me-1"></i>{{ _('Reopen ticket') }}
+          </button>
+        </form>
+      {% else %}
+        <span class="badge bg-secondary">{{ _('Reopen period expired') }}</span>
+      {% endif %}
     </div>
     {% endif %}
 
@@ -341,7 +348,7 @@
     {% if current_user.is_admin() or current_user.is_technician() %}
       <div class="section-card">
         <h3>{{ _('Update ticket') }}</h3>
-        <form method="post">
+        <form method="post" id="ticket-update-form">
           {{ form.hidden_tag() }}
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -504,6 +511,22 @@
       form.querySelector('input[name="reopen_reason"]').value = clean;
       return true;
     }
+
+    (function () {
+      const updateForm = document.getElementById('ticket-update-form');
+      if (!updateForm) return;
+      const statusSelect = updateForm.querySelector('select[name="status"]');
+      if (!statusSelect) return;
+
+      updateForm.addEventListener('submit', function (event) {
+        if (statusSelect.value !== 'Cerrado') return;
+        const typed = window.prompt("{{ _('Type CERRAR to confirm closing this ticket') }}");
+        if ((typed || '').trim().toUpperCase() !== 'CERRAR') {
+          event.preventDefault();
+          window.alert("{{ _('Ticket close action was cancelled') }}");
+        }
+      });
+    })();
 
     document.querySelectorAll('.quick-reply-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {

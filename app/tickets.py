@@ -94,6 +94,22 @@ def _ticket_timeline(ticket):
     return events
 
 
+def _reopen_deadline(ticket):
+    if ticket.status != 'Cerrado':
+        return None
+    reference = ticket.resolved_at or ticket.updated_at or ticket.created_at
+    if not reference:
+        return None
+    return reference + timedelta(days=7)
+
+
+def _can_reopen_ticket(ticket):
+    deadline = _reopen_deadline(ticket)
+    if not deadline:
+        return False
+    return utcnow() <= deadline
+
+
 @socketio.on('connect')
 def handle_connect():
     """Register user as online when they connect"""
@@ -748,9 +764,12 @@ def ticket_detail(ticket_id):
     attachments = ticket.attachments.order_by(TicketAttachment.created_at.desc()).all()
     csat_form = CSATForm(prefix='csat')
     timeline = _ticket_timeline(ticket)
+    reopen_deadline = _reopen_deadline(ticket)
+    can_reopen_window = _can_reopen_ticket(ticket)
     return render_template('tickets/detail.html', ticket=ticket, form=form, comment_form=comment_form,
                            comments=comments, attachments=attachments, can_chat=can_chat,
-                           csat_form=csat_form, timeline=timeline)
+                           csat_form=csat_form, timeline=timeline,
+                           reopen_deadline=reopen_deadline, can_reopen_window=can_reopen_window)
 
 
 @bp.route('/<int:ticket_id>/reopen', methods=['POST'])
@@ -763,6 +782,10 @@ def reopen_ticket(ticket_id):
 
     if ticket.status != 'Cerrado':
         flash(_t('Only closed tickets can be reopened'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    if not _can_reopen_ticket(ticket):
+        flash(_t('Reopen window expired. Closed tickets can only be reopened within 7 days.'), 'warning')
         return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
     reason = (request.form.get('reopen_reason') or '').strip()
@@ -780,6 +803,29 @@ def reopen_ticket(ticket_id):
         message=_t('Reopen reason: {reason}').format(reason=reason),
     ))
     db.session.commit()
+
+    # Notify requester and assigned technician so both sides are aware of the reopen.
+    recipients = []
+    if ticket.user and ticket.user.email:
+        recipients.append(ticket.user.email)
+    if ticket.technician and ticket.technician.email:
+        recipients.append(ticket.technician.email)
+    recipients = sorted(set(recipients))
+
+    if recipients:
+        try:
+            from app import send_email
+            send_email(
+                _t('Ticket reopened notification'),
+                recipients,
+                _t('Ticket #{id} was reopened by {user}. Reason: {reason}').format(
+                    id=ticket.id,
+                    user=current_user.username,
+                    reason=reason,
+                ),
+            )
+        except Exception:
+            current_app.logger.exception('Failed to send reopen notification for ticket #%s', ticket.id)
 
     flash(_t('Ticket reopened successfully'), 'success')
     return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))

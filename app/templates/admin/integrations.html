@@ -48,9 +48,9 @@
                             </td>
                             <td>
                                 {% if token.is_active %}
-                                <form method="POST" action="{{ url_for('admin.revoke_api_token', token_id=token.id) }}" class="d-inline">
+                                <form method="POST" action="{{ url_for('admin.revoke_api_token', token_id=token.id) }}" class="d-inline" onsubmit="return strongRevokeConfirm()">
                                     <button type="submit" class="btn btn-sm btn-danger text-white" 
-                                            onclick="return confirm('Revoke this API token?')">
+                                            onclick="return confirm('{{ _('Revoke this API token?') }}')">
                                         {{ _('Revoke') }}
                                     </button>
                                 </form>
@@ -285,4 +285,11 @@ Content-Type: application/json</code></pre>
     
     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary text-white">← {{ _('Back to Dashboard') }}</a>
 </div>
+
+<script>
+function strongRevokeConfirm() {
+    var value = window.prompt("{{ _('Type REVOCAR to confirm token revocation') }}");
+    return (value || '').trim().toUpperCase() === 'REVOCAR';
+}
+</script>
 {% endblock %}
