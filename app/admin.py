@@ -1186,7 +1186,7 @@ def kb_reject(article_id):
 @login_required
 @tech_or_admin_required
 def executive_report():
-    from app.models import Ticket, User
+    from app.models import Ticket
     from datetime import datetime, timedelta
     from sqlalchemy import func
 
@@ -1231,19 +1231,21 @@ def executive_report():
         by_tech[name] = by_tech.get(name, 0) + 1
 
     # This week vs last week
-    this_week = [t for t in all_tickets if t.created_at >= week_start]
-    prev_week = [t for t in all_tickets if prev_week_start <= t.created_at < week_start]
+    this_week = [t for t in all_tickets if t.created_at and t.created_at >= week_start]
+    prev_week = [t for t in all_tickets if t.created_at and prev_week_start <= t.created_at < week_start]
     this_week_closed = [t for t in this_week if t.status == 'Cerrado']
     prev_week_closed = [t for t in prev_week if t.status == 'Cerrado']
 
     return render_template('admin/executive_report.html',
         now=now,
+        generated_on=now.strftime('%Y-%m-%d %H:%M'),
         total=len(all_tickets),
         open_count=len(open_tickets),
         closed_count=len(closed_tickets),
         overdue_count=len(overdue),
         due_soon_count=len(due_soon),
         sla_compliance=sla_compliance,
+        avg_resolution=avg_resolution_hours,
         avg_resolution_hours=avg_resolution_hours,
         csat_avg=csat_avg,
         by_category=by_category,

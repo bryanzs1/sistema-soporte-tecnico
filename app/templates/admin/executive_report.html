@@ -132,7 +132,7 @@
               {% for prio, cnt in by_priority.items() %}
                 <tr>
                   <td>
-                    <span class="badge {{ 'bg-danger' if prio=='critical' else 'bg-warning text-dark' if prio=='high' else 'bg-info' if prio=='medium' else 'bg-secondary' }}">
+                    <span class="badge {{ 'bg-danger' if prio=='Crítica' else 'bg-warning text-dark' if prio=='Alta' else 'bg-info' if prio=='Media' else 'bg-secondary' }}">
                       {{ _(prio) }}
                     </span>
                   </td>
@@ -172,7 +172,7 @@
         <thead>
           <tr>
             <th>{{ _('ID') }}</th>
-            <th>{{ _('Subject') }}</th>
+            <th>{{ _('Title') }}</th>
             <th>{{ _('Priority') }}</th>
             <th>{{ _('Assigned To') }}</th>
             <th>{{ _('Created') }}</th>
@@ -184,13 +184,13 @@
             <tr>
               <td>#{{ t.id }}</td>
               <td>
-                <a href="{{ url_for('tickets.ticket_detail', ticket_id=t.id) }}" class="no-print">{{ t.subject }}</a>
-                <span class="print-only">{{ t.subject }}</span>
+                <a href="{{ url_for('tickets.ticket_detail', ticket_id=t.id) }}" class="no-print">{{ t.title or '—' }}</a>
+                <span class="print-only">{{ t.title or '—' }}</span>
               </td>
-              <td><span class="badge {{ 'bg-danger' if t.priority=='critical' else 'bg-warning text-dark' if t.priority=='high' else 'bg-info' if t.priority=='medium' else 'bg-secondary' }}">{{ _(t.priority) }}</span></td>
-              <td>{{ t.assigned_to.username if t.assigned_to else '—' }}</td>
-              <td>{{ t.created_at.strftime('%Y-%m-%d') }}</td>
-              <td class="text-danger fw-semibold">{{ t.sla_deadline.strftime('%Y-%m-%d %H:%M') if t.sla_deadline else '—' }}</td>
+              <td><span class="badge {{ 'bg-danger' if t.priority=='Crítica' else 'bg-warning text-dark' if t.priority=='Alta' else 'bg-info' if t.priority=='Media' else 'bg-secondary' }}">{{ _(t.priority) }}</span></td>
+              <td>{{ t.technician.username if t.technician else '—' }}</td>
+              <td>{{ t.created_at.strftime('%Y-%m-%d') if t.created_at else '—' }}</td>
+              <td class="text-danger fw-semibold">{{ t.sla_due_at.strftime('%Y-%m-%d %H:%M') if t.sla_due_at else '—' }}</td>
             </tr>
           {% endfor %}
         </tbody>
