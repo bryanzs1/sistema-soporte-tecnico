@@ -75,7 +75,7 @@
           <tr class="ticket-row align-middle">
             <td><strong>#{{ ticket.id }}</strong></td>
             <td>
-              <div class="text-truncate" title="{{ ticket.title or '—' }}">{{ ticket.title or '—' }}</div>
+              <div class="text-truncate" title="{{ ticket.title }}">{{ ticket.title }}</div>
               {% if ticket.description %}
                 <small class="text-muted d-block text-truncate" title="{{ ticket.description }}">{{ ticket.description[:60] }}{% if ticket.description|length > 60 %}...{% endif %}</small>
               {% endif %}
@@ -94,23 +94,23 @@
               <small>{{ _(ticket.category) if ticket.category else '—' }}</small>
             </td>
             <td>
-              <small title="{{ ticket.creator_name or '—' }}">{{ ticket.creator_name or '—' }}</small><br>
-              <small class="text-muted">{{ ticket.created_at.strftime('%Y-%m-%d') if ticket.created_at else '—' }}</small>
+              <small title="{{ ticket.creator_name }}">{{ ticket.creator_name }}</small><br>
+              <small class="text-muted">{{ ticket.created_at_text }}</small>
             </td>
             <td>
-              {% if ticket.sla_due_at %}
-                <small>{{ ticket.sla_due_at.strftime('%Y-%m-%d %H:%M') }}</small>
+              {% if ticket.sla_state != 'none' %}
+                <small>{{ ticket.sla_due_at_text }}</small>
               {% else %}
                 <small class="text-muted">—</small>
               {% endif %}
             </td>
             <td>
-              {% if ticket.sla_due_at %}
-                {% if ticket.status == 'Cerrado' %}
+              {% if ticket.sla_state != 'none' %}
+                {% if ticket.sla_state == 'closed' %}
                   <span class="badge bg-secondary">{{ _('Closed') }}</span>
-                {% elif ticket.is_overdue() %}
+                {% elif ticket.sla_state == 'overdue' %}
                   <span class="badge bg-danger" title="{{ _('Overdue') }}">{{ _('Overdue') }}</span>
-                {% elif ticket.is_due_soon() %}
+                {% elif ticket.sla_state == 'due_soon' %}
                   <span class="badge bg-warning text-dark" title="{{ _('Due soon') }}">{{ _('Due soon') }}</span>
                 {% else %}
                   <span class="badge bg-success" title="{{ _('On time') }}">{{ _('On time') }}</span>

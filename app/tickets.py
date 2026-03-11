@@ -50,6 +50,10 @@ def _serialize_comment(ticket, comment):
     }
 
 
+def _safe_datetime_text(value, fmt='%Y-%m-%d %H:%M'):
+    return value.strftime(fmt) if hasattr(value, 'strftime') else None
+
+
 @socketio.on('connect')
 def handle_connect():
     """Register user as online when they connect"""
@@ -269,13 +273,46 @@ def list_tickets():
         )
         missing_sla_rank = case((Ticket.sla_due_at.is_(None), 1), else_=0)
 
-        tickets = q.order_by(
+        ticket_records = q.order_by(
             closed_rank.asc(),
             overdue_rank.asc(),
             missing_sla_rank.asc(),
             Ticket.sla_due_at.asc(),
             Ticket.created_at.desc(),
         ).all()
+
+        tickets = []
+        skipped_records = 0
+        for ticket in ticket_records:
+            try:
+                is_closed = ticket.status == 'Cerrado'
+                try:
+                    is_overdue = ticket.is_overdue()
+                except Exception:
+                    is_overdue = False
+                try:
+                    is_due_soon = ticket.is_due_soon()
+                except Exception:
+                    is_due_soon = False
+
+                tickets.append({
+                    'id': ticket.id,
+                    'title': ticket.title or '—',
+                    'description': ticket.description or '',
+                    'status': ticket.status or '',
+                    'priority': ticket.priority or '',
+                    'category': ticket.category or '',
+                    'creator_name': ticket.creator_name or '—',
+                    'created_at_text': _safe_datetime_text(ticket.created_at, '%Y-%m-%d') or '—',
+                    'sla_due_at_text': _safe_datetime_text(ticket.sla_due_at) or '—',
+                    'sla_state': 'closed' if is_closed else 'overdue' if is_overdue else 'due_soon' if is_due_soon else 'on_time' if ticket.sla_due_at else 'none',
+                })
+            except Exception:
+                skipped_records += 1
+                current_app.logger.exception('Skipping malformed ticket row id=%s during list rendering', getattr(ticket, 'id', None))
+
+        if skipped_records:
+            flash(_t('Some historical ticket records could not be rendered and were skipped.'), 'warning')
 
         # Get categories and priorities safely
         categories = Ticket.categories()

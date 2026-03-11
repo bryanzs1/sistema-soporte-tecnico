@@ -1034,7 +1034,7 @@ def kb_search():
 def kb_from_comment(comment_id):
     comment = TicketComment.query.get_or_404(comment_id)
     ticket = comment.ticket
-    title = f"{ticket.subject} - Respuesta"
+    title = f"{ticket.title} - Respuesta"
     return redirect(url_for(
         'admin.kb_create',
         title=title,

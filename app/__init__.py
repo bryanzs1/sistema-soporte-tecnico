@@ -358,6 +358,7 @@ TRANSLATIONS = {
         , 'success': 'éxito'
         , 'failure': 'fallo'
         , 'There was a problem loading the ticket list. Review historical records or contact admin.': 'Hubo un problema cargando la lista de tickets. Revisa los registros históricos o contacta al administrador.'
+        , 'Some historical ticket records could not be rendered and were skipped.': 'Algunos registros históricos de tickets no pudieron mostrarse y fueron omitidos.'
         , 'Ticket must be closed before creating a KB article': 'El ticket debe estar cerrado antes de crear un articulo de KB'
         , 'Capture this resolution in the Knowledge Base': 'Registra esta solucion en la Base de Conocimiento'
         , 'Create a reusable article from this closed ticket with one click.': 'Crea un articulo reutilizable desde este ticket cerrado con un solo clic.'
