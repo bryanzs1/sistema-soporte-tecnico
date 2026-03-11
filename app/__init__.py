@@ -341,6 +341,8 @@ TRANSLATIONS = {
         , 'Save settings': 'Guardar configuracion'
         , 'Power Automate payload example': 'Ejemplo de payload de Power Automate'
         , 'Header required: X-API-Token or Authorization: Bearer <token>': 'Header requerido: X-API-Token o Authorization: Bearer <token>'
+        , 'Rating': 'Calificación'
+        , 'Submit rating': 'Enviar calificación'
         , 'Ticket must be closed before creating a KB article': 'El ticket debe estar cerrado antes de crear un articulo de KB'
         , 'Capture this resolution in the Knowledge Base': 'Registra esta solucion en la Base de Conocimiento'
         , 'Create a reusable article from this closed ticket with one click.': 'Crea un articulo reutilizable desde este ticket cerrado con un solo clic.'

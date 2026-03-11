@@ -86,8 +86,8 @@ class CSATForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.message.label.text = tr('Comment', 'Comentario')
-        self.submit_comment.label.text = tr('Add comment', 'Agregar comentario')
+        self.rating.label.text = tr('Rating', 'Calificación')
+        self.submit_csat.label.text = tr('Submit rating', 'Enviar calificación')
 
 
 class UserRoleForm(FlaskForm):

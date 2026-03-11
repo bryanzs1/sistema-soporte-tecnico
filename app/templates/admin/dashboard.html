@@ -32,7 +32,7 @@
         </a>
       </div>
       <div class="col-lg-3 col-md-6">
-        <a href="{{ url_for('tickets.list_tickets', status='Esperando') }}" class="text-decoration-none">
+        <a href="{{ url_for('tickets.list_tickets', status='Esperando usuario') }}" class="text-decoration-none">
           <div class="metric-card metric-warning">
             <div class="metric-label">{{ _('Waiting') }}</div>
             <div class="metric-value">{{ stats.waiting }}</div>
