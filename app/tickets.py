@@ -325,11 +325,40 @@ def list_tickets():
     except Exception as e:
         current_app.logger.exception('Error rendering tickets list: %s', e)
         flash(_t('There was a problem loading the ticket list. Review historical records or contact admin.'), 'warning')
-        return render_template('tickets/list.html', tickets=[],
-                               status=None, category=None, priority=None,
-                               start_date=None, end_date=None, keyword=None,
-                               categories=Ticket.default_categories(),
-                               priorities=Ticket.default_priorities())
+        try:
+            if current_user.is_admin() or current_user.is_technician():
+                fallback_query = Ticket.query
+            else:
+                fallback_query = Ticket.query.filter_by(user_id=current_user.id)
+
+            fallback_records = fallback_query.order_by(Ticket.id.desc()).limit(500).all()
+            fallback_tickets = []
+            for ticket in fallback_records:
+                fallback_tickets.append({
+                    'id': ticket.id,
+                    'title': ticket.title or '—',
+                    'description': ticket.description or '',
+                    'status': ticket.status or '',
+                    'priority': ticket.priority or '',
+                    'category': ticket.category or '',
+                    'creator_name': ticket.creator_name or '—',
+                    'created_at_text': _safe_datetime_text(ticket.created_at, '%Y-%m-%d') or '—',
+                    'sla_due_at_text': _safe_datetime_text(ticket.sla_due_at) or '—',
+                    'sla_state': 'none',
+                })
+
+            return render_template('tickets/list.html', tickets=fallback_tickets,
+                                   status=None, category=None, priority=None,
+                                   start_date=None, end_date=None, keyword=None,
+                                   categories=Ticket.default_categories(),
+                                   priorities=Ticket.default_priorities())
+        except Exception:
+            current_app.logger.exception('Fallback ticket list query also failed')
+            return render_template('tickets/list.html', tickets=[],
+                                   status=None, category=None, priority=None,
+                                   start_date=None, end_date=None, keyword=None,
+                                   categories=Ticket.default_categories(),
+                                   priorities=Ticket.default_priorities())
 
 
 @bp.route('/create', methods=['GET', 'POST'])
