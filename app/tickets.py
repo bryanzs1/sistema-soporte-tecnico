@@ -343,7 +343,6 @@ def list_tickets():
             )
         except Exception:
             current_app.logger.exception('Failed to write audit log for ticket_list_query_error')
-        flash(_t('There was a problem loading the ticket list. Review historical records or contact admin.'), 'warning')
         try:
             if current_user.is_admin() or current_user.is_technician():
                 fallback_query = Ticket.query
@@ -373,6 +372,7 @@ def list_tickets():
                                    priorities=Ticket.default_priorities())
         except Exception:
             current_app.logger.exception('Fallback ticket list query also failed')
+            flash(_t('There was a problem loading the ticket list. Review historical records or contact admin.'), 'warning')
             try:
                 AuditLog.log_action(
                     user_id=current_user.id if current_user.is_authenticated else None,
