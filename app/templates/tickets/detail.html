@@ -18,6 +18,25 @@
         {% endif %}
       </div>
     </div>
+
+    <div class="section-card mb-4">
+      <h3>{{ _('Timeline') }}</h3>
+      {% if timeline %}
+        <ul class="list-group list-group-flush">
+          {% for event in timeline %}
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <strong>{{ event.title }}</strong>
+                <div class="text-muted small">{{ event.detail }}</div>
+              </div>
+              <small class="text-muted ms-3">{{ event.at.strftime('%Y-%m-%d %H:%M') if event.at else '—' }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="ticket-detail-text mb-0">{{ _('No timeline data available yet') }}</p>
+      {% endif %}
+    </div>
     {% endif %}
     <h2 class="mb-4">Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
     
@@ -117,6 +136,22 @@
     </div>
     {% endif %}
 
+    {% if ticket.status == 'Cerrado' and (current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id) %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
+      <div>
+        <i class="bi bi-arrow-counterclockwise me-2"></i>
+        <strong>{{ _('Need more help?') }}</strong>
+        <div class="small text-muted">{{ _('You can reopen this ticket with a reason so the team can continue support.') }}</div>
+      </div>
+      <form method="post" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}" data-unsaved-guard="false" onsubmit="return submitReopenReason(this)">
+        <input type="hidden" name="reopen_reason" value="">
+        <button type="submit" class="btn btn-outline-warning">
+          <i class="bi bi-arrow-repeat me-1"></i>{{ _('Reopen ticket') }}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
     <!-- CSAT Card (only ticket creator, only when closed) -->
     {% if ticket.status == 'Cerrado' and ticket.user and ticket.user_id == current_user.id %}
     <div class="section-card mb-4">
@@ -180,6 +215,13 @@
           {{ comment_form.hidden_tag() }}
           <div class="mb-3">
             {{ comment_form.message.label }}
+            {% if current_user.role in ['admin','technician'] %}
+              <div class="d-flex flex-wrap gap-2 mb-2">
+                <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn" data-reply="{{ _('Hello, we are reviewing your case and will update you shortly.') }}">{{ _('Quick reply: Acknowledged') }}</button>
+                <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn" data-reply="{{ _('Please share a screenshot or exact error message so we can continue.') }}">{{ _('Quick reply: Ask for evidence') }}</button>
+                <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn" data-reply="{{ _('Issue resolved. Please confirm if everything is working correctly on your side.') }}">{{ _('Quick reply: Resolution') }}</button>
+              </div>
+            {% endif %}
             {% if current_user.role in ['admin','technician'] %}
               <div class="d-flex justify-content-end mb-1">
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#kbModal">
@@ -450,6 +492,28 @@
 
       setInterval(refreshChat, 5000);
     })();
+
+    function submitReopenReason(form) {
+      const reason = window.prompt("{{ _('Please provide a short reason to reopen the ticket') }}");
+      if (!reason) return false;
+      const clean = reason.trim();
+      if (clean.length < 5) {
+        window.alert("{{ _('Please provide a short reason to reopen the ticket') }}");
+        return false;
+      }
+      form.querySelector('input[name="reopen_reason"]').value = clean;
+      return true;
+    }
+
+    document.querySelectorAll('.quick-reply-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const ta = document.getElementById('comment-textarea');
+        if (!ta) return;
+        const text = btn.dataset.reply || '';
+        ta.value = ta.value ? (ta.value + '\n\n' + text) : text;
+        ta.focus();
+      });
+    });
   </script>
 
   <script>

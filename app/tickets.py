@@ -10,7 +10,7 @@ from sqlalchemy import and_, case
 from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
-from app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog
+from app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog, KBArticle
 from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
 from app.security import AuditHelper
 
@@ -58,6 +58,40 @@ def _serialize_comment(ticket, comment):
 
 def _safe_datetime_text(value, fmt='%Y-%m-%d %H:%M'):
     return value.strftime(fmt) if hasattr(value, 'strftime') else None
+
+
+def _ticket_timeline(ticket):
+    events = []
+    if ticket.created_at:
+        events.append({
+            'at': ticket.created_at,
+            'title': _t('Created'),
+            'detail': _t('Ticket created by {name}').format(name=ticket.creator_name or _t('User')),
+        })
+
+    if ticket.first_response_at:
+        events.append({
+            'at': ticket.first_response_at,
+            'title': _t('First response'),
+            'detail': _t('Support team started working on the ticket'),
+        })
+
+    if ticket.resolved_at:
+        events.append({
+            'at': ticket.resolved_at,
+            'title': _t('Resolved'),
+            'detail': _t('Ticket marked as closed'),
+        })
+
+    if (ticket.reopened_count or 0) > 0:
+        events.append({
+            'at': ticket.updated_at or ticket.created_at,
+            'title': _t('Reopened'),
+            'detail': _t('This ticket was reopened {count} time(s)').format(count=ticket.reopened_count or 0),
+        })
+
+    events.sort(key=lambda x: x['at'] or utcnow())
+    return events
 
 
 @socketio.on('connect')
@@ -448,6 +482,28 @@ def create_ticket():
     return render_template('tickets/create.html', form=form)
 
 
+@bp.route('/kb-suggestions')
+@login_required
+def kb_suggestions():
+    query = request.args.get('q', '').strip()
+    if len(query) < 3:
+        return jsonify([])
+
+    like = f'%{query}%'
+    found = KBArticle.query.filter_by(is_active=True).filter(
+        (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
+    ).order_by(KBArticle.updated_at.desc()).limit(6).all()
+
+    return jsonify([
+        {
+            'id': article.id,
+            'title': article.title,
+            'preview': article.content[:180] + ('...' if len(article.content) > 180 else ''),
+        }
+        for article in found
+    ])
+
+
 @bp.route('/request-password-reset')
 @login_required
 def request_password_reset_ticket():
@@ -691,9 +747,42 @@ def ticket_detail(ticket_id):
     comments = ticket.comments.order_by(TicketComment.created_at.asc()).all()
     attachments = ticket.attachments.order_by(TicketAttachment.created_at.desc()).all()
     csat_form = CSATForm(prefix='csat')
+    timeline = _ticket_timeline(ticket)
     return render_template('tickets/detail.html', ticket=ticket, form=form, comment_form=comment_form,
                            comments=comments, attachments=attachments, can_chat=can_chat,
-                           csat_form=csat_form)
+                           csat_form=csat_form, timeline=timeline)
+
+
+@bp.route('/<int:ticket_id>/reopen', methods=['POST'])
+@login_required
+def reopen_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    can_reopen = current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id
+    if not can_reopen:
+        abort(403)
+
+    if ticket.status != 'Cerrado':
+        flash(_t('Only closed tickets can be reopened'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    reason = (request.form.get('reopen_reason') or '').strip()
+    if len(reason) < 5:
+        flash(_t('Please provide a short reason to reopen the ticket'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    ticket.status = 'Abierto'
+    ticket.reopened_count = (ticket.reopened_count or 0) + 1
+    ticket.resolved_at = None
+
+    db.session.add(TicketComment(
+        ticket_id=ticket.id,
+        user_id=current_user.id,
+        message=_t('Reopen reason: {reason}').format(reason=reason),
+    ))
+    db.session.commit()
+
+    flash(_t('Ticket reopened successfully'), 'success')
+    return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
 
 @bp.route('/<int:ticket_id>/csat', methods=['POST'])
