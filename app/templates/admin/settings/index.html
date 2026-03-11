@@ -36,6 +36,10 @@
                    class="list-group-item list-group-item-action {% if active_tab == 'integrations' %}active{% endif %}">
                     <i class="bi bi-link-45deg me-2"></i>{{ _('Chat Integrations') }}
                 </a>
+                <a href="{{ url_for('admin.settings_audit') }}" 
+                   class="list-group-item list-group-item-action {% if active_tab == 'audit' %}active{% endif %}">
+                    <i class="bi bi-shield-check me-2"></i>{{ _('Audit Logs') }}
+                </a>
             </div>
         </div>
         
