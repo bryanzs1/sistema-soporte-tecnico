@@ -8,6 +8,7 @@ from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from datetime import datetime, timedelta, timezone
 
 # Ensure eventlet monkey patching is applied (defensive, in case wsgi.py hasn't yet)
 try:
@@ -38,6 +39,11 @@ login = LoginManager()
 login.login_view = 'auth.login'  # redirects unauthorized users to /auth/login
 
 mail = Mail()
+
+
+def utcnow():
+    """Return naive UTC datetime compatible with existing DB columns."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _rate_limit_key():
@@ -962,7 +968,7 @@ def create_app(config_class=None):
     @login.user_loader
     def load_user(user_id):
         from app.models import User
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -987,14 +993,13 @@ def create_app(config_class=None):
     # make current year available in templates for footer
     @app.context_processor
     def inject_current_year():
-        from datetime import datetime
         lang = session.get('lang', 'en')
 
         def _translate(text):
             return translate(text, lang)
 
         return {
-            'current_year': datetime.utcnow().year,
+            'current_year': utcnow().year,
             '_': _translate,
             'current_lang': lang,
         }
@@ -1015,23 +1020,22 @@ def create_app(config_class=None):
     def update_user_activity_and_enforce_password():
         if current_user.is_authenticated:
             # Update last_activity timestamp and in-memory online presence.
-            from datetime import datetime, timedelta
-            current_user.last_activity = datetime.utcnow()
+            current_user.last_activity = utcnow()
 
             # Fallback presence tracking in case Socket.IO is unavailable.
             existing = online_users.get(current_user.id, {})
             online_users[current_user.id] = {
                 'username': current_user.username,
                 'user_role': current_user.role,
-                'joined_at': existing.get('joined_at', datetime.utcnow()),
-                'last_seen': datetime.utcnow(),
+                'joined_at': existing.get('joined_at', utcnow()),
+                'last_seen': utcnow(),
             }
 
             # Cleanup stale users (no activity in last 90 seconds).
-            stale_after = datetime.utcnow() - timedelta(seconds=90)
+            stale_after = utcnow() - timedelta(seconds=90)
             stale_ids = [
                 uid for uid, info in online_users.items()
-                if info.get('last_seen', info.get('joined_at', datetime.utcnow())) < stale_after
+                if info.get('last_seen', info.get('joined_at', utcnow())) < stale_after
             ]
             for uid in stale_ids:
                 online_users.pop(uid, None)

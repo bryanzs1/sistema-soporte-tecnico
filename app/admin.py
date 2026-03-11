@@ -1,5 +1,6 @@
 import csv
 import json
+from datetime import datetime, timezone
 from io import StringIO
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
@@ -12,6 +13,11 @@ from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArti
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
+
+
+def utcnow():
+    """Return naive UTC datetime for compatibility with current schema."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _t(text):
@@ -178,7 +184,7 @@ def dashboard():
             resolution_hours.append(delta.total_seconds() / 3600)
 
     avg_resolution_hours = round(sum(resolution_hours) / len(resolution_hours), 2) if resolution_hours else 0
-    now = datetime.utcnow()
+    now = utcnow()
     overdue_count = Ticket.query.filter(
         Ticket.sla_due_at.isnot(None),
         Ticket.status != 'Cerrado',
@@ -268,7 +274,7 @@ def chat_monitoring():
             last_activity = last_comment.created_at if last_comment else ticket.created_at
             # Safe datetime comparison
             try:
-                is_recent = (datetime.utcnow() - last_activity).total_seconds() < 3600  # 1 hour
+                is_recent = (utcnow() - last_activity).total_seconds() < 3600  # 1 hour
             except:
                 is_recent = False
             
@@ -339,7 +345,7 @@ def online_users_list():
                 'user_id': user_id,
                 'username': user_info.get('username', ''),
                 'user_role': user_info.get('user_role', ''),
-                'joined_at': user_info.get('joined_at', datetime.utcnow()),
+                'joined_at': user_info.get('joined_at', utcnow()),
                 'is_active': user_obj.is_active,
             })
     
@@ -361,7 +367,7 @@ def online_users_data():
     for user_id, user_info in online_users.items():
         user_obj = User.query.get(user_id)
         if user_obj:
-            joined_at = user_info.get('joined_at', datetime.utcnow())
+            joined_at = user_info.get('joined_at', utcnow())
             users_list.append({
                 'user_id': user_id,
                 'username': user_info.get('username', ''),
@@ -399,7 +405,7 @@ def debug_online_users_json():
     return {
         'total_online': len(online_users),
         'users': debug_data,
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': utcnow().isoformat(),
         'message': f'Debug info for {len(online_users)} online users'
     }
 
@@ -1192,7 +1198,7 @@ def executive_report():
     from datetime import datetime, timedelta
     from sqlalchemy import func
 
-    now = datetime.utcnow()
+    now = utcnow()
     week_start = now - timedelta(days=7)
     prev_week_start = now - timedelta(days=14)
 

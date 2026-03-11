@@ -1,7 +1,7 @@
 import os
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
@@ -15,6 +15,11 @@ from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
 from app.security import AuditHelper
 
 bp = Blueprint('tickets', __name__)
+
+
+def utcnow():
+    """Return naive UTC datetime for compatibility with current schema."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _t(text):
@@ -74,7 +79,7 @@ def handle_connect():
         online_users[user_id] = {
             'username': username,
             'user_role': user_role,
-            'joined_at': datetime.utcnow(),
+            'joined_at': utcnow(),
         }
         
         current_app.logger.info(f'✅ User registered: {username} (ID: {user_id}, Role: {user_role})')
@@ -100,7 +105,7 @@ def handle_join_ticket_room(data):
         emit('chat_error', {'error': 'missing_ticket_id'})
         return
 
-    ticket = Ticket.query.get(ticket_id)
+    ticket = db.session.get(Ticket, ticket_id)
     if not ticket or not _ticket_read_access(ticket):
         emit('chat_error', {'error': 'forbidden'})
         return
@@ -143,7 +148,7 @@ def handle_ticket_chat_message(data):
         emit('chat_error', {'error': 'invalid_payload'})
         return
 
-    ticket = Ticket.query.get(ticket_id)
+    ticket = db.session.get(Ticket, ticket_id)
     if not ticket or not _ticket_chat_access(ticket):
         emit('chat_error', {'error': 'forbidden'})
         return
@@ -264,7 +269,7 @@ def list_tickets():
             kw = f"%{keyword}%"
             q = q.filter((Ticket.title.ilike(kw)) | (Ticket.description.ilike(kw)))
 
-        now = datetime.utcnow()
+        now = utcnow()
         closed_rank = case((Ticket.status == 'Cerrado', 1), else_=0)
         overdue_rank = case(
             (and_(Ticket.sla_due_at.isnot(None), Ticket.status != 'Cerrado', Ticket.sla_due_at < now), 0),
@@ -403,7 +408,7 @@ def create_ticket():
             priority=form.priority.data,
             user=current_user
         )
-        ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
+        ticket.sla_due_at = utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
         
         # ML: Obtener sugerencia de técnico
         try:
@@ -464,7 +469,7 @@ def request_password_reset_ticket():
         priority=priority,
         user=current_user,
     )
-    ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
+    ticket.sla_due_at = utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
     
     # ML: Obtener sugerencia de técnico
     try:
@@ -616,7 +621,7 @@ def ticket_detail(ticket_id):
     # populate technician choices only for admin/tech
     if current_user.is_admin() or current_user.is_technician():
         # Get active technicians who are currently online (active within last 30 minutes)
-        thirty_min_ago = datetime.utcnow() - timedelta(minutes=30)
+        thirty_min_ago = utcnow() - timedelta(minutes=30)
         techs = User.query.filter(
             User.role == 'technician',
             User.is_active == True,
@@ -660,13 +665,13 @@ def ticket_detail(ticket_id):
             ticket.technician_id = tech_id if tech_id > 0 else None
 
         if ticket.first_response_at is None and ticket.status in ('En proceso', 'Esperando usuario', 'Cerrado'):
-            ticket.first_response_at = datetime.utcnow()
+            ticket.first_response_at = utcnow()
 
         if previous_status == 'Cerrado' and ticket.status != 'Cerrado':
             ticket.reopened_count = (ticket.reopened_count or 0) + 1
 
         if ticket.status == 'Cerrado':
-            ticket.resolved_at = datetime.utcnow()
+            ticket.resolved_at = utcnow()
         elif ticket.resolved_at is not None:
             ticket.resolved_at = None
 

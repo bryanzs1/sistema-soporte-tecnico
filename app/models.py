@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,6 +8,11 @@ from sqlalchemy.exc import SQLAlchemyError
 roles = ('user', 'technician', 'admin')
 
 
+def utcnow():
+    """Return naive UTC datetime for SQLAlchemy DateTime columns."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
@@ -15,7 +20,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255))
     role = db.Column(db.String(20), default='user')
     is_active = db.Column(db.Boolean, default=True, nullable=False)
-    last_activity = db.Column(db.DateTime, default=datetime.utcnow)
+    last_activity = db.Column(db.DateTime, default=utcnow)
     
     # Security: 2FA (TOTP)
     totp_secret = db.Column(db.String(32))  # Encrypted TOTP secret
@@ -23,14 +28,14 @@ class User(UserMixin, db.Model):
     totp_backup_codes = db.Column(db.Text)  # Comma-separated backup codes (encrypted)
     
     # Security: Password Management
-    password_changed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    password_changed_at = db.Column(db.DateTime, default=utcnow)
     failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
     last_failed_login_at = db.Column(db.DateTime)
     locked_until = db.Column(db.DateTime)  # Account locked until this time
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-        self.password_changed_at = datetime.utcnow()
+        self.password_changed_at = utcnow()
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -45,7 +50,7 @@ class User(UserMixin, db.Model):
         """Check if account is locked due to failed login attempts"""
         if self.locked_until is None:
             return False
-        if datetime.utcnow() > self.locked_until:
+        if utcnow() > self.locked_until:
             # Lock expired, reset attempts
             self.failed_login_attempts = 0
             self.locked_until = None
@@ -56,11 +61,11 @@ class User(UserMixin, db.Model):
     def record_failed_login(self):
         """Record a failed login attempt and lock account if needed"""
         self.failed_login_attempts = (self.failed_login_attempts or 0) + 1
-        self.last_failed_login_at = datetime.utcnow()
+        self.last_failed_login_at = utcnow()
         
         # Lock account after 5 failed attempts for 15 minutes
         if self.failed_login_attempts >= 5:
-            self.locked_until = datetime.utcnow() + timedelta(minutes=15)
+            self.locked_until = utcnow() + timedelta(minutes=15)
         
         db.session.commit()
     
@@ -80,8 +85,8 @@ class Ticket(db.Model):
     category = db.Column(db.String(64))
     priority = db.Column(db.String(20))
     status = db.Column(db.String(20), default='Abierto')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
     sla_due_at = db.Column(db.DateTime)
     first_response_at = db.Column(db.DateTime)
     resolved_at = db.Column(db.DateTime)
@@ -172,13 +177,13 @@ class Ticket(db.Model):
         return max(1, min(8, int(round(total_sla_hours * 0.25))))
 
     def is_overdue(self):
-        return bool(self.sla_due_at and not self.is_closed() and datetime.utcnow() > self.sla_due_at)
+        return bool(self.sla_due_at and not self.is_closed() and utcnow() > self.sla_due_at)
 
     def is_due_soon(self):
         if not self.sla_due_at or self.is_closed() or self.is_overdue():
             return False
         warning_window = timedelta(hours=self.sla_warning_window_hours())
-        return datetime.utcnow() >= (self.sla_due_at - warning_window)
+        return utcnow() >= (self.sla_due_at - warning_window)
 
 
 class TicketComment(db.Model):
@@ -186,7 +191,7 @@ class TicketComment(db.Model):
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     ticket = db.relationship('Ticket', backref=db.backref('comments', lazy='dynamic', cascade='all, delete-orphan'))
     user = db.relationship('User', backref=db.backref('ticket_comments', lazy='dynamic'))
@@ -200,7 +205,7 @@ class TicketAttachment(db.Model):
     stored_filename = db.Column(db.String(255), nullable=False, unique=True)
     content_type = db.Column(db.String(120))
     file_size = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     ticket = db.relationship('Ticket', backref=db.backref('attachments', lazy='dynamic', cascade='all, delete-orphan'))
     uploaded_by = db.relationship('User', backref=db.backref('ticket_attachments', lazy='dynamic'))
@@ -211,7 +216,7 @@ class TicketOption(db.Model):
     option_type = db.Column(db.String(20), nullable=False)  # category | priority
     value = db.Column(db.String(64), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.UniqueConstraint('option_type', 'value', name='uq_ticket_option_type_value'),
@@ -225,7 +230,7 @@ class TechnicianStats(db.Model):
     avg_resolution_time = db.Column(db.Float)  # en minutos
     avg_satisfaction = db.Column(db.Float)  # promedio de ratings
     specialization = db.Column(db.String(200))  # categorías donde es experto (JSON)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
     
     technician = db.relationship('User', backref=db.backref('stats', uselist=False))
 
@@ -239,8 +244,8 @@ class KBArticle(db.Model):
     category = db.Column(db.String(64))
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     created_by = db.relationship('User', backref=db.backref('kb_articles', lazy='dynamic'))
 
@@ -252,7 +257,7 @@ class KBArticleRejection(db.Model):
     article_id = db.Column(db.Integer, db.ForeignKey('kb_article.id'), nullable=False, unique=True, index=True)
     reason = db.Column(db.Text, nullable=False)
     rejected_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    rejected_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    rejected_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     article = db.relationship('KBArticle', backref=db.backref('rejection', uselist=False, cascade='all, delete-orphan'))
     rejected_by = db.relationship('User', backref=db.backref('kb_rejections', lazy='dynamic'))
@@ -266,7 +271,7 @@ class ApiToken(db.Model):
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     last_used_at = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     expires_at = db.Column(db.DateTime)  # None = nunca expira
     
     created_by = db.relationship('User', backref=db.backref('api_tokens', lazy='dynamic'))
@@ -275,7 +280,7 @@ class ApiToken(db.Model):
         """Verifica si el token está activo y no ha expirado"""
         if not self.is_active:
             return False
-        if self.expires_at and datetime.utcnow() > self.expires_at:
+        if self.expires_at and utcnow() > self.expires_at:
             return False
         return True
 
@@ -289,7 +294,7 @@ class Integration(db.Model):
     config = db.Column(db.Text)  # Configuración adicional (JSON)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     last_used_at = db.Column(db.DateTime)
     
     created_by = db.relationship('User', backref=db.backref('integrations', lazy='dynamic'))
@@ -306,7 +311,7 @@ class AuditLog(db.Model):
     user_agent = db.Column(db.Text)  # Browser info
     status = db.Column(db.String(20), default='success')  # success, failure
     details = db.Column(db.Text)  # JSON serialized details
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False, index=True)
     
     user = db.relationship('User', backref=db.backref('audit_logs', lazy='dynamic'))
     
@@ -337,7 +342,7 @@ class PasswordHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    changed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    changed_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     
     user = db.relationship('User', backref=db.backref('password_history', lazy='dynamic', cascade='all, delete-orphan'))
     
