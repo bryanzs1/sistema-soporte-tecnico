@@ -75,7 +75,7 @@
           <tr class="ticket-row align-middle">
             <td><strong>#{{ ticket.id }}</strong></td>
             <td>
-              <div class="text-truncate" title="{{ ticket.title }}">{{ ticket.title }}</div>
+              <div class="text-truncate" title="{{ ticket.title or '—' }}">{{ ticket.title or '—' }}</div>
               {% if ticket.description %}
                 <small class="text-muted d-block text-truncate" title="{{ ticket.description }}">{{ ticket.description[:60] }}{% if ticket.description|length > 60 %}...{% endif %}</small>
               {% endif %}
@@ -91,11 +91,11 @@
               </span>
             </td>
             <td>
-              <small>{{ _(ticket.category) }}</small>
+              <small>{{ _(ticket.category) if ticket.category else '—' }}</small>
             </td>
             <td>
-              <small title="{{ ticket.creator_name }}">{{ ticket.creator_name }}</small><br>
-              <small class="text-muted">{{ ticket.created_at.strftime('%Y-%m-%d') }}</small>
+              <small title="{{ ticket.creator_name or '—' }}">{{ ticket.creator_name or '—' }}</small><br>
+              <small class="text-muted">{{ ticket.created_at.strftime('%Y-%m-%d') if ticket.created_at else '—' }}</small>
             </td>
             <td>
               {% if ticket.sla_due_at %}

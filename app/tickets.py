@@ -287,7 +287,7 @@ def list_tickets():
                                categories=categories, priorities=priorities)
     except Exception as e:
         current_app.logger.exception('Error rendering tickets list: %s', e)
-        # fallback response to avoid 500 after creating tickets
+        flash(_t('There was a problem loading the ticket list. Review historical records or contact admin.'), 'warning')
         return render_template('tickets/list.html', tickets=[],
                                status=None, category=None, priority=None,
                                start_date=None, end_date=None, keyword=None,

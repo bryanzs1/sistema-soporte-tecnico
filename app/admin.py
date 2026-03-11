@@ -543,13 +543,8 @@ def ml_train():
 @login_required
 @admin_required
 def integrations():
-    """Gestión de integraciones y API tokens"""
-    api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
-    integrations = Integration.query.order_by(Integration.created_at.desc()).all()
-    
-    return render_template('admin/integrations.html', 
-                         api_tokens=api_tokens,
-                         integrations=integrations)
+    """Legacy route kept for compatibility; use centralized settings page."""
+    return redirect(url_for('admin.settings_integrations'))
 
 
 @bp.route('/integrations/tokens/create', methods=['POST'])
