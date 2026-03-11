@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 from app import db, translate, socketio
 from app.models import Ticket, User, TicketComment, TicketAttachment
 from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
+from app.security import AuditHelper
 
 bp = Blueprint('tickets', __name__)
 
@@ -642,11 +643,10 @@ def ticket_chat_feed(ticket_id):
 @login_required
 def delete_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
-    if not current_user.is_admin():
-        flash(_t('Administrator access required'), 'danger')
-        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+    if current_user.is_admin():
+        AuditHelper.log_ticket_action(current_user.id, 'delete_blocked', ticket.id)
+    else:
+        AuditHelper.log_ticket_action(current_user.id, 'delete_unauthorized', ticket.id)
 
-    db.session.delete(ticket)
-    db.session.commit()
-    flash(_t('Ticket deleted successfully'), 'success')
+    flash(_t('Ticket deletion is disabled by security policy'), 'warning')
     return redirect(url_for('tickets.list_tickets'))

@@ -315,11 +315,9 @@
         </form>
         {% if current_user.is_admin() %}
         <hr>
-        <form method="post" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}" onsubmit="return confirm('{{ _('Delete this ticket permanently?') }}')">
-          <button type="submit" class="btn btn-outline-danger">
-            <i class="bi bi-trash me-1"></i>{{ _('Delete ticket') }}
-          </button>
-        </form>
+        <div class="alert alert-secondary mb-0">
+          <i class="bi bi-shield-lock me-1"></i>{{ _('Ticket deletion is disabled by security policy') }}
+        </div>
         {% endif %}
       </div>
     {% endif %}

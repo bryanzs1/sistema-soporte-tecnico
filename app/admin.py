@@ -1,4 +1,6 @@
+import csv
 import json
+from io import StringIO
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_required, current_user
@@ -6,7 +8,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -885,6 +887,67 @@ def settings_integrations():
                          office365_integration=office365_integration,
                          office365_config=office365_config,
                          email_intake_url=url_for('api.office365_email_intake', _external=True))
+
+
+@bp.route('/settings/audit')
+@login_required
+@admin_required
+def settings_audit():
+    """Security audit trail (read-only) with basic filters."""
+    action = request.args.get('action', '').strip()
+    status = request.args.get('status', '').strip()
+    username = request.args.get('username', '').strip()
+
+    q = AuditLog.query
+    if action:
+        q = q.filter(AuditLog.action.ilike(f'%{action}%'))
+    if status:
+        q = q.filter(AuditLog.status == status)
+    if username:
+        q = q.join(User, User.id == AuditLog.user_id, isouter=True).filter(User.username.ilike(f'%{username}%'))
+
+    logs = q.order_by(AuditLog.created_at.desc()).limit(500).all()
+    return render_template('admin/settings/audit.html', logs=logs, action=action, status=status, username=username)
+
+
+@bp.route('/settings/audit/export')
+@login_required
+@admin_required
+def settings_audit_export():
+    """Export audit logs to CSV for compliance review."""
+    action = request.args.get('action', '').strip()
+    status = request.args.get('status', '').strip()
+    username = request.args.get('username', '').strip()
+
+    q = AuditLog.query
+    if action:
+        q = q.filter(AuditLog.action.ilike(f'%{action}%'))
+    if status:
+        q = q.filter(AuditLog.status == status)
+    if username:
+        q = q.join(User, User.id == AuditLog.user_id, isouter=True).filter(User.username.ilike(f'%{username}%'))
+
+    logs = q.order_by(AuditLog.created_at.desc()).limit(5000).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['created_at', 'user', 'action', 'resource_type', 'resource_id', 'status', 'ip_address'])
+    for log in logs:
+        writer.writerow([
+            log.created_at.isoformat() if log.created_at else '',
+            log.user.username if log.user else '',
+            log.action or '',
+            log.resource_type or '',
+            log.resource_id or '',
+            log.status or '',
+            log.ip_address or '',
+        ])
+
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=audit_logs.csv'}
+    )
 
 
 @bp.route('/settings/integrations/office365-email', methods=['POST'])
