@@ -313,6 +313,14 @@
           </div>
           {{ form.submit(class_='btn btn-primary btn-animated') }}
         </form>
+        {% if current_user.is_admin() %}
+        <hr>
+        <form method="post" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}" onsubmit="return confirm('{{ _('Delete this ticket permanently?') }}')">
+          <button type="submit" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>{{ _('Delete ticket') }}
+          </button>
+        </form>
+        {% endif %}
       </div>
     {% endif %}
   </div>

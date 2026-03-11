@@ -636,3 +636,17 @@ def ticket_chat_feed(ticket_id):
     payload = [_serialize_comment(ticket, c) for c in comments]
 
     return jsonify({'comments': payload})
+
+
+@bp.route('/<int:ticket_id>/delete', methods=['POST'])
+@login_required
+def delete_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if not current_user.is_admin():
+        flash(_t('Administrator access required'), 'danger')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    db.session.delete(ticket)
+    db.session.commit()
+    flash(_t('Ticket deleted successfully'), 'success')
+    return redirect(url_for('tickets.list_tickets'))

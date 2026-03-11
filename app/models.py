@@ -119,12 +119,13 @@ class Ticket(db.Model):
     @staticmethod
     def categories():
         try:
-            values = [
+            raw_values = [
                 item.value for item in TicketOption.query
                 .filter_by(option_type='category', active=True)
                 .order_by(TicketOption.value.asc())
                 .all()
             ]
+            values = [v.strip() for v in raw_values if (v or '').strip()]
             return values or Ticket.default_categories()
         except SQLAlchemyError:
             return Ticket.default_categories()
@@ -132,12 +133,13 @@ class Ticket(db.Model):
     @staticmethod
     def priorities():
         try:
-            values = [
+            raw_values = [
                 item.value for item in TicketOption.query
                 .filter_by(option_type='priority', active=True)
                 .order_by(TicketOption.value.asc())
                 .all()
             ]
+            values = [v.strip() for v in raw_values if (v or '').strip()]
             return values or Ticket.default_priorities()
         except SQLAlchemyError:
             return Ticket.default_priorities()
