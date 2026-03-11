@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, session
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_limiter.util import get_remote_address
 import os
 
 from app import db, login, translate, limiter
@@ -31,8 +32,16 @@ def must_change_default_admin_password(user):
     )
 
 
+def _login_rate_limit_key():
+    """Scope login limiting by client IP + submitted username to reduce shared-network collisions."""
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    ip = forwarded_for.split(',')[0].strip() if forwarded_for else get_remote_address()
+    username = (request.form.get('username') or '').strip().lower() or '__empty__'
+    return f"{ip}:{username}"
+
+
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
-@limiter.limit("5 per 15 minutes")
+@limiter.limit("5 per 15 minutes", key_func=_login_rate_limit_key, methods=['POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
