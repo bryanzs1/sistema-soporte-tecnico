@@ -68,7 +68,7 @@
                   </a></li>
                   {% endif %}
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                  <li><a class="dropdown-item text-danger logout-link" href="{{ url_for('auth.logout') }}" data-confirm-message="{{ _('Are you sure you want to log out?') }}" data-skip-unsaved-check="true">
                     <i class="bi bi-box-arrow-right"></i> {{ _('Logout') }}
                   </a></li>
                 </ul>
@@ -267,6 +267,86 @@
             showBanner();
           });
         }
+      });
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const unsavedMessage = "{{ _('You have unsaved changes. If you leave this page, your information will be lost.') }}";
+        const trackedForms = Array.from(document.querySelectorAll('form')).filter(function (form) {
+          if ((form.method || '').toLowerCase() !== 'post') return false;
+          if (form.dataset.unsavedGuard === 'false') return false;
+          return form.querySelector('textarea, select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], input[type="date"], input[type="datetime-local"], input[type="checkbox"], input[type="radio"]');
+        });
+
+        let hasUnsavedChanges = false;
+        let isSubmitting = false;
+
+        function valueOf(field) {
+          const type = (field.type || '').toLowerCase();
+          if (type === 'checkbox' || type === 'radio') {
+            return field.checked ? '1' : '0';
+          }
+          if (type === 'file') {
+            return (field.files && field.files.length) ? String(field.files.length) : '';
+          }
+          return field.value || '';
+        }
+
+        function evaluateFormDirty(form) {
+          const fields = form.querySelectorAll('textarea, select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], input[type="date"], input[type="datetime-local"], input[type="checkbox"], input[type="radio"]');
+          for (const field of fields) {
+            if (field.dataset.initialValue !== valueOf(field)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        function recomputeDirtyState() {
+          hasUnsavedChanges = trackedForms.some(evaluateFormDirty);
+        }
+
+        trackedForms.forEach(function (form) {
+          const fields = form.querySelectorAll('textarea, select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], input[type="date"], input[type="datetime-local"], input[type="checkbox"], input[type="radio"]');
+          fields.forEach(function (field) {
+            field.dataset.initialValue = valueOf(field);
+            field.addEventListener('input', recomputeDirtyState);
+            field.addEventListener('change', recomputeDirtyState);
+          });
+          form.addEventListener('submit', function () {
+            isSubmitting = true;
+            hasUnsavedChanges = false;
+          });
+        });
+
+        window.addEventListener('beforeunload', function (event) {
+          if (!hasUnsavedChanges || isSubmitting) return;
+          event.preventDefault();
+          event.returnValue = unsavedMessage;
+        });
+
+        document.querySelectorAll('a.logout-link').forEach(function (logoutLink) {
+          logoutLink.addEventListener('click', function (event) {
+            const msg = logoutLink.dataset.confirmMessage || '{{ _('Are you sure you want to log out?') }}';
+            if (!window.confirm(msg)) {
+              event.preventDefault();
+            }
+          });
+        });
+
+        document.querySelectorAll('a[href]').forEach(function (link) {
+          if (link.classList.contains('logout-link')) return;
+          if (link.dataset.skipUnsavedCheck === 'true') return;
+          link.addEventListener('click', function (event) {
+            const href = link.getAttribute('href') || '';
+            if (!hasUnsavedChanges || isSubmitting) return;
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+            if (!window.confirm(unsavedMessage)) {
+              event.preventDefault();
+            }
+          });
+        });
       });
     </script>
   </body>
