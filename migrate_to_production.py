@@ -7,6 +7,7 @@ import os
 import sys
 from app import create_app, db
 from flask_migrate import upgrade
+from app.schema_sync import ensure_runtime_schema
 
 def migrate_database():
     """Apply all pending database migrations"""
@@ -16,7 +17,10 @@ def migrate_database():
         print("Starting database migration...")
         try:
             upgrade()
+            changes = ensure_runtime_schema()
             print("✓ Database migration completed successfully")
+            if any(changes.values()):
+                print(f"✓ Runtime schema sync applied: {changes}")
         except Exception as e:
             print(f"✗ Migration failed: {str(e)}", file=sys.stderr)
             sys.exit(1)
