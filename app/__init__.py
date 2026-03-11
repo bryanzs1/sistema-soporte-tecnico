@@ -104,6 +104,8 @@ TRANSLATIONS = {
         'View': 'Ver',
         'View Details': 'Ver detalles',
         'Create a new ticket': 'Crear un nuevo ticket',
+        'Basic Information': 'Información Básica',
+        'Options': 'Opciones',
         'Status': 'Estado',
         'Priority': 'Prioridad',
         'Category': 'Categoría',
