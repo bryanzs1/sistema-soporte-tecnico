@@ -250,14 +250,12 @@ def list_tickets():
             q = q.filter_by(priority=priority)
         if start_date:
             try:
-                from datetime import datetime
                 sd = datetime.fromisoformat(start_date)
                 q = q.filter(Ticket.created_at >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
-                from datetime import datetime
                 ed = datetime.fromisoformat(end_date)
                 q = q.filter(Ticket.created_at <= ed)
             except ValueError:
@@ -544,14 +542,12 @@ def export_tickets():
         q = q.filter_by(priority=priority)
     if start_date:
         try:
-            from datetime import datetime
             sd = datetime.fromisoformat(start_date)
             q = q.filter(Ticket.created_at >= sd)
         except ValueError:
             pass
     if end_date:
         try:
-            from datetime import datetime
             ed = datetime.fromisoformat(end_date)
             q = q.filter(Ticket.created_at <= ed)
         except ValueError:
@@ -620,7 +616,6 @@ def ticket_detail(ticket_id):
     # populate technician choices only for admin/tech
     if current_user.is_admin() or current_user.is_technician():
         # Get active technicians who are currently online (active within last 30 minutes)
-        from datetime import datetime, timedelta
         thirty_min_ago = datetime.utcnow() - timedelta(minutes=30)
         techs = User.query.filter(
             User.role == 'technician',

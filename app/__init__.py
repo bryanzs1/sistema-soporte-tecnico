@@ -891,13 +891,20 @@ def create_app(config_class=None):
         app.logger.warning('⚠️  Flask-Limiter using in-memory storage in production. Configure REDIS_URL to harden rate limits.')
 
     limiter.init_app(app)
+    socketio_logging_env = os.environ.get('SOCKETIO_LOGGING')
+    if socketio_logging_env is None:
+        # Keep logs quiet by default in Render production; verbose locally for troubleshooting.
+        socketio_logging = os.environ.get('RENDER') != 'true'
+    else:
+        socketio_logging = socketio_logging_env.strip().lower() in ('1', 'true', 'yes', 'on')
+
     socketio.init_app(
         app, 
         cors_allowed_origins='*',  # Allow WebSocket connections from anywhere
         manage_session=True,  # Allow access to Flask session and current_user
         async_mode='eventlet',
-        logger=True,
-        engineio_logger=True,
+        logger=socketio_logging,
+        engineio_logger=socketio_logging,
         ping_timeout=60,
         ping_interval=25
     )
