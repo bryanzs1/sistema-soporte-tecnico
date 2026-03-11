@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 from datetime import datetime, timedelta
 
@@ -9,7 +10,7 @@ from sqlalchemy import and_, case
 from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
-from app.models import Ticket, User, TicketComment, TicketAttachment
+from app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog
 from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
 from app.security import AuditHelper
 
@@ -324,6 +325,24 @@ def list_tickets():
                                categories=categories, priorities=priorities)
     except Exception as e:
         current_app.logger.exception('Error rendering tickets list: %s', e)
+        try:
+            AuditLog.log_action(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                action='ticket_list_query_error',
+                resource_type='ticket',
+                ip_address=AuditHelper.get_client_ip(),
+                user_agent=AuditHelper.get_user_agent(),
+                status='failure',
+                details=json.dumps({
+                    'error': str(e),
+                    'status': request.args.get('status'),
+                    'category': request.args.get('category'),
+                    'priority': request.args.get('priority'),
+                    'keyword': request.args.get('keyword'),
+                })[:2000],
+            )
+        except Exception:
+            current_app.logger.exception('Failed to write audit log for ticket_list_query_error')
         flash(_t('There was a problem loading the ticket list. Review historical records or contact admin.'), 'warning')
         try:
             if current_user.is_admin() or current_user.is_technician():
@@ -354,6 +373,18 @@ def list_tickets():
                                    priorities=Ticket.default_priorities())
         except Exception:
             current_app.logger.exception('Fallback ticket list query also failed')
+            try:
+                AuditLog.log_action(
+                    user_id=current_user.id if current_user.is_authenticated else None,
+                    action='ticket_list_fallback_error',
+                    resource_type='ticket',
+                    ip_address=AuditHelper.get_client_ip(),
+                    user_agent=AuditHelper.get_user_agent(),
+                    status='failure',
+                    details='fallback_query_failed',
+                )
+            except Exception:
+                current_app.logger.exception('Failed to write audit log for ticket_list_fallback_error')
             return render_template('tickets/list.html', tickets=[],
                                    status=None, category=None, priority=None,
                                    start_date=None, end_date=None, keyword=None,

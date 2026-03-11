@@ -41,6 +41,7 @@
             <th>{{ _('Resource') }}</th>
             <th>{{ _('Status') }}</th>
             <th>{{ _('IP') }}</th>
+            <th>{{ _('Details') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -54,9 +55,14 @@
               <span class="badge {{ 'bg-success' if log.status == 'success' else 'bg-danger' }}">{{ log.status }}</span>
             </td>
             <td>{{ log.ip_address or '—' }}</td>
+            <td>
+              {% if log.details %}
+                <small class="text-muted">{{ log.details[:180] }}{% if log.details|length > 180 %}...{% endif %}</small>
+              {% else %}—{% endif %}
+            </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-muted">{{ _('No records found') }}</td></tr>
+          <tr><td colspan="7" class="text-muted">{{ _('No records found') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>

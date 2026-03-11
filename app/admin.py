@@ -926,7 +926,7 @@ def settings_audit_export():
 
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(['created_at', 'user', 'action', 'resource_type', 'resource_id', 'status', 'ip_address'])
+    writer.writerow(['created_at', 'user', 'action', 'resource_type', 'resource_id', 'status', 'ip_address', 'details'])
     for log in logs:
         writer.writerow([
             log.created_at.isoformat() if log.created_at else '',
@@ -936,6 +936,7 @@ def settings_audit_export():
             log.resource_id or '',
             log.status or '',
             log.ip_address or '',
+            log.details or '',
         ])
 
     return Response(
