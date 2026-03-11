@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_required, current_user
 
@@ -864,10 +866,60 @@ def settings_integrations():
     """Gestión de integraciones desde settings"""
     api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
     integrations = Integration.query.order_by(Integration.created_at.desc()).all()
+    office365_integration = Integration.query.filter_by(platform='office365_email').first()
+    office365_config = {
+        'enabled': False,
+        'mailbox': '',
+        'allow_external_senders': True,
+    }
+    if office365_integration and office365_integration.config:
+        try:
+            parsed = json.loads(office365_integration.config)
+            office365_config.update(parsed)
+        except (TypeError, ValueError):
+            pass
     
     return render_template('admin/settings/integrations.html',
                          api_tokens=api_tokens,
-                         integrations=integrations)
+                         integrations=integrations,
+                         office365_integration=office365_integration,
+                         office365_config=office365_config,
+                         email_intake_url=url_for('api.office365_email_intake', _external=True))
+
+
+@bp.route('/settings/integrations/office365-email', methods=['POST'])
+@login_required
+@admin_required
+def settings_office365_email_update():
+    """Create/update optional Office 365 email intake integration settings."""
+    enabled = request.form.get('office365_enabled') == 'on'
+    mailbox = request.form.get('office365_mailbox', '').strip()
+    allow_external_senders = request.form.get('office365_allow_external') == 'on'
+
+    config = {
+        'enabled': enabled,
+        'mailbox': mailbox,
+        'allow_external_senders': allow_external_senders,
+    }
+
+    integration = Integration.query.filter_by(platform='office365_email').first()
+    if integration:
+        integration.name = 'Office 365 Email Intake'
+        integration.config = json.dumps(config)
+        integration.is_active = enabled
+    else:
+        integration = Integration(
+            platform='office365_email',
+            name='Office 365 Email Intake',
+            config=json.dumps(config),
+            created_by=current_user,
+            is_active=enabled,
+        )
+        db.session.add(integration)
+
+    db.session.commit()
+    flash(_t('Office 365 email intake settings saved'), 'success')
+    return redirect(url_for('admin.settings_integrations'))
 
 
 # ===== KNOWLEDGE BASE =====

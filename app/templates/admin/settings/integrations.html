@@ -2,6 +2,56 @@
 {% block title %}{{ _('Chat Integrations') }}{% endblock %}
 
 {% block settings_content %}
+<!-- Office 365 Email Intake (Optional) -->
+<div class="card mb-4 border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-envelope-at me-2"></i>{{ _('Office 365 Email to Ticket (Optional)') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-3">{{ _('Enable this only for companies that use Office 365. Keep disabled otherwise.') }}</p>
+
+        <form method="POST" action="{{ url_for('admin.settings_office365_email_update') }}" class="row g-3">
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="office365_enabled" name="office365_enabled" {% if office365_config.enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="office365_enabled">{{ _('Enable Office 365 email intake') }}</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ _('Support mailbox') }}</label>
+                <input type="email" name="office365_mailbox" class="form-control" placeholder="soporte@empresa.com" value="{{ office365_config.mailbox or '' }}">
+                <small class="text-muted">{{ _('Used to validate sender domain when restricted mode is enabled.') }}</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ _('Intake endpoint') }}</label>
+                <input type="text" readonly class="form-control" value="{{ email_intake_url }}">
+                <small class="text-muted">{{ _('Use this URL in Power Automate HTTP action.') }}</small>
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="office365_allow_external" name="office365_allow_external" {% if office365_config.allow_external_senders %}checked{% endif %}>
+                    <label class="form-check-label" for="office365_allow_external">{{ _('Allow external senders') }}</label>
+                </div>
+                <small class="text-muted">{{ _('If disabled, only sender emails from the same domain as support mailbox are accepted.') }}</small>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-info text-white">{{ _('Save settings') }}</button>
+            </div>
+        </form>
+
+        <hr>
+        <h6 class="mb-2">{{ _('Power Automate payload example') }}</h6>
+<pre class="bg-light p-3 rounded small mb-0">{
+  "subject": "VPN no conecta",
+  "body": "No me puedo conectar desde casa...",
+  "from_email": "usuario@empresa.com",
+  "from_name": "Usuario Demo",
+  "message_id": "&lt;outlook-message-id&gt;"
+}</pre>
+        <small class="text-muted d-block mt-2">{{ _('Header required: X-API-Token or Authorization: Bearer &lt;token&gt;') }}</small>
+    </div>
+</div>
+
 <!-- API Tokens Section -->
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">

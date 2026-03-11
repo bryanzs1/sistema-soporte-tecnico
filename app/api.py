@@ -17,6 +17,15 @@ from app.ai_chatbot import answer_question
 bp = Blueprint('api', __name__)
 
 
+def _integration_config(integration):
+    if not integration or not integration.config:
+        return {}
+    try:
+        return json.loads(integration.config)
+    except (TypeError, ValueError):
+        return {}
+
+
 def require_api_token(f):
     """Decorator para requerir autenticación con API token"""
     @wraps(f)
@@ -192,6 +201,67 @@ def create_ticket_api():
         
     except Exception as e:
         current_app.logger.error(f'Error creating ticket via API: {e}')
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error', 'message': str(e)}), 500
+
+
+@bp.route('/email/intake', methods=['POST'])
+@require_api_token
+def office365_email_intake():
+    """Optional endpoint for Office 365/Power Automate email-to-ticket ingestion."""
+    try:
+        integration = Integration.query.filter_by(platform='office365_email', is_active=True).first()
+        config = _integration_config(integration)
+        if not integration or not config.get('enabled', False):
+            return jsonify({'error': 'Email intake is disabled'}), 503
+
+        data = request.get_json(silent=True) or {}
+        subject = (data.get('subject') or '').strip()
+        body = (data.get('body') or data.get('body_text') or '').strip()
+        from_email = (data.get('from_email') or '').strip().lower()
+        from_name = (data.get('from_name') or '').strip()
+        message_id = (data.get('message_id') or '').strip()
+
+        if not subject or not body or not from_email:
+            return jsonify({'error': 'subject, body and from_email are required'}), 400
+
+        mailbox = (config.get('mailbox') or '').strip().lower()
+        if not config.get('allow_external_senders', True) and mailbox and '@' in mailbox and '@' in from_email:
+            mailbox_domain = mailbox.split('@', 1)[1]
+            sender_domain = from_email.split('@', 1)[1]
+            if mailbox_domain != sender_domain:
+                return jsonify({'error': 'Sender domain not allowed'}), 403
+
+        creator_name = from_name or from_email.split('@', 1)[0]
+        category = data.get('category') or Ticket.default_categories()[0]
+        priority = data.get('priority') or 'Media'
+
+        user = User.query.filter_by(email=from_email).first() or request.api_token.created_by
+        description = body
+        if message_id:
+            description = f"{description}\n\n[Email Message-ID: {message_id}]"
+
+        ticket = Ticket(
+            title=subject[:200],
+            description=description,
+            creator_name=creator_name,
+            category=category,
+            priority=priority,
+            user=user,
+        )
+        ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
+
+        db.session.add(ticket)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'ticket_id': ticket.id,
+            'url': f"{request.url_root}tickets/{ticket.id}",
+        }), 201
+
+    except Exception as e:
+        current_app.logger.error(f'Error ingesting Office 365 email: {e}')
         db.session.rollback()
         return jsonify({'error': 'Internal server error', 'message': str(e)}), 500
 
