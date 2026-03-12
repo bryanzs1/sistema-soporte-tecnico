@@ -1081,6 +1081,10 @@ footer {
     font-size: 0.9rem;
 }
 
+.admin-dashboard-page > .mb-5 > h2 {
+    letter-spacing: 0.01em;
+}
+
 .operations-hub-card {
     background: linear-gradient(135deg, rgba(14, 116, 144, 0.08) 0%, rgba(30, 64, 175, 0.06) 100%);
     border: 1px solid rgba(30, 64, 175, 0.12);
@@ -1325,6 +1329,93 @@ footer {
 
     .dashboard-metrics-group {
         padding: 14px;
+    }
+
+    .admin-dashboard-page > .mb-5 > h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem !important;
+    }
+
+    .operations-hub-card h3 {
+        font-size: 1.08rem;
+    }
+
+    .operations-hub-card p,
+    .dashboard-metrics-header p {
+        font-size: 0.84rem;
+    }
+
+    .operations-hub-copy strong {
+        font-size: 0.92rem;
+    }
+
+    .operations-hub-copy small {
+        font-size: 0.79rem;
+    }
+
+    .operations-hub-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        font-size: 1rem;
+    }
+
+    .dashboard-metrics-header h4 {
+        font-size: 1rem;
+    }
+
+    .metric-card {
+        padding: 18px;
+        border-radius: 10px;
+    }
+
+    .metric-label {
+        font-size: 0.76rem;
+        margin-bottom: 6px;
+    }
+
+    .metric-value {
+        font-size: 1.65rem;
+        line-height: 1.05;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-dashboard-page {
+        margin-top: 0.9rem !important;
+    }
+
+    .operations-hub-card,
+    .dashboard-metrics-group,
+    .section-card {
+        border-radius: 12px;
+    }
+
+    .operations-hub-link {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .operations-hub-badge {
+        min-width: 32px;
+        height: 32px;
+        font-size: 0.84rem;
+    }
+
+    .dashboard-metrics-group {
+        padding: 12px;
+    }
+
+    .dashboard-metrics-header {
+        margin-bottom: 10px;
+    }
+
+    .metric-card {
+        padding: 16px;
+    }
+
+    .metric-value {
+        font-size: 1.48rem;
     }
 }
 
