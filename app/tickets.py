@@ -449,10 +449,12 @@ def list_tickets():
 @login_required
 def create_ticket():
     form = TicketForm()
+    form.creator_name.data = current_user.username
     if form.validate_on_submit():
         ticket = Ticket(
             title=form.title.data,
-            creator_name=form.creator_name.data,
+            # Always persist authenticated username as ticket creator.
+            creator_name=current_user.username,
             description=form.description.data,
             category=form.category.data,
             priority=form.priority.data,

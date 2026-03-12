@@ -18,7 +18,8 @@
             <div class="col-12 col-lg-6">
               <div class="mb-3">
                 {{ form.creator_name.label }}
-                {{ form.creator_name(class_='form-control input-enhanced', placeholder=_('Your name')) }}
+                {{ form.creator_name(class_='form-control input-enhanced', placeholder=_('Your name'), readonly=true) }}
+                <small class="text-muted d-block mt-1">{{ _('This field is automatically filled with your account name') }}</small>
               </div>
             </div>
             <div class="col-12 col-lg-6">
