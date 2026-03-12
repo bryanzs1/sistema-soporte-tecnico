@@ -244,7 +244,7 @@
         <!-- KB Search Modal -->
         {% if current_user.role in ['admin','technician'] %}
         <div class="modal fade" id="kbModal" tabindex="-1" aria-labelledby="kbModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-lg">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="kbModalLabel"><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</h5>
@@ -261,9 +261,35 @@
         </div>
         <script>
         (function(){
+          const kbModalEl = document.getElementById('kbModal');
           const kbInput = document.getElementById('kb-search-input');
           const kbResults = document.getElementById('kb-results');
           let kbTimer;
+
+          // Move modal to <body> to avoid stacking/transform issues that can leave only the gray backdrop.
+          if (kbModalEl && kbModalEl.parentElement !== document.body) {
+            document.body.appendChild(kbModalEl);
+          }
+
+          if (kbModalEl) {
+            kbModalEl.addEventListener('shown.bs.modal', function () {
+              if (kbInput) {
+                kbInput.focus();
+                kbInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
+              }
+            });
+
+            kbModalEl.addEventListener('hidden.bs.modal', function () {
+              // Defensive cleanup for mobile browsers that can leave a stale backdrop/scroll lock.
+              document.body.classList.remove('modal-open');
+              document.body.style.removeProperty('padding-right');
+              document.body.style.removeProperty('overflow');
+              document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+                el.remove();
+              });
+            });
+          }
+
           if(kbInput){
             kbInput.addEventListener('input', function(){
               clearTimeout(kbTimer);
@@ -287,9 +313,11 @@
                     document.querySelectorAll('.kb-insert-btn').forEach(btn => {
                       btn.addEventListener('click', function(){
                         const ta = document.getElementById('comment-textarea');
+                        if (!ta) return;
                         const cur = ta.value;
                         ta.value = cur ? cur + '\n\n' + this.dataset.content : this.dataset.content;
-                        bootstrap.Modal.getInstance(document.getElementById('kbModal')).hide();
+                        const modalInstance = bootstrap.Modal.getOrCreateInstance(kbModalEl);
+                        modalInstance.hide();
                       });
                     });
                   });

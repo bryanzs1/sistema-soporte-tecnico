@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
@@ -77,16 +78,25 @@ for raw_line in text.splitlines():
 
 flush_bullets()
 
-doc = SimpleDocTemplate(
-    str(pdf_path),
-    pagesize=A4,
-    leftMargin=36,
-    rightMargin=36,
-    topMargin=36,
-    bottomMargin=36,
-    title="Manual de Uso del Sistema",
-    author="Sistema Soporte Tecnico",
-)
-doc.build(story)
+def build_to(target_path: Path) -> None:
+    doc = SimpleDocTemplate(
+        str(target_path),
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36,
+        title="Manual de Uso del Sistema",
+        author="Sistema Soporte Tecnico",
+    )
+    doc.build(story)
 
-print(f"PDF generated: {pdf_path}")
+
+try:
+    build_to(pdf_path)
+    print(f"PDF generated: {pdf_path}")
+except PermissionError:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    fallback = ROOT / "docs" / f"MANUAL_USO_SISTEMA_{ts}.pdf"
+    build_to(fallback)
+    print(f"Primary PDF locked; generated fallback: {fallback}")

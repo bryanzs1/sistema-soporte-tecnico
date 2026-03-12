@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 from typing import List, Optional
+from datetime import date
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_DIR = ROOT / "app"
@@ -21,6 +22,7 @@ class FunctionInfo:
         methods: Optional[str],
         source_segment: str,
         params: List[str],
+        returns: str,
     ) -> None:
         self.module = module
         self.name = name
@@ -31,6 +33,7 @@ class FunctionInfo:
         self.methods = methods
         self.source_segment = source_segment
         self.params = params
+        self.returns = returns
 
 
 def decorator_text(deco: ast.AST) -> str:
@@ -77,31 +80,31 @@ def extract_route_info(deco: ast.AST) -> tuple[Optional[str], Optional[str]]:
 def classify(fi: FunctionInfo) -> str:
     decos = set(fi.decorators)
     if fi.route:
-        return "HTTP endpoint"
+        return "Endpoint HTTP"
     if any("socketio.on" in d for d in decos):
-        return "Socket event"
+        return "Evento Socket.IO"
     if fi.class_name:
-        return "Class method"
+        return "Metodo de clase"
     if fi.name.startswith("_"):
-        return "Internal helper"
-    return "Application helper"
+        return "Helper interno"
+    return "Funcion de aplicacion"
 
 
 def main_effects(source: str) -> List[str]:
     effects = []
     checks = [
-        ("db.session.commit", "Persists database changes."),
-        ("db.session.add", "Creates or stages new records in database session."),
-        ("db.session.rollback", "Rolls back transaction on error."),
-        ("render_template(", "Renders HTML template response."),
-        ("jsonify(", "Returns JSON response."),
-        ("flash(", "Sends user-visible feedback message."),
-        ("send_email(", "Triggers email notification flow."),
-        ("send_webhook(", "Triggers webhook notification flow."),
-        ("query.get_or_404", "Loads resource or returns 404 automatically."),
-        ("abort(", "Can terminate request with HTTP error code."),
-        ("socketio.emit", "Broadcasts real-time event via Socket.IO."),
-        ("redirect(", "Redirects browser to another route."),
+        ("db.session.commit", "Persiste cambios en base de datos."),
+        ("db.session.add", "Registra nuevas entidades en la sesion ORM."),
+        ("db.session.rollback", "Revierte transaccion ante error."),
+        ("render_template(", "Renderiza una vista HTML para el cliente."),
+        ("jsonify(", "Retorna respuesta JSON."),
+        ("flash(", "Genera mensaje visible para usuario en UI."),
+        ("send_email(", "Dispara notificacion por correo."),
+        ("send_webhook(", "Dispara notificacion por webhook."),
+        ("query.get_or_404", "Obtiene recurso o finaliza con 404."),
+        ("abort(", "Interrumpe la solicitud con codigo HTTP de error."),
+        ("socketio.emit", "Emite evento en tiempo real por Socket.IO."),
+        ("redirect(", "Redirige la navegacion a otra ruta."),
     ]
     for token, message in checks:
         if token in source:
@@ -113,25 +116,68 @@ def permission_notes(fi: FunctionInfo) -> List[str]:
     notes = []
     decos = set(fi.decorators)
     if "login_required" in decos:
-        notes.append("Requires authenticated session.")
+        notes.append("Requiere sesion autenticada.")
     if "admin_required" in decos:
-        notes.append("Requires administrator privileges.")
+        notes.append("Requiere privilegios de administrador.")
     if "tech_or_admin_required" in decos:
-        notes.append("Requires technician or administrator role.")
+        notes.append("Requiere rol tecnico o administrador.")
+    return notes
+
+
+def output_notes(source: str) -> str:
+    if "return app" in source:
+        return "Instancia de aplicacion Flask"
+    if "return True" in source or "return False" in source:
+        return "Valor booleano"
+    if "jsonify(" in source:
+        return "JSON"
+    if "render_template(" in source:
+        return "HTML"
+    if "redirect(" in source:
+        return "Redireccion HTTP"
+    if "Response(" in source:
+        return "Response explicita"
+    return "Depende del flujo interno"
+
+
+def error_notes(source: str) -> List[str]:
+    notes = []
+    if "get_or_404" in source:
+        notes.append("Puede finalizar en 404 cuando el recurso no existe.")
+    if "abort(" in source:
+        notes.append("Puede finalizar por autorizacion/validacion con abort().")
+    if "rollback" in source:
+        notes.append("Incluye rollback de transaccion en escenarios de excepcion.")
+    if "except" in source:
+        notes.append("Contiene manejo explicito de excepciones.")
     return notes
 
 
 def function_purpose(fi: FunctionInfo, kind: str) -> str:
-    if kind == "HTTP endpoint" and fi.route:
-        methods = fi.methods or "GET"
-        return f"Exposes route {fi.route} with HTTP methods {methods}. Handles web request lifecycle and returns UI/API output."
-    if kind == "Socket event":
-        return "Handles a real-time Socket.IO event for chat/presence synchronization."
-    if kind == "Class method":
-        return "Implements model/business behavior encapsulated in class logic."
-    if kind == "Internal helper":
-        return "Supports internal workflow orchestration and is not intended as public endpoint."
-    return "Provides shared application utility behavior used by multiple flows."
+    name = fi.name.lower()
+    if name == "create_app":
+        return "Inicializa la aplicacion Flask, registra extensiones, blueprints y configuracion base de ejecucion."
+    if kind == "Endpoint HTTP" and fi.route:
+        return f"Atiende la ruta {fi.route} y ejecuta la logica funcional asociada a la solicitud web/API."
+    if kind == "Evento Socket.IO":
+        return "Sincroniza eventos en tiempo real para chat/presencia entre clientes conectados."
+    if "create" in name:
+        return "Crea entidades o registros en el sistema." 
+    if "edit" in name or "update" in name:
+        return "Actualiza datos existentes y aplica validaciones de negocio."
+    if "delete" in name or "revoke" in name:
+        return "Ejecuta acciones de eliminacion o revocacion controlada."
+    if "list" in name or "search" in name:
+        return "Consulta y filtra informacion para visualizacion o seleccion." 
+    if "login" in name or "logout" in name or "password" in name:
+        return "Gestiona flujo de autenticacion y seguridad de acceso." 
+    if "report" in name or "dashboard" in name:
+        return "Consolida metricas e indicadores para seguimiento operativo." 
+    if kind == "Metodo de clase":
+        return "Implementa comportamiento de dominio dentro del modelo/clase." 
+    if kind == "Helper interno":
+        return "Soporta pasos internos del flujo; no expuesto directamente a usuario final." 
+    return "Provee utilidad compartida dentro del modulo." 
 
 
 def collect_functions(py_path: Path) -> List[FunctionInfo]:
@@ -143,6 +189,7 @@ def collect_functions(py_path: Path) -> List[FunctionInfo]:
     class Visitor(ast.NodeVisitor):
         def __init__(self) -> None:
             self.class_stack: List[str] = []
+            self.function_depth = 0
 
         def visit_ClassDef(self, node: ast.ClassDef) -> None:
             self.class_stack.append(node.name)
@@ -150,6 +197,13 @@ def collect_functions(py_path: Path) -> List[FunctionInfo]:
             self.class_stack.pop()
 
         def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            # Skip nested local functions (e.g., wrappers inside decorators) to keep docs professional.
+            if self.function_depth > 0 and not self.class_stack:
+                self.function_depth += 1
+                self.generic_visit(node)
+                self.function_depth -= 1
+                return
+
             decorators = [decorator_text(d) for d in node.decorator_list]
             route = None
             methods = None
@@ -161,6 +215,7 @@ def collect_functions(py_path: Path) -> List[FunctionInfo]:
                     break
 
             params = [a.arg for a in node.args.args]
+            returns = ast.unparse(node.returns) if node.returns and hasattr(ast, "unparse") else ""
             try:
                 seg = ast.get_source_segment(source, node) or ""
             except Exception:
@@ -177,9 +232,12 @@ def collect_functions(py_path: Path) -> List[FunctionInfo]:
                     methods=methods,
                     source_segment=seg,
                     params=params,
+                    returns=returns,
                 )
             )
+            self.function_depth += 1
             self.generic_visit(node)
+            self.function_depth -= 1
 
     Visitor().visit(tree)
     return out
@@ -187,73 +245,108 @@ def collect_functions(py_path: Path) -> List[FunctionInfo]:
 
 def build_manual(all_funcs: List[FunctionInfo]) -> str:
     lines: List[str] = []
-    lines.append("# Manual de Uso y Referencia Detallada de Funciones")
+    lines.append("# Manual Profesional de Funcionalidades del Sistema")
     lines.append("")
-    lines.append("## 1. Alcance")
-    lines.append("Este manual incluye uso funcional por rol y catalogo tecnico funcion por funcion del backend principal.")
+    lines.append("## 1. Presentacion")
+    lines.append("Documento oficial del sistema de soporte tecnico orientado a operacion funcional. Este manual describe que hace el sistema y como se utiliza por rol, sin detalle de codigo fuente.")
     lines.append("")
-    lines.append("## 2. Roles del sistema")
+    lines.append("- Version del manual: 2.1")
+    lines.append(f"- Fecha de generacion: {date.today().isoformat()}")
+    lines.append("- Enfoque: funcionalidades de negocio y operacion")
+    lines.append("")
+    lines.append("## 2. Publico objetivo")
+    lines.append("- Direccion/Operacion: comprension de capacidades y controles del sistema.")
+    lines.append("- Soporte tecnico: uso diario de flujos y validaciones.")
+    lines.append("- Lideres de area: seguimiento de indicadores y calidad de servicio.")
+    lines.append("")
+    lines.append("## 3. Roles del sistema")
     lines.append("- Usuario: crea, consulta, comenta, califica y reabre tickets dentro de la ventana permitida.")
     lines.append("- Tecnico: gestiona flujo operativo de tickets, chat y conocimientos.")
     lines.append("- Administrador: gestiona configuracion, seguridad, usuarios, integraciones, auditoria y reportes.")
     lines.append("")
-    lines.append("## 3. Modulos principales")
-    lines.append("- app/auth.py: autenticacion, password, 2FA y cierre de sesion.")
-    lines.append("- app/tickets.py: operaciones completas de tickets, chat y reaperturas.")
-    lines.append("- app/admin.py: panel administrativo, settings, KB, integraciones y auditoria.")
-    lines.append("- app/api.py: endpoints externos y webhooks.")
-    lines.append("- app/routes.py: paginas publicas, health y utilidades de sesion.")
-    lines.append("- app/models.py: entidades y reglas de negocio de datos.")
+    lines.append("## 4. Funcionalidades principales")
+    lines.append("- Gestion integral de tickets: creacion, asignacion, seguimiento, cierre y reapertura controlada.")
+    lines.append("- Comunicacion integrada: comentarios y chat en tiempo real entre usuario y equipo tecnico.")
+    lines.append("- Base de conocimiento: consulta de articulos y sugerencias automaticas durante la creacion de tickets.")
+    lines.append("- Control de servicio: estado operativo, indicadores SLA, satisfaccion del usuario y reportes ejecutivos.")
+    lines.append("- Gobierno y seguridad: control de acceso por rol, confirmaciones para acciones criticas, auditoria e integraciones empresariales.")
     lines.append("")
 
-    lines.append("## 4. Referencia detallada de funciones")
-    lines.append("La siguiente seccion describe cada funcion detectada en el paquete app.")
+    lines.append("## 5. Flujo funcional de tickets")
+    lines.append("1. Registro del caso: el usuario crea un ticket con categoria, prioridad y descripcion del incidente.")
+    lines.append("2. Analisis inicial: el sistema enruta el caso y el equipo tecnico prioriza atencion segun severidad.")
+    lines.append("3. Atencion y colaboracion: se intercambian mensajes, evidencias y actualizaciones de avance.")
+    lines.append("4. Resolucion: el tecnico documenta solucion, aplica cierre y deja trazabilidad del proceso.")
+    lines.append("5. Validacion del usuario: el usuario confirma resultado y registra calificacion de satisfaccion.")
+    lines.append("6. Reapertura controlada: si persiste la incidencia, se habilita reapertura con motivo dentro del plazo permitido.")
+    lines.append("")
+    lines.append("## 6. Funcionalidades por rol")
+    lines.append("### 6.1 Usuario")
+    lines.append("- Crear tickets y adjuntar informacion del incidente.")
+    lines.append("- Consultar estado y progreso en su panel.")
+    lines.append("- Enviar comentarios y responder en el chat del caso.")
+    lines.append("- Reabrir tickets con motivo cuando aplique.")
+    lines.append("- Calificar la atencion recibida al cierre del servicio.")
+    lines.append("")
+    lines.append("### 6.2 Tecnico")
+    lines.append("- Visualizar cola de tickets por prioridad y estado.")
+    lines.append("- Tomar, actualizar y cerrar casos con trazabilidad.")
+    lines.append("- Mantener comunicacion continua con el solicitante.")
+    lines.append("- Consultar respuestas rapidas y base de conocimiento para resolver mas rapido.")
+    lines.append("- Gestionar reaperturas y cumplimiento de tiempos de atencion.")
+    lines.append("")
+    lines.append("### 6.3 Administrador")
+    lines.append("- Administrar usuarios, perfiles y permisos.")
+    lines.append("- Configurar parametros del sistema, politicas y plantillas operativas.")
+    lines.append("- Supervisar auditoria, actividad sensible e integraciones.")
+    lines.append("- Revisar indicadores de servicio, cumplimiento y calidad.")
+    lines.append("- Coordinar mejoras continuas sobre procesos de soporte.")
+    lines.append("")
+    lines.append("## 7. Seguridad y control")
+    lines.append("- Acceso controlado por autenticacion y roles.")
+    lines.append("- Confirmaciones reforzadas para acciones criticas.")
+    lines.append("- Registro de eventos para trazabilidad y auditoria.")
+    lines.append("- Politicas de sesion y validacion para reducir errores operativos.")
+    lines.append("")
+    lines.append("## 8. Indicadores y seguimiento")
+    lines.append("- Seguimiento de tiempos de atencion y cumplimiento de SLA.")
+    lines.append("- Medicion de satisfaccion de usuario y calidad de resolucion.")
+    lines.append("- Vista ejecutiva para monitoreo de volumen, estado y tendencia de casos.")
     lines.append("")
 
-    funcs_sorted = sorted(all_funcs, key=lambda f: (f.module, f.lineno))
-
-    current_module = None
-    for fi in funcs_sorted:
-        if fi.module != current_module:
-            current_module = fi.module
-            lines.append(f"### Modulo: {current_module}")
-            lines.append("")
-
-        owner = f"{fi.class_name}.{fi.name}" if fi.class_name else fi.name
-        kind = classify(fi)
-        purpose = function_purpose(fi, kind)
-        effects = main_effects(fi.source_segment)
-        perms = permission_notes(fi)
-
-        lines.append(f"#### Funcion: {owner}")
-        lines.append(f"- Ubicacion: {fi.module}:{fi.lineno}")
-        lines.append(f"- Tipo: {kind}")
-        if fi.route:
-            lines.append(f"- Ruta: {fi.route}")
-            lines.append(f"- Metodos HTTP: {fi.methods or 'GET'}")
-        if fi.params:
-            lines.append(f"- Parametros: {', '.join(fi.params)}")
-        else:
-            lines.append("- Parametros: sin parametros declarados")
-        lines.append(f"- Que hace: {purpose}")
-
-        if perms:
-            lines.append("- Seguridad/Permisos:")
-            for p in perms:
-                lines.append(f"  - {p}")
-
-        if effects:
-            lines.append("- Efectos principales:")
-            for e in effects:
-                lines.append(f"  - {e}")
-
-        lines.append("")
-
-    lines.append("## 5. Notas operativas")
+    lines.append("## 9. Herramientas del proyecto y su funcion")
+    lines.append("- Python: lenguaje base para logica de negocio y servicios backend.")
+    lines.append("- Flask: framework web principal para rutas, vistas y ciclo de solicitudes.")
+    lines.append("- Flask-SQLAlchemy: capa ORM para modelado y acceso a datos.")
+    lines.append("- Flask-Migrate: control de migraciones de esquema de base de datos.")
+    lines.append("- Flask-Login: autenticacion de sesiones y control de usuario activo.")
+    lines.append("- Flask-WTF: formularios con validaciones y proteccion CSRF.")
+    lines.append("- Flask-Limiter: limitacion de intentos para proteger endpoints sensibles.")
+    lines.append("- Flask-Talisman: endurecimiento de cabeceras de seguridad HTTP.")
+    lines.append("- Flask-CORS: control de acceso entre origenes para integraciones web/API.")
+    lines.append("- Flask-Mail: envio de notificaciones por correo.")
+    lines.append("- Flask-SocketIO: comunicacion en tiempo real para chat y eventos operativos.")
+    lines.append("- eventlet: soporte de concurrencia para Socket.IO en produccion.")
+    lines.append("- redis: backend de mensajeria/cache para eventos y escalabilidad.")
+    lines.append("- psycopg2-binary: conector PostgreSQL para persistencia en entorno productivo.")
+    lines.append("- gunicorn: servidor WSGI de ejecucion en despliegues Linux/Render.")
+    lines.append("- python-dotenv: carga de variables de entorno desde archivo .env.")
+    lines.append("- pyotp: generacion y validacion de codigos TOTP para 2FA.")
+    lines.append("- qrcode y pillow: generacion de imagen QR para enrolamiento 2FA.")
+    lines.append("- sentry-sdk: monitoreo de errores y telemetria de excepciones.")
+    lines.append("- marshmallow: serializacion y validacion de estructuras de datos.")
+    lines.append("- cryptography: cifrado y operaciones criptograficas de soporte.")
+    lines.append("- requests: consumo de APIs externas y validaciones de conectividad.")
+    lines.append("- beautifulsoup4: parsing HTML en utilidades de integracion/analisis.")
+    lines.append("- pandas: analisis tabular para reportes y consolidaciones.")
+    lines.append("- scikit-learn y numpy: capacidades de analitica/modelado en componentes inteligentes.")
+    lines.append("- textblob: apoyo NLP para procesamiento de texto y clasificacion basica.")
+    lines.append("")
+    lines.append("## 10. Notas operativas")
     lines.append("- Revisar POST_LAUNCH_CHECKLIST.md para validacion post despliegue.")
-    lines.append("- Para regenerar este manual, ejecutar tools/generate_detailed_manual.py y luego tools/build_manual_pdf.py.")
+    lines.append("- Regeneracion del documento: ejecutar tools/generate_detailed_manual.py y luego tools/build_manual_pdf.py.")
     lines.append("")
-    lines.append("Fin del documento.")
+    lines.append("Documento funcional del sistema (sin detalle tecnico de codigo).")
     lines.append("")
 
     return "\n".join(lines)
