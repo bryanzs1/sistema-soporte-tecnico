@@ -52,7 +52,8 @@
       </div>
       <div class="modal-body">
         <p>{{ _('Are you sure you want to permanently delete user') }} <strong id="deleteUsername"></strong>?</p>
-        <p class="text-danger mb-0"><small>{{ _('This action cannot be undone. Users with existing records must be deactivated instead.') }}</small></p>
+        <p class="text-danger mb-1"><small>{{ _('This action cannot be undone.') }}</small></p>
+        <p class="text-muted mb-0"><small>{{ _('Existing records will be reassigned to administrator') }} <strong>{{ current_user.username }}</strong>.</small></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
