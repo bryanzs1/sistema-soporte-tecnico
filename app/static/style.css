@@ -1017,6 +1017,7 @@ footer {
     background: var(--color-bg-card);
     border-radius: 12px;
     padding: 25px;
+    min-height: 100%;
     box-shadow: 0 4px 20px rgba(30, 64, 175, 0.08);
     transition: all 0.3s ease;
     animation: fadeInUp 0.6s ease-out;
@@ -1057,6 +1058,27 @@ footer {
     font-size: 2rem;
     font-weight: 700;
     color: var(--color-text-primary);
+}
+
+.dashboard-metrics-group {
+    background: rgba(255, 255, 255, 0.56);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 16px;
+    padding: 18px;
+}
+
+.dashboard-metrics-header {
+    margin-bottom: 14px;
+}
+
+.dashboard-metrics-header h4 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+}
+
+.dashboard-metrics-header p {
+    font-size: 0.9rem;
 }
 
 .operations-hub-card {
@@ -1299,6 +1321,10 @@ footer {
 
     .operations-hub-link {
         padding: 16px;
+    }
+
+    .dashboard-metrics-group {
+        padding: 14px;
     }
 }
 
