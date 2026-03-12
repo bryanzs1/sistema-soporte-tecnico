@@ -1313,6 +1313,50 @@ footer {
     background: linear-gradient(160deg, rgba(240, 249, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
 }
 
+@keyframes dashboardRiseIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (min-width: 992px) {
+    .admin-dashboard-page .operations-hub-grid > [class*="col-"] .operations-hub-link,
+    .admin-dashboard-page .dashboard-metrics-group .row > [class*="col-"] .metric-card {
+        opacity: 0;
+        animation: dashboardRiseIn 0.34s ease-out forwards;
+    }
+
+    .admin-dashboard-page .operations-hub-grid > [class*="col-"]:nth-child(1) .operations-hub-link,
+    .admin-dashboard-page .dashboard-metrics-group .row > [class*="col-"]:nth-child(1) .metric-card {
+        animation-delay: 0.04s;
+    }
+
+    .admin-dashboard-page .operations-hub-grid > [class*="col-"]:nth-child(2) .operations-hub-link,
+    .admin-dashboard-page .dashboard-metrics-group .row > [class*="col-"]:nth-child(2) .metric-card {
+        animation-delay: 0.09s;
+    }
+
+    .admin-dashboard-page .operations-hub-grid > [class*="col-"]:nth-child(3) .operations-hub-link,
+    .admin-dashboard-page .dashboard-metrics-group .row > [class*="col-"]:nth-child(3) .metric-card {
+        animation-delay: 0.14s;
+    }
+
+    .admin-dashboard-page .operations-hub-grid > [class*="col-"]:nth-child(4) .operations-hub-link,
+    .admin-dashboard-page .dashboard-metrics-group .row > [class*="col-"]:nth-child(4) .metric-card {
+        animation-delay: 0.19s;
+    }
+
+    .admin-dashboard-page .operations-hub-grid > [class*="col-"]:nth-child(5) .operations-hub-link,
+    .admin-dashboard-page .dashboard-metrics-group .row > [class*="col-"]:nth-child(5) .metric-card {
+        animation-delay: 0.24s;
+    }
+}
+
 /* Content Cards with Staggered Animation */
 .content-card {
     background: var(--color-bg-card);
