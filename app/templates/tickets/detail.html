@@ -18,7 +18,10 @@
         {% endif %}
       </div>
     </div>
+    {% endif %}
+    <h2 class="mb-4">Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
 
+    <!-- Timeline - Always visible below title -->
     <div class="section-card mb-4">
       <h3>{{ _('Timeline') }}</h3>
       {% if timeline %}
@@ -37,8 +40,6 @@
         <p class="ticket-detail-text mb-0">{{ _('No timeline data available yet') }}</p>
       {% endif %}
     </div>
-    {% endif %}
-    <h2 class="mb-4">Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
     
     <!-- Main Details Card -->
     <div class="section-card mb-4">
