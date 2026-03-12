@@ -4,6 +4,81 @@
 <div class="container mt-4">
   <div class="mb-5">
     <h2 class="mb-4">{{ _('Control Panel') }}</h2>
+
+    <div class="section-card operations-hub-card mb-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div>
+          <h3 class="mb-1">{{ _('Operations Hub') }}</h3>
+          <p class="text-muted mb-0">{{ _('Interactive shortcuts for daily operations') }}</p>
+        </div>
+        <div class="operations-hub-jump">
+          <label for="dashboardActionJump" class="form-label small text-muted mb-1">{{ _('Jump to') }}</label>
+          <select id="dashboardActionJump" class="form-select form-select-sm">
+            <option value="">{{ _('Select an action') }}</option>
+            <option value="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</option>
+            <option value="{{ url_for('tickets.list_tickets', status='Abierto') }}">{{ _('Open tickets') }}</option>
+            <option value="{{ url_for('tickets.list_tickets', status='En proceso') }}">{{ _('In Progress') }}</option>
+            <option value="{{ url_for('admin.chat_monitoring') }}">{{ _('Chat Monitoring') }}</option>
+            <option value="{{ url_for('admin.online_users_list') }}">{{ _('Online Users') }}</option>
+            <option value="{{ url_for('admin.kb_list') }}">{{ _('Knowledge Base') }}</option>
+            <option value="{{ url_for('admin.executive_report') }}">{{ _('Executive Report') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-3 operations-hub-grid">
+        <div class="col-xl col-lg-4 col-md-6">
+          <a class="operations-hub-link operations-hub-primary" href="{{ url_for('tickets.list_tickets') }}">
+            <div class="operations-hub-icon"><i class="bi bi-kanban"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Ticket Queue') }}</strong>
+              <small>{{ _('Review all active tickets') }}</small>
+            </div>
+            <span class="operations-hub-badge">{{ stats.total }}</span>
+          </a>
+        </div>
+        <div class="col-xl col-lg-4 col-md-6">
+          <a class="operations-hub-link operations-hub-info" href="{{ url_for('admin.chat_monitoring') }}">
+            <div class="operations-hub-icon"><i class="bi bi-chat-dots"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Chat Monitoring') }}</strong>
+              <small>{{ _('Follow live conversations') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+        <div class="col-xl col-lg-4 col-md-6">
+          <a class="operations-hub-link operations-hub-success" href="{{ url_for('admin.online_users_list') }}">
+            <div class="operations-hub-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Online Users') }}</strong>
+              <small>{{ _('See connected users now') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+        <div class="col-xl col-lg-6 col-md-6">
+          <a class="operations-hub-link operations-hub-secondary" href="{{ url_for('admin.kb_list') }}">
+            <div class="operations-hub-icon"><i class="bi bi-journal-richtext"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Knowledge Base') }}</strong>
+              <small>{{ _('Review and approve content') }}</small>
+            </div>
+            <span class="operations-hub-badge {{ 'is-warning' if stats.pending_kb > 0 else '' }}">{{ stats.pending_kb }}</span>
+          </a>
+        </div>
+        <div class="col-xl col-lg-6 col-md-12">
+          <a class="operations-hub-link operations-hub-dark" href="{{ url_for('admin.executive_report') }}">
+            <div class="operations-hub-icon"><i class="bi bi-bar-chart-line"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Executive Report') }}</strong>
+              <small>{{ _('Open the management summary') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+      </div>
+    </div>
     
     <!-- Main Metrics Row -->
     <div class="row g-4">
@@ -119,7 +194,7 @@
 
   <!-- Categories Section -->
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-12">
       <div class="section-card">
         <h3>{{ _('By category') }}</h3>
         <ul class="list-group list-group-flush">
@@ -130,53 +205,6 @@
             </li>
           {% endfor %}
         </ul>
-      </div>
-    </div>
-    <div class="col-lg-6">
-      <div class="section-card">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-          <h3 class="mb-0">{{ _('Operations Hub') }}</h3>
-          <small class="text-muted">{{ _('Interactive shortcuts for daily operations') }}</small>
-        </div>
-
-        <div class="row g-2 mb-3">
-          <div class="col-12">
-            <label for="dashboardActionJump" class="form-label small text-muted mb-1">{{ _('Jump to') }}</label>
-            <select id="dashboardActionJump" class="form-select form-select-sm">
-              <option value="">{{ _('Select an action') }}</option>
-              <option value="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</option>
-              <option value="{{ url_for('tickets.list_tickets', status='Abierto') }}">{{ _('Open tickets') }}</option>
-              <option value="{{ url_for('tickets.list_tickets', status='En proceso') }}">{{ _('In Progress') }}</option>
-              <option value="{{ url_for('admin.chat_monitoring') }}">{{ _('Chat Monitoring') }}</option>
-              <option value="{{ url_for('admin.online_users_list') }}">{{ _('Online Users') }}</option>
-              <option value="{{ url_for('admin.kb_list') }}">{{ _('Knowledge Base') }}</option>
-              <option value="{{ url_for('admin.executive_report') }}">{{ _('Executive Report') }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="d-flex flex-column gap-2">
-          <a class="btn btn-primary btn-animated text-white d-flex justify-content-between align-items-center" href="{{ url_for('tickets.list_tickets') }}">
-            <span><i class="bi bi-kanban me-2"></i>{{ _('Ticket Queue') }}</span>
-            <span class="badge bg-light text-dark">{{ stats.total }}</span>
-          </a>
-          <a class="btn btn-info btn-animated text-white d-flex justify-content-between align-items-center" href="{{ url_for('admin.chat_monitoring') }}">
-            <span><i class="bi bi-chat-dots me-2"></i>{{ _('Chat Monitoring') }}</span>
-            <i class="bi bi-arrow-right-short"></i>
-          </a>
-          <a class="btn btn-success btn-animated text-white d-flex justify-content-between align-items-center" href="{{ url_for('admin.online_users_list') }}">
-            <span><i class="bi bi-people-fill me-2"></i>{{ _('Online Users') }}</span>
-            <i class="bi bi-arrow-right-short"></i>
-          </a>
-          <a class="btn btn-secondary btn-animated text-white d-flex justify-content-between align-items-center" href="{{ url_for('admin.kb_list') }}">
-            <span><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</span>
-            <span class="badge {{ 'bg-warning text-dark' if stats.pending_kb > 0 else 'bg-light text-dark' }}">{{ stats.pending_kb }}</span>
-          </a>
-          <a class="btn btn-dark btn-animated text-white d-flex justify-content-between align-items-center" href="{{ url_for('admin.executive_report') }}">
-            <span><i class="bi bi-bar-chart-line me-2"></i>{{ _('Executive Report') }}</span>
-            <i class="bi bi-arrow-right-short"></i>
-          </a>
-        </div>
       </div>
     </div>
   </div>
