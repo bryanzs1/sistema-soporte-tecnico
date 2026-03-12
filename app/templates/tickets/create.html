@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('New Ticket') }}{% endblock %}
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 create-ticket-page">
   <div class="mb-5">
     <h2 class="mb-4">{{ _('Create a new ticket') }}</h2>
     
@@ -14,14 +14,14 @@
         <div class="section-card mb-4">
           <h3>{{ _('Basic Information') }}</h3>
           
-          <div class="row mb-3">
-            <div class="col-lg-6">
+          <div class="row mb-3 g-3">
+            <div class="col-12 col-lg-6">
               <div class="mb-3">
                 {{ form.creator_name.label }}
                 {{ form.creator_name(class_='form-control input-enhanced', placeholder=_('Your name')) }}
               </div>
             </div>
-            <div class="col-lg-6">
+            <div class="col-12 col-lg-6">
               <div class="mb-3">
                 {{ form.category.label }}
                 {{ form.category(class_='form-select input-enhanced') }}
@@ -52,8 +52,8 @@
         <div class="section-card mb-4">
           <h3>{{ _('Options') }}</h3>
           
-          <div class="row">
-            <div class="col-lg-6">
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
               <div class="mb-3">
                 {{ form.priority.label }}
                 {{ form.priority(class_='form-select input-enhanced') }}
@@ -74,7 +74,7 @@
         </div>
         
         <!-- Submit Section -->
-        <div class="d-flex gap-3">
+        <div class="d-flex flex-column flex-md-row gap-3 create-ticket-actions">
           {{ form.submit(class_='btn btn-primary btn-animated btn-lg', value=_('Create Ticket')) }}
           <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-secondary btn-lg">{{ _('Cancel') }}</a>
         </div>

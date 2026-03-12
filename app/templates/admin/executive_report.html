@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('Executive Report') }}{% endblock %}
 {% block content %}
-<div class="container mt-4" id="report-wrapper">
+<div class="container mt-4 executive-report-page" id="report-wrapper">
 
   <!-- Print toolbar (hidden when printing) -->
-  <div class="d-flex justify-content-between align-items-center mb-4 no-print flex-wrap gap-2">
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print flex-wrap gap-2 executive-report-toolbar">
     <h2 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>{{ _('Executive Report') }}</h2>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-column flex-sm-row gap-2 executive-report-toolbar-actions">
       <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i>{{ _('Back') }}
       </a>
@@ -24,52 +24,52 @@
 
   <!-- KPI summary row -->
   <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-sm-6 col-md-3">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold text-primary">{{ total }}</div>
+        <div class="fs-2 fw-bold text-primary report-kpi-value">{{ total }}</div>
         <div class="text-muted small">{{ _('Total Tickets') }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-sm-6 col-md-3">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold text-warning">{{ open_count }}</div>
+        <div class="fs-2 fw-bold text-warning report-kpi-value">{{ open_count }}</div>
         <div class="text-muted small">{{ _('Open') }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-sm-6 col-md-3">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold text-success">{{ closed_count }}</div>
+        <div class="fs-2 fw-bold text-success report-kpi-value">{{ closed_count }}</div>
         <div class="text-muted small">{{ _('Closed') }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-sm-6 col-md-3">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold text-danger">{{ overdue_count }}</div>
+        <div class="fs-2 fw-bold text-danger report-kpi-value">{{ overdue_count }}</div>
         <div class="text-muted small">{{ _('SLA Overdue') }}</div>
       </div>
     </div>
   </div>
 
   <div class="row g-3 mb-4">
-    <div class="col-6 col-md-4">
+    <div class="col-12 col-sm-6 col-md-4">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold {{ 'text-success' if sla_compliance >= 80 else 'text-warning' if sla_compliance >= 60 else 'text-danger' }}">
+        <div class="fs-2 fw-bold report-kpi-value {{ 'text-success' if sla_compliance >= 80 else 'text-warning' if sla_compliance >= 60 else 'text-danger' }}">
           {{ sla_compliance }}%
         </div>
         <div class="text-muted small">{{ _('SLA Compliance') }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-4">
+    <div class="col-12 col-sm-6 col-md-4">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold text-info">
+        <div class="fs-2 fw-bold text-info report-kpi-value">
           {% if avg_resolution is not none %}{{ avg_resolution }}h{% else %}—{% endif %}
         </div>
         <div class="text-muted small">{{ _('Avg. Resolution Time') }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-4">
+    <div class="col-12 col-sm-6 col-md-4">
       <div class="section-card text-center py-3">
-        <div class="fs-2 fw-bold text-warning">
+        <div class="fs-2 fw-bold text-warning report-kpi-value">
           {% if csat_avg is not none %}
             {{ csat_avg }}/5
             {% for i in range(csat_avg|int) %}<i class="bi bi-star-fill text-warning fs-6"></i>{% endfor %}
@@ -105,7 +105,7 @@
 
   <div class="row g-3 mb-4">
     <!-- By Category -->
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
       <div class="section-card h-100">
         <h5 class="mb-3"><i class="bi bi-tag me-2"></i>{{ _('By Category') }}</h5>
         {% if by_category %}
@@ -122,7 +122,7 @@
     </div>
 
     <!-- By Priority -->
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
       <div class="section-card h-100">
         <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>{{ _('By Priority') }}</h5>
         {% if by_priority %}
@@ -146,7 +146,7 @@
     </div>
 
     <!-- By Technician -->
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
       <div class="section-card h-100">
         <h5 class="mb-3"><i class="bi bi-person-badge me-2"></i>{{ _('By Technician') }}</h5>
         {% if by_tech %}

@@ -3,7 +3,7 @@
 {% block title %}{{ _('Settings') }} - {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 settings-page">
     <div class="row mb-4">
         <div class="col">
             <h1><i class="bi bi-gear me-2"></i>{{ _('System Settings') }}</h1>
@@ -11,10 +11,10 @@
         </div>
     </div>
     
-    <div class="row">
+    <div class="row g-3 settings-layout-row">
         <!-- Sidebar Navigation -->
-        <div class="col-lg-3 mb-3">
-            <div class="list-group sticky-top">
+        <div class="col-12 col-lg-3 mb-3 settings-sidebar-col">
+            <div class="list-group sticky-top settings-sidebar-nav">
                 <a href="{{ url_for('admin.settings_users') }}" 
                    class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_users' %}active{% endif %}">
                     <i class="bi bi-people me-2"></i>{{ _('User Management') }}
@@ -43,7 +43,7 @@
         </div>
         
         <!-- Main Content -->
-        <div class="col-lg-9">
+        <div class="col-12 col-lg-9 settings-content-col">
             {% block settings_content %}{% endblock %}
         </div>
     </div>

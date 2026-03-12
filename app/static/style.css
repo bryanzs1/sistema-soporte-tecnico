@@ -2141,3 +2141,279 @@ footer {
 .ticket-col-sla-due { width: 12%; }
 .ticket-col-sla { width: 8%; }
 .ticket-col-action { width: 12%; }
+
+/* ===== RESPONSIVE PROJECT-WIDE SAFEGUARDS ===== */
+.tickets-filter-actions {
+    align-items: stretch;
+}
+
+.tickets-export-group {
+    flex-wrap: wrap;
+}
+
+.tickets-export-group > .btn {
+    white-space: nowrap;
+}
+
+.settings-sidebar-nav {
+    overflow-x: auto;
+}
+
+.settings-sidebar-nav .list-group-item {
+    white-space: normal;
+}
+
+.executive-report-page .table-responsive {
+    border-radius: 12px;
+}
+
+@media (max-width: 991px) {
+    body {
+        padding-top: 66px;
+    }
+
+    .navbar .container-fluid {
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
+    }
+
+    .navbar-collapse {
+        margin-top: 0.75rem;
+        padding: 0.85rem;
+        border-radius: 14px;
+        background: rgba(16, 35, 82, 0.96);
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+    }
+
+    .navbar-nav .nav-link {
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+    }
+
+    .footer-custom .row {
+        gap: 0.5rem;
+    }
+
+    .footer-custom .text-md-start,
+    .footer-custom .text-md-end {
+        text-align: center !important;
+    }
+
+    .hero-section {
+        padding: 118px 0 68px 0;
+        min-height: min(440px, 74vh);
+    }
+
+    .hero-title {
+        font-size: clamp(2.2rem, 6vw, 3.5rem);
+    }
+
+    .hero-subtitle {
+        font-size: clamp(1rem, 2.8vw, 1.25rem);
+    }
+
+    .section-card,
+    .form-card,
+    .content-card {
+        padding: 22px;
+    }
+
+    .tickets-list-page .excel-table-container {
+        overflow-x: auto;
+    }
+
+    .tickets-list-page .excel-table .btn-sm {
+        width: 100%;
+    }
+
+    .settings-page .settings-sidebar-col {
+        order: 1;
+    }
+
+    .settings-page .settings-content-col {
+        order: 2;
+    }
+
+    .settings-page .sticky-top {
+        position: static !important;
+        top: auto !important;
+    }
+
+    .settings-page .settings-sidebar-nav {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .executive-report-toolbar-actions {
+        width: 100%;
+    }
+
+    .executive-report-toolbar-actions .btn {
+        width: 100%;
+    }
+
+    .online-users-page .online-users-table,
+    .executive-report-page table,
+    .tickets-list-page table {
+        min-width: 640px;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-card {
+        padding: 24px;
+    }
+
+    .section-card {
+        padding: 20px;
+    }
+
+    .tickets-filter-form .col-lg,
+    .tickets-filter-form .col-lg-auto,
+    .tickets-filter-form .col-sm-6 {
+        width: 100%;
+    }
+
+    .tickets-filter-actions,
+    .tickets-list-primary-actions,
+    .create-ticket-actions {
+        width: 100%;
+    }
+
+    .tickets-export-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .tickets-export-group > .btn,
+    .create-ticket-actions .btn,
+    .tickets-list-primary-actions .btn {
+        width: 100%;
+    }
+
+    .tickets-list-page .ticket-col-title {
+        min-width: 220px;
+    }
+
+    .create-ticket-page .alert[role="status"] .d-flex {
+        align-items: flex-start !important;
+    }
+
+    .executive-report-page .report-kpi-value {
+        font-size: 1.6rem !important;
+        line-height: 1.1;
+    }
+
+    .executive-report-page .fs-4 {
+        font-size: 1.45rem !important;
+    }
+
+    .executive-report-page .section-card,
+    .ticket-options-page .card-body,
+    .chat-monitoring-page .card-body,
+    .online-users-page .card-body {
+        padding: 18px;
+    }
+
+    .ticket-options-page .list-group-item .btn,
+    .chat-monitoring-page .btn,
+    .online-users-page .btn {
+        white-space: normal;
+    }
+
+    .chat-monitoring-page .monitor-activity-alert .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+
+    .chat-monitoring-page .monitor-message-count {
+        align-self: flex-start;
+    }
+
+    .online-users-page .stat-value {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding-top: 62px;
+    }
+
+    .container,
+    .container-fluid {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+    }
+
+    .hero-section {
+        padding: 104px 0 52px 0;
+        min-height: min(390px, 70vh);
+    }
+
+    .hero-title {
+        font-size: clamp(1.85rem, 7vw, 2.35rem);
+    }
+
+    .hero-subtitle {
+        font-size: 0.98rem;
+    }
+
+    .feature-card {
+        padding: 24px 18px;
+    }
+
+    .section-title {
+        font-size: clamp(1.6rem, 6vw, 2rem);
+    }
+
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+    }
+
+    .cookie-consent {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+    }
+
+    .tickets-list-page .excel-table thead th,
+    .tickets-list-page .excel-table tbody tr.ticket-row td {
+        font-size: 0.77rem;
+    }
+
+    .tickets-list-page .excel-table tbody tr.ticket-row td {
+        padding: 0.42rem 0.34rem;
+    }
+
+    .executive-report-page .report-kpi-value {
+        font-size: 1.42rem !important;
+    }
+
+    .executive-report-page .section-card,
+    .form-card,
+    .section-card,
+    .content-card {
+        padding: 16px;
+    }
+
+    .online-users-page .online-users-table,
+    .executive-report-page table,
+    .tickets-list-page table {
+        min-width: 560px;
+    }
+
+    .online-users-page .stat-title {
+        font-size: 0.8rem;
+    }
+
+    .online-users-page .stat-value {
+        font-size: 1.55rem;
+    }
+}

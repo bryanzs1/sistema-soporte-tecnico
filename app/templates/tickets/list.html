@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('Tickets') }}{% endblock %}
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 tickets-list-page">
   <h2>{{ _('Tickets') }}</h2>
 
   <div class="card mb-3 p-3">
-    <form class="row g-2" method="get">
-      <div class="col-auto">
+    <form class="row g-2 tickets-filter-form" method="get">
+      <div class="col-12 col-sm-6 col-lg-auto">
         <select class="form-select" name="status">
         <option value="">{{ _('All statuses') }}</option>
         {% for s in ['Abierto','En proceso','Esperando usuario','Cerrado'] %}
@@ -14,7 +14,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-auto">
+    <div class="col-12 col-sm-6 col-lg-auto">
       <select class="form-select" name="category">
         <option value="">{{ _('All categories') }}</option>
         {% for c in categories %}
@@ -22,7 +22,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-auto">
+    <div class="col-12 col-sm-6 col-lg-auto">
       <select class="form-select" name="priority">
         <option value="">{{ _('All priorities') }}</option>
         {% for p in priorities %}
@@ -30,29 +30,33 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-auto">
+    <div class="col-12 col-sm-6 col-lg-auto">
       <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}" placeholder="{{ _('From') }}">
     </div>
-    <div class="col-auto">
+    <div class="col-12 col-sm-6 col-lg-auto">
       <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}" placeholder="{{ _('To') }}">
     </div>
-    <div class="col-auto">
+    <div class="col-12 col-lg">
       <input type="text" name="keyword" class="form-control" value="{{ keyword or '' }}" placeholder="{{ _('Search...') }}">
     </div>
-    <div class="col-auto">
+    <div class="col-12 col-lg-auto">
+      <div class="d-flex flex-column flex-sm-row gap-2 tickets-filter-actions">
       <button type="submit" class="btn btn-primary text-white">{{ _('Filter') }}</button>
-      <div class="btn-group">
+      <div class="btn-group tickets-export-group">
         <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a>
         <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a>
+      </div>
       </div>
     </div>
   </form>
 </div>
 
-  <a class="btn btn-success mb-3" href="{{ url_for('tickets.create_ticket') }}">{{ _('New Ticket') }}</a>
+  <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 mb-3 tickets-list-primary-actions">
+  <a class="btn btn-success" href="{{ url_for('tickets.create_ticket') }}">{{ _('New Ticket') }}</a>
   {% if not current_user.is_admin() and not current_user.is_technician() %}
-    <a class="btn btn-outline-warning mb-3 ms-2" href="{{ url_for('tickets.request_password_reset_ticket') }}">{{ _('Request password reset') }}</a>
+    <a class="btn btn-outline-warning" href="{{ url_for('tickets.request_password_reset_ticket') }}">{{ _('Request password reset') }}</a>
   {% endif %}
+  </div>
 
   <!-- TABLA ESTILO EXCEL -->
   <div class="table-responsive excel-table-container">
@@ -64,9 +68,9 @@
           <th class="ticket-col-status">{{ _('Status') }}</th>
           <th class="ticket-col-priority">{{ _('Priority') }}</th>
           <th class="ticket-col-category">{{ _('Category') }}</th>
-          <th class="ticket-col-creator">{{ _('Creator') }}</th>
-          <th class="ticket-col-sla-due">{{ _('SLA Due') }}</th>
-          <th class="ticket-col-sla">{{ _('SLA') }}</th>
+          <th class="ticket-col-creator d-none d-md-table-cell">{{ _('Creator') }}</th>
+          <th class="ticket-col-sla-due d-none d-lg-table-cell">{{ _('SLA Due') }}</th>
+          <th class="ticket-col-sla d-none d-md-table-cell">{{ _('SLA') }}</th>
           <th class="ticket-col-action">{{ _('Action') }}</th>
         </tr>
       </thead>
@@ -93,18 +97,18 @@
             <td>
               <small>{{ _(ticket.category) if ticket.category else '—' }}</small>
             </td>
-            <td>
+            <td class="d-none d-md-table-cell">
               <small title="{{ ticket.creator_name }}">{{ ticket.creator_name }}</small><br>
               <small class="text-muted">{{ ticket.created_at_text }}</small>
             </td>
-            <td>
+            <td class="d-none d-lg-table-cell">
               {% if ticket.sla_state != 'none' %}
                 <small>{{ ticket.sla_due_at_text }}</small>
               {% else %}
                 <small class="text-muted">—</small>
               {% endif %}
             </td>
-            <td>
+            <td class="d-none d-md-table-cell">
               {% if ticket.sla_state != 'none' %}
                 {% if ticket.sla_state == 'closed' %}
                   <span class="badge bg-secondary">{{ _('Closed') }}</span>
