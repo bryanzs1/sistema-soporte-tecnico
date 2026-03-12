@@ -171,7 +171,7 @@
       </div>
     </div>
     <div class="col-lg-4 col-md-6">
-      <div class="metric-card metric-success">
+      <div class="metric-card metric-success kpi-focus kpi-sla">
         <div class="metric-label">{{ _('SLA Compliance') }}</div>
         <div class="metric-value">
           {% if stats.sla_compliance_pct is not none %}{{ stats.sla_compliance_pct }}%{% else %}—{% endif %}
@@ -180,7 +180,7 @@
       </div>
     </div>
     <div class="col-lg-4 col-md-6">
-      <div class="metric-card">
+      <div class="metric-card kpi-focus kpi-csat">
         <div class="metric-label">{{ _('CSAT avg') }}</div>
         <div class="metric-value d-flex align-items-center gap-2">
           {% if stats.csat_avg is not none %}
