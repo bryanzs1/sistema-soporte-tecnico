@@ -237,6 +237,9 @@
               </div>
             {% endif %}
             {{ comment_form.message(class_='form-control input-enhanced', rows=3, placeholder=_('Write a message...'), id='comment-textarea') }}
+            <div id="kb-insert-feedback" class="alert alert-success mt-2 py-2 px-3 d-none" role="status" aria-live="polite">
+              <i class="bi bi-check-circle me-1"></i>{{ _('KB content inserted into message') }}
+            </div>
           </div>
           {{ comment_form.submit_comment(class_='btn btn-primary btn-animated') }}
         </form>
@@ -264,7 +267,18 @@
           const kbModalEl = document.getElementById('kbModal');
           const kbInput = document.getElementById('kb-search-input');
           const kbResults = document.getElementById('kb-results');
+          const kbFeedback = document.getElementById('kb-insert-feedback');
           let kbTimer;
+          let kbFeedbackTimer;
+
+          function showKbFeedback() {
+            if (!kbFeedback) return;
+            kbFeedback.classList.remove('d-none');
+            clearTimeout(kbFeedbackTimer);
+            kbFeedbackTimer = setTimeout(function () {
+              kbFeedback.classList.add('d-none');
+            }, 2200);
+          }
 
           // Move modal to <body> to avoid stacking/transform issues that can leave only the gray backdrop.
           if (kbModalEl && kbModalEl.parentElement !== document.body) {
@@ -318,6 +332,7 @@
                         ta.value = cur ? cur + '\n\n' + this.dataset.content : this.dataset.content;
                         const modalInstance = bootstrap.Modal.getOrCreateInstance(kbModalEl);
                         modalInstance.hide();
+                        showKbFeedback();
                       });
                     });
                   });
