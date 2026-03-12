@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, PasswordHistory, TicketAttachment
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -185,29 +185,29 @@ def delete_user(user_id):
             flash(_t('Cannot delete the last administrator account.'), 'danger')
             return redirect(url_for('admin.settings_users'))
 
-    # Block deletion if user has associated records that cannot be orphaned
-    has_tickets = Ticket.query.filter(
-        (Ticket.user_id == user.id) | (Ticket.technician_id == user.id)
-    ).first()
-    has_comments = TicketComment.query.filter_by(user_id=user.id).first()
-    has_attachments = TicketAttachment.query.filter_by(uploaded_by_id=user.id).first()
-    has_kb = KBArticle.query.filter_by(created_by_id=user.id).first()
-    has_tokens = ApiToken.query.filter_by(created_by_id=user.id).first()
-    has_integrations = Integration.query.filter_by(created_by_id=user.id).first()
-
-    if any([has_tickets, has_comments, has_attachments, has_kb, has_tokens, has_integrations]):
-        flash(
-            _t('User "{username}" has associated records and cannot be deleted. Deactivate the account instead.').format(username=user.username),
-            'warning'
-        )
-        return redirect(url_for('admin.settings_users'))
-
     try:
         username = user.username
+        reassign_to_id = current_user.id
+
+        # Preserve operational history by reassigning strict foreign keys to current admin.
+        Ticket.query.filter_by(user_id=user.id).update({'user_id': None}, synchronize_session=False)
+        Ticket.query.filter_by(technician_id=user.id).update({'technician_id': None}, synchronize_session=False)
+        Ticket.query.filter_by(ml_suggested_technician_id=user.id).update({'ml_suggested_technician_id': None}, synchronize_session=False)
+
+        TicketComment.query.filter_by(user_id=user.id).update({'user_id': reassign_to_id}, synchronize_session=False)
+        TicketAttachment.query.filter_by(uploaded_by_id=user.id).update({'uploaded_by_id': reassign_to_id}, synchronize_session=False)
+        KBArticle.query.filter_by(created_by_id=user.id).update({'created_by_id': reassign_to_id}, synchronize_session=False)
+        KBArticleRejection.query.filter_by(rejected_by_id=user.id).update({'rejected_by_id': reassign_to_id}, synchronize_session=False)
+        ApiToken.query.filter_by(created_by_id=user.id).update({'created_by_id': reassign_to_id}, synchronize_session=False)
+        Integration.query.filter_by(created_by_id=user.id).update({'created_by_id': reassign_to_id}, synchronize_session=False)
+
+        # Remove 1:1 stats and auth history tied to user.
+        TechnicianStats.query.filter_by(technician_id=user.id).delete(synchronize_session=False)
+        PasswordHistory.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+
         # Nullify audit log references (nullable FK — preserves audit trail)
-        AuditLog.query.filter_by(user_id=user.id).update({'user_id': None})
-        # Delete password history (non-nullable FK)
-        PasswordHistory.query.filter_by(user_id=user.id).delete()
+        AuditLog.query.filter_by(user_id=user.id).update({'user_id': None}, synchronize_session=False)
+
         db.session.delete(user)
         db.session.commit()
         flash(_t('User "{username}" has been permanently deleted.').format(username=username), 'success')
