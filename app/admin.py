@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, PasswordHistory, TicketAttachment
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
 
 bp = Blueprint('admin', __name__)
@@ -165,6 +165,58 @@ def reset_user_password(user_id):
             return render_template('admin/reset_user_password.html', user=user, form=form)
 
     return render_template('admin/reset_user_password.html', user=user, form=form)
+
+
+@bp.route('/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Prevent self-deletion
+    if user.id == current_user.id:
+        flash(_t('You cannot delete your own account.'), 'danger')
+        return redirect(url_for('admin.settings_users'))
+
+    # Prevent deleting the last admin
+    if user.role == 'admin':
+        admin_count = User.query.filter_by(role='admin').count()
+        if admin_count <= 1:
+            flash(_t('Cannot delete the last administrator account.'), 'danger')
+            return redirect(url_for('admin.settings_users'))
+
+    # Block deletion if user has associated records that cannot be orphaned
+    has_tickets = Ticket.query.filter(
+        (Ticket.user_id == user.id) | (Ticket.technician_id == user.id)
+    ).first()
+    has_comments = TicketComment.query.filter_by(user_id=user.id).first()
+    has_attachments = TicketAttachment.query.filter_by(uploaded_by_id=user.id).first()
+    has_kb = KBArticle.query.filter_by(created_by_id=user.id).first()
+    has_tokens = ApiToken.query.filter_by(created_by_id=user.id).first()
+    has_integrations = Integration.query.filter_by(created_by_id=user.id).first()
+
+    if any([has_tickets, has_comments, has_attachments, has_kb, has_tokens, has_integrations]):
+        flash(
+            _t('User "{username}" has associated records and cannot be deleted. Deactivate the account instead.').format(username=user.username),
+            'warning'
+        )
+        return redirect(url_for('admin.settings_users'))
+
+    try:
+        username = user.username
+        # Nullify audit log references (nullable FK — preserves audit trail)
+        AuditLog.query.filter_by(user_id=user.id).update({'user_id': None})
+        # Delete password history (non-nullable FK)
+        PasswordHistory.query.filter_by(user_id=user.id).delete()
+        db.session.delete(user)
+        db.session.commit()
+        flash(_t('User "{username}" has been permanently deleted.').format(username=username), 'success')
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error('Error deleting user %s: %s', user.username, e)
+        flash(_t('Error deleting user. Please try again.'), 'danger')
+
+    return redirect(url_for('admin.settings_users'))
 
 
 @bp.route('/dashboard')

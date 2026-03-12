@@ -54,6 +54,15 @@
                             <a class="btn btn-sm btn-warning text-dark" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">
                                 <i class="bi bi-key me-1"></i>{{ _('Reset Password') }}
                             </a>
+                            <button class="btn btn-sm btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteUserModal"
+                                    data-user-id="{{ u.id }}"
+                                    data-username="{{ u.username }}"
+                                    data-delete-url="{{ url_for('admin.delete_user', user_id=u.id) }}"
+                                    {% if u.id == current_user.id %}disabled title="{{ _('You cannot delete your own account.') }}"{% endif %}>
+                                <i class="bi bi-trash me-1"></i>{{ _('Delete') }}
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -68,4 +77,39 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Delete User Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ _('Delete User') }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ _('Are you sure you want to permanently delete user') }} <strong id="deleteUsername"></strong>?</p>
+                <p class="text-danger mb-0"><i class="bi bi-info-circle me-1"></i>{{ _('This action cannot be undone. Users with existing records must be deactivated instead.') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <form id="deleteUserForm" method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>{{ _('Delete Permanently') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('deleteUserModal').addEventListener('show.bs.modal', function (event) {
+    var btn = event.relatedTarget;
+    document.getElementById('deleteUsername').textContent = btn.getAttribute('data-username');
+    document.getElementById('deleteUserForm').action = btn.getAttribute('data-delete-url');
+});
+</script>
 {% endblock %}
