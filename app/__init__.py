@@ -403,6 +403,17 @@ TRANSLATIONS = {
         , 'Select an action': 'Selecciona una acción'
         , 'Open tickets': 'Tickets abiertos'
         , 'Ticket Queue': 'Cola de tickets'
+        , 'Review all active tickets': 'Revisa todos los tickets activos'
+        , 'Follow live conversations': 'Sigue las conversaciones en vivo'
+        , 'See connected users now': 'Consulta los usuarios conectados ahora'
+        , 'Review and approve content': 'Revisa y aprueba contenido'
+        , 'Open the management summary': 'Abre el resumen gerencial'
+        , 'Operational Snapshot': 'Resumen operativo'
+        , 'Current ticket workload and execution status': 'Carga actual de tickets y estado de ejecución'
+        , 'Productivity and Risk': 'Productividad y riesgo'
+        , 'Resolution speed, reopened tickets and SLA breaches': 'Velocidad de resolución, tickets reabiertos e incumplimientos de SLA'
+        , 'Service Quality': 'Calidad del servicio'
+        , 'SLA compliance and user satisfaction indicators': 'Indicadores de cumplimiento de SLA y satisfacción del usuario'
         , 'Date': 'Fecha'
         , 'User': 'Usuario'
         , 'Resource': 'Recurso'
@@ -793,6 +804,22 @@ TRANSLATIONS = {
         'Vencimiento SLA': 'SLA Due',
         'Acciones Rápidas': 'Quick Actions',
         'Por categoría': 'By category',
+        'Centro de Operaciones': 'Operations Hub',
+        'Accesos directos interactivos para operaciones diarias': 'Interactive shortcuts for daily operations',
+        'Ir a': 'Jump to',
+        'Selecciona una acción': 'Select an action',
+        'Cola de tickets': 'Ticket Queue',
+        'Revisa todos los tickets activos': 'Review all active tickets',
+        'Sigue las conversaciones en vivo': 'Follow live conversations',
+        'Consulta los usuarios conectados ahora': 'See connected users now',
+        'Revisa y aprueba contenido': 'Review and approve content',
+        'Abre el resumen gerencial': 'Open the management summary',
+        'Resumen operativo': 'Operational Snapshot',
+        'Carga actual de tickets y estado de ejecución': 'Current ticket workload and execution status',
+        'Productividad y riesgo': 'Productivity and Risk',
+        'Velocidad de resolución, tickets reabiertos e incumplimientos de SLA': 'Resolution speed, reopened tickets and SLA breaches',
+        'Calidad del servicio': 'Service Quality',
+        'Indicadores de cumplimiento de SLA y satisfacción del usuario': 'SLA compliance and user satisfaction indicators',
         'Administrar usuarios': 'Manage users',
         'Administrar opciones de ticket': 'Manage ticket options',
         'Tu nombre': 'Your name',
