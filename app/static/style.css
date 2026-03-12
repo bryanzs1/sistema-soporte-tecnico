@@ -1085,6 +1085,45 @@ footer {
     letter-spacing: 0.01em;
 }
 
+/* Desktop safeguard: preserve strong visual hierarchy on PC screens */
+@media (min-width: 992px) {
+    .admin-dashboard-page > .mb-5 > h2 {
+        font-size: 2rem;
+        margin-bottom: 1.35rem !important;
+    }
+
+    .operations-hub-card h3 {
+        font-size: 1.3rem;
+    }
+
+    .dashboard-metrics-header h4 {
+        font-size: 1.12rem;
+    }
+
+    .metric-label {
+        font-size: 0.85rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+    }
+}
+
+/* Tablet transition: keep readability before compact mobile rules apply */
+@media (min-width: 769px) and (max-width: 991px) {
+    .admin-dashboard-page > .mb-5 > h2 {
+        font-size: 1.75rem;
+    }
+
+    .operations-hub-card h3 {
+        font-size: 1.18rem;
+    }
+
+    .metric-value {
+        font-size: 1.82rem;
+    }
+}
+
 .operations-hub-card {
     background: linear-gradient(135deg, rgba(14, 116, 144, 0.08) 0%, rgba(30, 64, 175, 0.06) 100%);
     border: 1px solid rgba(30, 64, 175, 0.12);
