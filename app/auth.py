@@ -1,11 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_limiter.util import get_remote_address
 import os
+import hashlib
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from app import db, login, translate, limiter
+from app import db, login, translate, limiter, send_email
 from app.models import User
-from app.forms import LoginForm, ForcePasswordChangeForm, ChangePasswordForm
+from app.forms import LoginForm, ForcePasswordChangeForm, ChangePasswordForm, RequestPasswordResetForm, ResetPasswordForm
 from app.security import AuditHelper
 
 
@@ -38,6 +40,34 @@ def _login_rate_limit_key():
     ip = forwarded_for.split(',')[0].strip() if forwarded_for else get_remote_address()
     username = (request.form.get('username') or '').strip().lower() or '__empty__'
     return f"{ip}:{username}"
+
+
+def _password_reset_serializer():
+    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+
+def _generate_password_reset_token(user):
+    # Bind token to current password hash so old links die immediately after a password change.
+    password_hash_digest = hashlib.sha256((user.password_hash or '').encode('utf-8')).hexdigest()
+    payload = {'uid': user.id, 'ph': password_hash_digest}
+    return _password_reset_serializer().dumps(payload, salt='password-reset')
+
+
+def _resolve_user_from_reset_token(token, max_age_seconds=1800):
+    try:
+        data = _password_reset_serializer().loads(token, salt='password-reset', max_age=max_age_seconds)
+    except (BadSignature, SignatureExpired):
+        return None
+
+    user = User.query.get(data.get('uid'))
+    if not user or not user.is_active:
+        return None
+
+    expected_digest = hashlib.sha256((user.password_hash or '').encode('utf-8')).hexdigest()
+    if data.get('ph') != expected_digest:
+        return None
+
+    return user
 
 
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
@@ -92,6 +122,79 @@ def login():
         flash(_t('Welcome back, {username}!').format(username=user.username), 'success')
         return redirect(url_for('main.index'))
     return render_template('auth/login.html', form=form)
+
+
+@bp.route('/forgot-password', methods=['GET', 'POST'], endpoint='forgot_password')
+@limiter.limit('5 per hour', methods=['POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        email = (form.email.data or '').strip().lower()
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.is_active:
+            token = _generate_password_reset_token(user)
+            reset_url = url_for('auth.reset_password_with_token', token=token, _external=True)
+            subject = _t('Password reset link')
+            body = _t('Open this link to reset your password: {url}').format(url=reset_url)
+            try:
+                send_email(subject, [user.email], body)
+            except Exception as e:
+                current_app.logger.error('Error sending password reset email to %s: %s', user.email, e)
+
+        # Prevent account enumeration by always returning the same response.
+        flash(_t('If the email exists in our system, you will receive password reset instructions shortly.'), 'info')
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/forgot_password.html', form=form)
+
+
+@bp.route('/reset-password/<token>', methods=['GET', 'POST'], endpoint='reset_password_with_token')
+@limiter.limit('10 per hour', methods=['POST'])
+def reset_password_with_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    user = _resolve_user_from_reset_token(token)
+    if not user:
+        flash(_t('Invalid or expired password reset link. Request a new one.'), 'danger')
+        return redirect(url_for('auth.forgot_password'))
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        from app.security import PasswordValidator
+        from app.models import PasswordHistory
+
+        is_valid, message = PasswordValidator.validate(form.new_password.data)
+        if not is_valid:
+            flash(_t('Password does not meet security requirements: ') + message, 'warning')
+            return render_template('auth/reset_password.html', form=form)
+
+        if PasswordHistory.check_password_reuse(user.id, form.new_password.data):
+            flash(_t('This password was recently used. Please choose a different one.'), 'danger')
+            return render_template('auth/reset_password.html', form=form)
+
+        if user.check_password(form.new_password.data):
+            flash(_t('New password must be different from current password'), 'warning')
+            return render_template('auth/reset_password.html', form=form)
+
+        old_hash = user.password_hash
+        user.set_password(form.new_password.data)
+        PasswordHistory.add_to_history(user.id, old_hash, commit=False)
+        db.session.commit()
+
+        try:
+            AuditHelper.log_password_change(user.id)
+        except Exception as audit_error:
+            current_app.logger.warning('Audit log failed after self-service password reset: %s', audit_error)
+
+        flash(_t('Your password has been reset successfully. Please sign in.'), 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/reset_password.html', form=form)
 
 
 @bp.route('/force-password-change', methods=['GET', 'POST'], endpoint='force_password_change')
