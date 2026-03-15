@@ -51,7 +51,7 @@ def _serialize_comment(ticket, comment):
         'username': comment.user.username if comment.user else _t('User'),
         'user_role': user_role,
         'message_role': message_role,
-        'message': comment.message,
+        'message': _t(comment.message),
         'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
     }
 
