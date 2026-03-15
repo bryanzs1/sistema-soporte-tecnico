@@ -8,6 +8,13 @@
     </div>
     <div class="card-body">
         <p class="text-muted">{{ _('Configure categories and priority levels for tickets') }}</p>
+        <form method="post" action="{{ url_for('admin.restore_ticket_options_defaults') }}" class="mb-3">
+            {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+            <input type="hidden" name="next" value="settings">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-repeat me-1"></i>{{ _('Restore recommended options') }}
+            </button>
+        </form>
         
         <!-- Add New Option Form -->
         <div class="card mb-4 bg-light">

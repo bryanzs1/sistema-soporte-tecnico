@@ -54,7 +54,7 @@ def tech_or_admin_required(func):
 
 def _sync_default_ticket_options():
     """Ensure default categories and priorities exist in TicketOption catalog."""
-    created = False
+    changes = 0
 
     for value in Ticket.default_categories():
         normalized = (value or '').strip()
@@ -64,10 +64,10 @@ def _sync_default_ticket_options():
         if existing:
             if not existing.active:
                 existing.active = True
-                created = True
+                changes += 1
             continue
         db.session.add(TicketOption(option_type='category', value=normalized, active=True))
-        created = True
+        changes += 1
 
     for value in Ticket.default_priorities():
         normalized = (value or '').strip()
@@ -77,13 +77,31 @@ def _sync_default_ticket_options():
         if existing:
             if not existing.active:
                 existing.active = True
-                created = True
+                changes += 1
             continue
         db.session.add(TicketOption(option_type='priority', value=normalized, active=True))
-        created = True
+        changes += 1
 
-    if created:
+    if changes:
         db.session.commit()
+
+    return changes
+
+
+@bp.route('/ticket-options/restore-defaults', methods=['POST'])
+@login_required
+@admin_required
+def restore_ticket_options_defaults():
+    changes = _sync_default_ticket_options()
+    if changes:
+        flash(_t('Recommended options restored: {count}').format(count=changes), 'success')
+    else:
+        flash(_t('Ticket options are already up to date'), 'info')
+
+    target = request.form.get('next')
+    if target == 'settings':
+        return redirect(url_for('admin.settings_ticket_options'))
+    return redirect(url_for('admin.ticket_options'))
 
 
 @bp.route('/users')
