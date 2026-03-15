@@ -30,7 +30,18 @@ class TicketForm(FlaskForm):
     creator_name = StringField('Your name', validators=[DataRequired(), Length(max=120)])
     title = StringField('Title', validators=[DataRequired(), Length(max=140)])
     description = TextAreaField('Description', validators=[DataRequired()])
-    category = SelectField('Category', choices=[(c,c) for c in ['Red','Impresoras','Software','Hardware']])
+    category = SelectField('Category', choices=[(c,c) for c in [
+        'Software',
+        'Hardware',
+        'Red',
+        'Impresoras',
+        'Accesos y cuentas',
+        'Correo corporativo',
+        'VPN y conectividad remota',
+        'Telefonía y videoconferencia',
+        'Equipos y periféricos',
+        'Seguridad informática',
+    ]])
     priority = SelectField('Priority', choices=[(p,p) for p in ['Baja','Media','Alta','Crítica']])
     attachment = FileField('Attachment', validators=[FileAllowed(['png', 'jpg', 'jpeg', 'pdf', 'txt', 'doc', 'docx', 'xlsx', 'csv'], 'Invalid file type')])
     submit = SubmitField('Create Ticket')

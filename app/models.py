@@ -115,7 +115,18 @@ class Ticket(db.Model):
     # possible values for dropdowns can be defined in code
     @staticmethod
     def default_categories():
-        return ['Red', 'Impresoras', 'Software', 'Hardware']
+        return [
+            'Software',
+            'Hardware',
+            'Red',
+            'Impresoras',
+            'Accesos y cuentas',
+            'Correo corporativo',
+            'VPN y conectividad remota',
+            'Telefonía y videoconferencia',
+            'Equipos y periféricos',
+            'Seguridad informática',
+        ]
 
     @staticmethod
     def default_priorities():
