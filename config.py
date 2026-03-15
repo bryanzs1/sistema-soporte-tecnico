@@ -22,6 +22,14 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@localhost')
+
+    # Optional external translator for free-text chat messages (e.g. LibreTranslate)
+    CHAT_TRANSLATE_API_URL = os.environ.get('CHAT_TRANSLATE_API_URL')
+    CHAT_TRANSLATE_API_KEY = os.environ.get('CHAT_TRANSLATE_API_KEY')
+    try:
+        CHAT_TRANSLATE_TIMEOUT = float(os.environ.get('CHAT_TRANSLATE_TIMEOUT', '2.5'))
+    except (TypeError, ValueError):
+        CHAT_TRANSLATE_TIMEOUT = 2.5
     
     # Security: Session & Cookie Configuration
     SESSION_COOKIE_SECURE = True      # Only send cookie over HTTPS

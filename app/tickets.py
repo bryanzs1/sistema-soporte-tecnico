@@ -16,6 +16,9 @@ from app.security import AuditHelper
 
 bp = Blueprint('tickets', __name__)
 
+_chat_translation_cache = {}
+_CHAT_TRANSLATION_CACHE_LIMIT = 2000
+
 
 def utcnow():
     """Return naive UTC datetime for compatibility with current schema."""
@@ -24,6 +27,57 @@ def utcnow():
 
 def _t(text):
     return translate(text, session.get('lang', 'en'))
+
+
+def _translate_chat_free_text(message, target_lang):
+    """Translate free-text chat content using external API when configured."""
+    text = (message or '').strip()
+    if not text:
+        return message
+    if target_lang not in ('en', 'es'):
+        return message
+
+    cache_key = f'{target_lang}:{text}'
+    cached = _chat_translation_cache.get(cache_key)
+    if cached:
+        return cached
+
+    api_url = current_app.config.get('CHAT_TRANSLATE_API_URL')
+    if not api_url:
+        return message
+
+    endpoint = api_url.rstrip('/')
+    if not endpoint.endswith('/translate'):
+        endpoint = endpoint + '/translate'
+
+    payload = {
+        'q': text,
+        'source': 'auto',
+        'target': target_lang,
+        'format': 'text',
+    }
+    api_key = current_app.config.get('CHAT_TRANSLATE_API_KEY')
+    if api_key:
+        payload['api_key'] = api_key
+
+    try:
+        import requests
+        timeout = current_app.config.get('CHAT_TRANSLATE_TIMEOUT', 2.5)
+        resp = requests.post(endpoint, json=payload, timeout=timeout)
+        if resp.ok:
+            data = resp.json() if resp.content else {}
+            translated = (data.get('translatedText') or '').strip()
+            if translated:
+                if len(_chat_translation_cache) >= _CHAT_TRANSLATION_CACHE_LIMIT:
+                    # Remove the oldest inserted key in a simple FIFO manner.
+                    first_key = next(iter(_chat_translation_cache))
+                    _chat_translation_cache.pop(first_key, None)
+                _chat_translation_cache[cache_key] = translated
+                return translated
+    except Exception as e:
+        current_app.logger.debug('Chat translation failed: %s', e)
+
+    return message
 
 
 def _ticket_read_access(ticket):
@@ -46,12 +100,17 @@ def _serialize_comment(ticket, comment):
     elif ticket.technician_id and comment.user_id == ticket.technician_id:
         message_role = 'technician'
 
+    target_lang = session.get('lang', 'en')
+    translated_message = _t(comment.message)
+    if translated_message == comment.message:
+        translated_message = _translate_chat_free_text(comment.message, target_lang)
+
     return {
         'id': comment.id,
         'username': comment.user.username if comment.user else _t('User'),
         'user_role': user_role,
         'message_role': message_role,
-        'message': _t(comment.message),
+        'message': translated_message,
         'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
     }
 
