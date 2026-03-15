@@ -52,6 +52,40 @@ def tech_or_admin_required(func):
     return wrapper
 
 
+def _sync_default_ticket_options():
+    """Ensure default categories and priorities exist in TicketOption catalog."""
+    created = False
+
+    for value in Ticket.default_categories():
+        normalized = (value or '').strip()
+        if not normalized:
+            continue
+        existing = TicketOption.query.filter_by(option_type='category', value=normalized).first()
+        if existing:
+            if not existing.active:
+                existing.active = True
+                created = True
+            continue
+        db.session.add(TicketOption(option_type='category', value=normalized, active=True))
+        created = True
+
+    for value in Ticket.default_priorities():
+        normalized = (value or '').strip()
+        if not normalized:
+            continue
+        existing = TicketOption.query.filter_by(option_type='priority', value=normalized).first()
+        if existing:
+            if not existing.active:
+                existing.active = True
+                created = True
+            continue
+        db.session.add(TicketOption(option_type='priority', value=normalized, active=True))
+        created = True
+
+    if created:
+        db.session.commit()
+
+
 @bp.route('/users')
 @login_required
 @admin_required
@@ -466,6 +500,7 @@ def debug_online_users_json():
 @login_required
 @admin_required
 def ticket_options():
+    _sync_default_ticket_options()
     form = TicketOptionForm()
     if form.validate_on_submit():
         exists = TicketOption.query.filter_by(
@@ -794,6 +829,7 @@ def settings_users():
 @admin_required
 def settings_ticket_options():
     """Gestión de opciones de tickets desde settings"""
+    _sync_default_ticket_options()
     form = TicketOptionForm()
     categories = TicketOption.query.filter_by(option_type='category', active=True).all()
     priorities = TicketOption.query.filter_by(option_type='priority', active=True).all()
