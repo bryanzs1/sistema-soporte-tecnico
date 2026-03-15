@@ -77,14 +77,14 @@
               <!-- Language Dropdown -->
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-globe"></i> <span class="d-none d-md-inline">{{ _('Language') }}</span>
+                  <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'en')|upper }}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
-                    <i class="bi bi-translate me-2"></i>{{ _('English') }}
+                    <i class="bi bi-translate me-2"></i>EN
                   </a></li>
                   <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
-                    <i class="bi bi-translate me-2"></i>{{ _('Spanish') }}
+                    <i class="bi bi-translate me-2"></i>ES
                   </a></li>
                 </ul>
               </li>
