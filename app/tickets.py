@@ -10,7 +10,7 @@ from sqlalchemy import and_, case
 from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
-from app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog, KBArticle
+from app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog, KBArticle, TicketOption
 from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
 from app.security import AuditHelper
 
@@ -90,6 +90,11 @@ def _ticket_chat_access(ticket):
         or ticket.user_id == current_user.id
         or (current_user.is_technician() and ticket.technician_id == current_user.id)
     )
+
+
+def _technician_reassign_enabled():
+    policy = TicketOption.query.filter_by(option_type='system_policy', value='technician_reassign').first()
+    return bool(policy and policy.active)
 
 
 def _serialize_comment(ticket, comment):
@@ -825,11 +830,12 @@ def ticket_detail(ticket_id):
         ticket.status = submitted_status
 
         submitted_technician = request.form.get('technician')
-        if current_user.is_admin() and submitted_technician and str(submitted_technician).isdigit():
+        can_reassign_technician = current_user.is_admin() or (current_user.is_technician() and _technician_reassign_enabled())
+        if can_reassign_technician and submitted_technician and str(submitted_technician).isdigit():
             tech_id = int(submitted_technician)
             # 0 means unassign, set to None
             ticket.technician_id = tech_id if tech_id > 0 else None
-        elif (not current_user.is_admin()) and submitted_technician is not None:
+        elif (not can_reassign_technician) and submitted_technician is not None:
             # Defense in depth: prevent forged requests from technicians changing assignment.
             flash(_t('Only administrators can assign or reassign technicians'), 'warning')
 
@@ -866,7 +872,8 @@ def ticket_detail(ticket_id):
     return render_template('tickets/detail.html', ticket=ticket, form=form, comment_form=comment_form,
                            comments=comments, attachments=attachments, can_chat=can_chat,
                            csat_form=csat_form, timeline=timeline,
-                           reopen_deadline=reopen_deadline, can_reopen_window=can_reopen_window)
+                           reopen_deadline=reopen_deadline, can_reopen_window=can_reopen_window,
+                           technician_reassign_enabled=_technician_reassign_enabled())
 
 
 @bp.route('/<int:ticket_id>/take', methods=['POST'])

@@ -88,6 +88,11 @@ def _sync_default_ticket_options():
     return changes
 
 
+def _technician_reassign_enabled():
+    policy = TicketOption.query.filter_by(option_type='system_policy', value='technician_reassign').first()
+    return bool(policy and policy.active)
+
+
 @bp.route('/ticket-options/restore-defaults', methods=['POST'])
 @login_required
 @admin_required
@@ -879,7 +884,31 @@ def settings_ticket_options():
     return render_template('admin/settings/ticket_options.html', 
                          form=form, 
                          categories=categories, 
-                         priorities=priorities)
+                         priorities=priorities,
+                         technician_reassign_enabled=_technician_reassign_enabled())
+
+
+@bp.route('/settings/ticket-options/policies', methods=['POST'])
+@login_required
+@admin_required
+def settings_ticket_policies_update():
+    enabled = request.form.get('technician_reassign_enabled') == 'on'
+    policy = TicketOption.query.filter_by(option_type='system_policy', value='technician_reassign').first()
+
+    if not policy:
+        policy = TicketOption(option_type='system_policy', value='technician_reassign', active=enabled)
+        db.session.add(policy)
+    else:
+        policy.active = enabled
+
+    db.session.commit()
+
+    if enabled:
+        flash(_t('Technicians can now reassign tickets'), 'success')
+    else:
+        flash(_t('Only administrators can reassign tickets'), 'info')
+
+    return redirect(url_for('admin.settings_ticket_options'))
 
 
 @bp.route('/settings/ml')

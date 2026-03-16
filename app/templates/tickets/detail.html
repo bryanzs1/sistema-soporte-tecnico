@@ -434,7 +434,7 @@
               {{ form.status.label }}
               {{ form.status(class_='form-select input-enhanced') }}
             </div>
-            {% if current_user.is_admin() %}
+            {% if current_user.is_admin() or (current_user.is_technician() and technician_reassign_enabled) %}
             <div class="col-md-6 mb-3">
               {{ form.technician.label }}
               {{ form.technician(class_='form-select input-enhanced') }}
