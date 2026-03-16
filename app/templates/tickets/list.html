@@ -4,8 +4,15 @@
 <div class="container mt-4 tickets-list-page">
   <h2>{{ _('Tickets') }}</h2>
 
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="btn {% if view == 'active' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='active', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('Active tickets') }}</a>
+    <a class="btn {% if view == 'history' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='history', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('History') }}</a>
+    <a class="btn {% if view == 'all' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='all', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('All tickets') }}</a>
+  </div>
+
   <div class="card mb-3 p-3">
     <form class="row g-2 tickets-filter-form" method="get">
+      <input type="hidden" name="view" value="{{ view or 'active' }}">
       <div class="col-12 col-sm-6 col-lg-auto">
         <select class="form-select" name="status">
         <option value="">{{ _('All statuses') }}</option>
@@ -43,8 +50,8 @@
       <div class="d-flex flex-column flex-sm-row gap-2 tickets-filter-actions">
       <button type="submit" class="btn btn-primary text-white">{{ _('Filter') }}</button>
       <div class="btn-group tickets-export-group">
-        <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a>
-        <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a>
+        <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', view=view, status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a>
+        <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', view=view, status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a>
       </div>
       </div>
     </div>

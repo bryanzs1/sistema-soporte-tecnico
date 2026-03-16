@@ -106,6 +106,9 @@ TRANSLATIONS = {
         'All statuses': 'Todos los estados',
         'All categories': 'Todas las categorías',
         'All priorities': 'Todas las prioridades',
+        'Active tickets': 'Tickets activos',
+        'History': 'Historial',
+        'All tickets': 'Todos los tickets',
         'From': 'Desde',
         'To': 'Hasta',
         'Search...': 'Buscar...',
@@ -692,6 +695,9 @@ TRANSLATIONS = {
         , 'Most Messages': 'Más mensajes'
         , 'All Chats': 'Todos los chats'
         , 'All Statuses': 'Todos los estados'
+        , 'Tickets activos': 'Active tickets'
+        , 'Historial': 'History'
+        , 'Todos los tickets': 'All tickets'
         , 'Filter by Status': 'Filtrar por estado'
         , 'Filter by Activity': 'Filtrar por actividad'
         , 'Sort By': 'Ordenar por'

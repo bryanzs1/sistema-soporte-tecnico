@@ -349,6 +349,9 @@ def list_tickets():
             q = Ticket.query.filter_by(user_id=current_user.id)
 
         # apply filters from query string
+        view = request.args.get('view', type=str) or 'active'
+        if view not in ('active', 'history', 'all'):
+            view = 'active'
         status = request.args.get('status', type=str)
         category = request.args.get('category', type=str)
         priority = request.args.get('priority', type=str)
@@ -358,6 +361,10 @@ def list_tickets():
 
         if status:
             q = q.filter_by(status=status)
+        elif view == 'active':
+            q = q.filter(Ticket.status != 'Cerrado')
+        elif view == 'history':
+            q = q.filter(Ticket.status == 'Cerrado')
         if category:
             q = q.filter_by(category=category)
         if priority:
@@ -433,6 +440,7 @@ def list_tickets():
         priorities = Ticket.priorities()
 
         return render_template('tickets/list.html', tickets=tickets,
+                               view=view,
                                status=status, category=category, priority=priority,
                                start_date=start_date, end_date=end_date, keyword=keyword,
                                categories=categories, priorities=priorities)
@@ -480,6 +488,7 @@ def list_tickets():
                 })
 
             return render_template('tickets/list.html', tickets=fallback_tickets,
+                                   view=view,
                                    status=None, category=None, priority=None,
                                    start_date=None, end_date=None, keyword=None,
                                    categories=Ticket.default_categories(),
@@ -500,6 +509,7 @@ def list_tickets():
             except Exception:
                 current_app.logger.exception('Failed to write audit log for ticket_list_fallback_error')
             return render_template('tickets/list.html', tickets=[],
+                                   view=view,
                                    status=None, category=None, priority=None,
                                    start_date=None, end_date=None, keyword=None,
                                    categories=Ticket.default_categories(),
@@ -664,6 +674,9 @@ def export_tickets():
         q = Ticket.query
     else:
         q = Ticket.query.filter_by(user_id=current_user.id)
+    view = request.args.get('view', type=str) or 'active'
+    if view not in ('active', 'history', 'all'):
+        view = 'active'
     status = request.args.get('status', type=str)
     category = request.args.get('category', type=str)
     priority = request.args.get('priority', type=str)
@@ -676,6 +689,10 @@ def export_tickets():
 
     if status:
         q = q.filter_by(status=status)
+    elif view == 'active':
+        q = q.filter(Ticket.status != 'Cerrado')
+    elif view == 'history':
+        q = q.filter(Ticket.status == 'Cerrado')
     if category:
         q = q.filter_by(category=category)
     if priority:
