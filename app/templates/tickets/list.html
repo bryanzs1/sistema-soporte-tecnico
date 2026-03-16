@@ -80,6 +80,9 @@
             <td><strong>#{{ ticket.id }}</strong></td>
             <td>
               <div class="text-truncate" title="{{ ticket.title }}">{{ ticket.title }}</div>
+              {% if not ticket.technician_id and ticket.status != 'Cerrado' %}
+                <small class="d-block mt-1"><span class="badge bg-warning text-dark">{{ _('Unassigned') }}</span></small>
+              {% endif %}
               {% if ticket.description %}
                 <small class="text-muted d-block text-truncate" title="{{ ticket.description }}">{{ ticket.description[:60] }}{% if ticket.description|length > 60 %}...{% endif %}</small>
               {% endif %}

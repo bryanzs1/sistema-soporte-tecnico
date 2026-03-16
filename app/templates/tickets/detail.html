@@ -114,13 +114,16 @@
             <strong>{{ _('Reopened') }}:</strong> {{ ticket.reopened_count or 0 }} {{ _('time(s)') }}
           </div>
         </div>
-        {% if ticket.technician %}
-          <div class="col-md-6 mb-3">
-            <div class="detail-item">
-              <strong>{{ _('Assigned technician') }}:</strong> {{ ticket.technician.username }}
-            </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Assigned technician') }}:</strong>
+            {% if ticket.technician %}
+              {{ ticket.technician.username }}
+            {% else %}
+              <span class="badge bg-warning text-dark ms-2">{{ _('Unassigned') }}</span>
+            {% endif %}
           </div>
-        {% endif %}
+        </div>
       </div>
     </div>
 
