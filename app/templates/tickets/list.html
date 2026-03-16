@@ -124,7 +124,16 @@
               {% endif %}
             </td>
             <td>
-              <a href="{{ url_for('tickets.ticket_detail', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary text-white">{{ _('View Details') }}</a>
+              <div class="d-flex flex-column flex-sm-row gap-2">
+                <a href="{{ url_for('tickets.ticket_detail', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary text-white">{{ _('View Details') }}</a>
+                {% if current_user.is_technician() and not ticket.technician_id and ticket.status != 'Cerrado' %}
+                <form method="post" action="{{ url_for('tickets.take_ticket', ticket_id=ticket.id) }}">
+                  {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                  <input type="hidden" name="next" value="list">
+                  <button type="submit" class="btn btn-sm btn-outline-success">{{ _('Take ticket') }}</button>
+                </form>
+                {% endif %}
+              </div>
             </td>
           </tr>
         {% endfor %}

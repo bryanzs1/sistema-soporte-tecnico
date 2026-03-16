@@ -416,6 +416,7 @@ def list_tickets():
                     'priority': ticket.priority or '',
                     'category': ticket.category or '',
                     'creator_name': ticket.creator_name or '—',
+                    'technician_id': ticket.technician_id,
                     'created_at_text': _safe_datetime_text(ticket.created_at, '%Y-%m-%d') or '—',
                     'sla_due_at_text': _safe_datetime_text(ticket.sla_due_at) or '—',
                     'sla_state': 'closed' if is_closed else 'overdue' if is_overdue else 'due_soon' if is_due_soon else 'on_time' if ticket.sla_due_at else 'none',
@@ -472,6 +473,7 @@ def list_tickets():
                     'priority': ticket.priority or '',
                     'category': ticket.category or '',
                     'creator_name': ticket.creator_name or '—',
+                    'technician_id': ticket.technician_id,
                     'created_at_text': _safe_datetime_text(ticket.created_at, '%Y-%m-%d') or '—',
                     'sla_due_at_text': _safe_datetime_text(ticket.sla_due_at) or '—',
                     'sla_state': 'none',
@@ -831,6 +833,47 @@ def ticket_detail(ticket_id):
                            comments=comments, attachments=attachments, can_chat=can_chat,
                            csat_form=csat_form, timeline=timeline,
                            reopen_deadline=reopen_deadline, can_reopen_window=can_reopen_window)
+
+
+@bp.route('/<int:ticket_id>/take', methods=['POST'])
+@login_required
+def take_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    if not current_user.is_technician() and not current_user.is_admin():
+        abort(403)
+
+    if ticket.status == 'Cerrado':
+        flash(_t('Closed tickets cannot be taken'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    if ticket.technician_id and ticket.technician_id != current_user.id:
+        flash(_t('This ticket is already assigned to another technician'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    if ticket.technician_id == current_user.id:
+        flash(_t('This ticket is already assigned to you'), 'info')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    ticket.technician_id = current_user.id
+    if ticket.status == 'Abierto':
+        ticket.status = 'En proceso'
+    if ticket.first_response_at is None:
+        ticket.first_response_at = utcnow()
+
+    db.session.add(TicketComment(
+        ticket_id=ticket.id,
+        user_id=current_user.id,
+        message=_t('Ticket taken by technician {username}').format(username=current_user.username),
+    ))
+    db.session.commit()
+
+    flash(_t('You have taken ticket #{id} successfully').format(id=ticket.id), 'success')
+
+    next_target = request.form.get('next')
+    if next_target == 'list':
+        return redirect(url_for('tickets.list_tickets'))
+    return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
 
 @bp.route('/<int:ticket_id>/reopen', methods=['POST'])
