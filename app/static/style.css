@@ -2166,15 +2166,7 @@ footer {
 .tickets-filter-form input[name="keyword"] {
     width: 100%;
     min-width: 260px;
-    max-width: 560px;
-}
-
-html[lang="es"] .tickets-filter-form input[name="keyword"] {
-    max-width: 420px;
-}
-
-html[lang="en"] .tickets-filter-form input[name="keyword"] {
-    max-width: 560px;
+    max-width: clamp(360px, calc(var(--keyword-len, 8) * 1ch + 13rem), 560px);
 }
 
 @media (max-width: 1199px) {

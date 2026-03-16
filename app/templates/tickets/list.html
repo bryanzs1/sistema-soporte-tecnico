@@ -43,7 +43,7 @@
     <div class="col-12 col-sm-6 col-lg-auto">
       <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}" placeholder="{{ _('To') }}">
     </div>
-    <div class="col-12 col-xl tickets-keyword-col">
+    <div class="col-12 col-xl tickets-keyword-col" style="--keyword-len: {{ (_('Search...')|length) }};">
       <input type="text" name="keyword" class="form-control" value="{{ keyword or '' }}" placeholder="{{ _('Search...') }}">
     </div>
     <div class="col-12 col-xl-auto tickets-filter-actions-col">
