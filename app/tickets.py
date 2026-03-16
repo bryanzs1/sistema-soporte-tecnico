@@ -1,12 +1,13 @@
 import os
 import json
 import uuid
+import unicodedata
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, current_app, session, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
 from flask_socketio import emit, join_room, leave_room
-from sqlalchemy import and_, case
+from sqlalchemy import and_, case, or_, func
 from werkzeug.utils import secure_filename
 
 from app import db, translate, socketio
@@ -95,6 +96,113 @@ def _ticket_chat_access(ticket):
 def _technician_reassign_enabled():
     policy = TicketOption.query.filter_by(option_type='system_policy', value='technician_reassign').first()
     return bool(policy and policy.active)
+
+
+def _normalize_filter_value(raw_value, allowed_values):
+    """Normalize filter values so ES/EN inputs match stored canonical DB values."""
+    value = (raw_value or '').strip()
+    if not value:
+        return None
+
+    canonical_values = [v for v in (allowed_values or []) if v]
+    if value in canonical_values:
+        return value
+
+    canonical_by_lower = {v.lower(): v for v in canonical_values}
+    direct = canonical_by_lower.get(value.lower())
+    if direct:
+        return direct
+
+    candidates = {value, value.title()}
+    for candidate in candidates:
+        for lang in ('es', 'en'):
+            translated = translate(candidate, lang)
+            if translated in canonical_values:
+                return translated
+            mapped = canonical_by_lower.get((translated or '').lower())
+            if mapped:
+                return mapped
+
+    return value
+
+
+def _keyword_variants(keyword):
+    """Build a small set of language variants so keyword search works in ES and EN."""
+    base = (keyword or '').strip()
+    if not base:
+        return []
+
+    variants = {base}
+    for candidate in (base, base.lower(), base.title()):
+        for lang in ('es', 'en'):
+            translated = translate(candidate, lang)
+            if translated:
+                variants.add(translated)
+
+    return [v for v in variants if v]
+
+
+def _strip_accents(text):
+    """Return ASCII-like representation to make searches accent-insensitive."""
+    source = (text or '').strip()
+    if not source:
+        return ''
+    normalized = unicodedata.normalize('NFKD', source)
+    return ''.join(ch for ch in normalized if not unicodedata.combining(ch))
+
+
+def _normalize_text_expr(expr):
+    """Normalize SQL text expression for accent-insensitive matching across DB engines."""
+    lowered = func.lower(expr)
+    lowered = func.replace(lowered, 'á', 'a')
+    lowered = func.replace(lowered, 'à', 'a')
+    lowered = func.replace(lowered, 'ä', 'a')
+    lowered = func.replace(lowered, 'â', 'a')
+    lowered = func.replace(lowered, 'é', 'e')
+    lowered = func.replace(lowered, 'è', 'e')
+    lowered = func.replace(lowered, 'ë', 'e')
+    lowered = func.replace(lowered, 'ê', 'e')
+    lowered = func.replace(lowered, 'í', 'i')
+    lowered = func.replace(lowered, 'ì', 'i')
+    lowered = func.replace(lowered, 'ï', 'i')
+    lowered = func.replace(lowered, 'î', 'i')
+    lowered = func.replace(lowered, 'ó', 'o')
+    lowered = func.replace(lowered, 'ò', 'o')
+    lowered = func.replace(lowered, 'ö', 'o')
+    lowered = func.replace(lowered, 'ô', 'o')
+    lowered = func.replace(lowered, 'ú', 'u')
+    lowered = func.replace(lowered, 'ù', 'u')
+    lowered = func.replace(lowered, 'ü', 'u')
+    lowered = func.replace(lowered, 'û', 'u')
+    lowered = func.replace(lowered, 'ñ', 'n')
+    return lowered
+
+
+def _apply_keyword_filter(query, keyword):
+    terms = _keyword_variants(keyword)
+    if not terms:
+        return query
+
+    normalized_columns = [
+        _normalize_text_expr(Ticket.title),
+        _normalize_text_expr(Ticket.description),
+        _normalize_text_expr(Ticket.status),
+        _normalize_text_expr(Ticket.priority),
+        _normalize_text_expr(Ticket.category),
+    ]
+
+    clauses = []
+    for term in terms:
+        normalized_term = _strip_accents(term).lower()
+        if not normalized_term:
+            continue
+        kw = f"%{normalized_term}%"
+        clauses.extend([column.like(kw) for column in normalized_columns])
+
+    if not clauses:
+        return query
+
+    return query.filter(or_(*clauses))
 
 
 def _serialize_comment(ticket, comment):
@@ -357,12 +465,18 @@ def list_tickets():
         view = request.args.get('view', type=str) or 'active'
         if view not in ('active', 'history', 'all'):
             view = 'active'
-        status = request.args.get('status', type=str)
-        category = request.args.get('category', type=str)
-        priority = request.args.get('priority', type=str)
+        raw_status = request.args.get('status', type=str)
+        raw_category = request.args.get('category', type=str)
+        raw_priority = request.args.get('priority', type=str)
         start_date = request.args.get('start_date', type=str)
         end_date = request.args.get('end_date', type=str)
         keyword = request.args.get('keyword', type=str)
+
+        categories = Ticket.categories()
+        priorities = Ticket.priorities()
+        status = _normalize_filter_value(raw_status, Ticket.statuses())
+        category = _normalize_filter_value(raw_category, categories)
+        priority = _normalize_filter_value(raw_priority, priorities)
 
         filtered_query = base_query
 
@@ -384,9 +498,7 @@ def list_tickets():
                 filtered_query = filtered_query.filter(Ticket.created_at <= ed)
             except ValueError:
                 pass
-        if keyword:
-            kw = f"%{keyword}%"
-            filtered_query = filtered_query.filter((Ticket.title.ilike(kw)) | (Ticket.description.ilike(kw)))
+        filtered_query = _apply_keyword_filter(filtered_query, keyword)
 
         ticket_counts = {
             'active': filtered_query.filter(Ticket.status != 'Cerrado').count(),
@@ -450,10 +562,6 @@ def list_tickets():
 
         if skipped_records:
             flash(_t('Some historical ticket records could not be rendered and were skipped.'), 'warning')
-
-        # Get categories and priorities safely
-        categories = Ticket.categories()
-        priorities = Ticket.priorities()
 
         return render_template('tickets/list.html', tickets=tickets,
                                ticket_counts=ticket_counts,
@@ -696,15 +804,19 @@ def export_tickets():
     view = request.args.get('view', type=str) or 'active'
     if view not in ('active', 'history', 'all'):
         view = 'active'
-    status = request.args.get('status', type=str)
-    category = request.args.get('category', type=str)
-    priority = request.args.get('priority', type=str)
+    raw_status = request.args.get('status', type=str)
+    raw_category = request.args.get('category', type=str)
+    raw_priority = request.args.get('priority', type=str)
     start_date = request.args.get('start_date', type=str)
     end_date = request.args.get('end_date', type=str)
     keyword = request.args.get('keyword', type=str)
     fmt = request.args.get('format', 'csv')  # csv or xlsx
     # common imports
     import io
+
+    status = _normalize_filter_value(raw_status, Ticket.statuses())
+    category = _normalize_filter_value(raw_category, Ticket.categories())
+    priority = _normalize_filter_value(raw_priority, Ticket.priorities())
 
     if status:
         q = q.filter_by(status=status)
@@ -728,9 +840,7 @@ def export_tickets():
             q = q.filter(Ticket.created_at <= ed)
         except ValueError:
             pass
-    if keyword:
-        kw = f"%{keyword}%"
-        q = q.filter((Ticket.title.ilike(kw)) | (Ticket.description.ilike(kw)))
+    q = _apply_keyword_filter(q, keyword)
     tickets = q.order_by(Ticket.created_at.desc()).all()
 
     # prepare data table
