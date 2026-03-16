@@ -43,10 +43,10 @@
     <div class="col-12 col-sm-6 col-lg-auto">
       <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}" placeholder="{{ _('To') }}">
     </div>
-    <div class="col-12 col-lg">
+    <div class="col-12 col-xl tickets-keyword-col">
       <input type="text" name="keyword" class="form-control" value="{{ keyword or '' }}" placeholder="{{ _('Search...') }}">
     </div>
-    <div class="col-12 col-lg-auto">
+    <div class="col-12 col-xl-auto tickets-filter-actions-col">
       <div class="d-flex flex-column flex-sm-row gap-2 tickets-filter-actions">
       <button type="submit" class="btn btn-primary text-white">{{ _('Filter') }}</button>
       <div class="btn-group tickets-export-group">

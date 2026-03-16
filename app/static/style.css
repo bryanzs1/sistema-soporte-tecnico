@@ -2155,6 +2155,25 @@ footer {
     white-space: nowrap;
 }
 
+.tickets-keyword-col {
+    min-width: 280px;
+}
+
+.tickets-filter-form input[name="keyword"] {
+    min-width: 260px;
+}
+
+@media (max-width: 1199px) {
+    .tickets-keyword-col,
+    .tickets-filter-actions-col {
+        width: 100%;
+    }
+
+    .tickets-filter-form input[name="keyword"] {
+        min-width: 0;
+    }
+}
+
 .settings-sidebar-nav {
     overflow-x: auto;
 }
