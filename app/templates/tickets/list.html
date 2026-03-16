@@ -25,7 +25,7 @@
       <select class="form-select" name="category">
         <option value="">{{ _('All categories') }}</option>
         {% for c in categories %}
-          <option value="{{ c }}" {% if category == c %}selected{% endif %}>{{ _(c) }}</option>
+          <option value="{{ c }}" {% if category == c %}selected{% endif %}>{{ category_labels.get(c, _(c)) if category_labels is defined else _(c) }}</option>
         {% endfor %}
       </select>
     </div>
@@ -33,7 +33,7 @@
       <select class="form-select" name="priority">
         <option value="">{{ _('All priorities') }}</option>
         {% for p in priorities %}
-          <option value="{{ p }}" {% if priority == p %}selected{% endif %}>{{ _(p) }}</option>
+          <option value="{{ p }}" {% if priority == p %}selected{% endif %}>{{ priority_labels.get(p, _(p)) if priority_labels is defined else _(p) }}</option>
         {% endfor %}
       </select>
     </div>

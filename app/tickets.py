@@ -205,6 +205,31 @@ def _apply_keyword_filter(query, keyword):
     return query.filter(or_(*clauses))
 
 
+def _localized_catalog_label(value, canonical_defaults):
+    """Return a localized label for catalog values while preserving stored filter value."""
+    raw = (value or '').strip()
+    if not raw:
+        return value
+
+    # Direct translation first.
+    direct = _t(raw)
+    if direct != raw:
+        return direct
+
+    # Try common case variants because translation map is case-sensitive.
+    for candidate in (raw.title(), raw.capitalize(), raw.lower(), raw.upper()):
+        translated = _t(candidate)
+        if translated != candidate:
+            return translated
+
+    # Normalize known defaults (ES/EN aliases) and translate from canonical value.
+    canonical = _normalize_filter_value(raw, canonical_defaults)
+    canonical_translated = _t(canonical)
+    if canonical_translated != canonical:
+        return canonical_translated
+    return canonical
+
+
 def _serialize_comment(ticket, comment):
     user_role = comment.user.role if comment.user else 'user'
     message_role = 'admin'
@@ -563,12 +588,22 @@ def list_tickets():
         if skipped_records:
             flash(_t('Some historical ticket records could not be rendered and were skipped.'), 'warning')
 
+        category_labels = {
+            c: _localized_catalog_label(c, Ticket.default_categories())
+            for c in categories
+        }
+        priority_labels = {
+            p: _localized_catalog_label(p, Ticket.default_priorities())
+            for p in priorities
+        }
+
         return render_template('tickets/list.html', tickets=tickets,
                                ticket_counts=ticket_counts,
                                view=view,
                                status=status, category=category, priority=priority,
                                start_date=start_date, end_date=end_date, keyword=keyword,
-                               categories=categories, priorities=priorities)
+                               categories=categories, priorities=priorities,
+                               category_labels=category_labels, priority_labels=priority_labels)
     except Exception as e:
         current_app.logger.exception('Error rendering tickets list: %s', e)
         try:
@@ -618,7 +653,15 @@ def list_tickets():
                                    status=None, category=None, priority=None,
                                    start_date=None, end_date=None, keyword=None,
                                    categories=Ticket.default_categories(),
-                                   priorities=Ticket.default_priorities())
+                                   priorities=Ticket.default_priorities(),
+                                   category_labels={
+                                       c: _localized_catalog_label(c, Ticket.default_categories())
+                                       for c in Ticket.default_categories()
+                                   },
+                                   priority_labels={
+                                       p: _localized_catalog_label(p, Ticket.default_priorities())
+                                       for p in Ticket.default_priorities()
+                                   })
         except Exception:
             current_app.logger.exception('Fallback ticket list query also failed')
             flash(_t('There was a problem loading the ticket list. Review historical records or contact admin.'), 'warning')
