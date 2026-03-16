@@ -348,14 +348,6 @@ def list_tickets():
         else:
             base_query = Ticket.query.filter_by(user_id=current_user.id)
 
-        q = base_query
-
-        ticket_counts = {
-            'active': base_query.filter(Ticket.status != 'Cerrado').count(),
-            'history': base_query.filter(Ticket.status == 'Cerrado').count(),
-        }
-        ticket_counts['all'] = ticket_counts['active'] + ticket_counts['history']
-
         # apply filters from query string
         view = request.args.get('view', type=str) or 'active'
         if view not in ('active', 'history', 'all'):
@@ -367,31 +359,42 @@ def list_tickets():
         end_date = request.args.get('end_date', type=str)
         keyword = request.args.get('keyword', type=str)
 
+        filtered_query = base_query
+
         if status:
-            q = q.filter_by(status=status)
-        elif view == 'active':
-            q = q.filter(Ticket.status != 'Cerrado')
-        elif view == 'history':
-            q = q.filter(Ticket.status == 'Cerrado')
+            filtered_query = filtered_query.filter_by(status=status)
         if category:
-            q = q.filter_by(category=category)
+            filtered_query = filtered_query.filter_by(category=category)
         if priority:
-            q = q.filter_by(priority=priority)
+            filtered_query = filtered_query.filter_by(priority=priority)
         if start_date:
             try:
                 sd = datetime.fromisoformat(start_date)
-                q = q.filter(Ticket.created_at >= sd)
+                filtered_query = filtered_query.filter(Ticket.created_at >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
                 ed = datetime.fromisoformat(end_date)
-                q = q.filter(Ticket.created_at <= ed)
+                filtered_query = filtered_query.filter(Ticket.created_at <= ed)
             except ValueError:
                 pass
         if keyword:
             kw = f"%{keyword}%"
-            q = q.filter((Ticket.title.ilike(kw)) | (Ticket.description.ilike(kw)))
+            filtered_query = filtered_query.filter((Ticket.title.ilike(kw)) | (Ticket.description.ilike(kw)))
+
+        ticket_counts = {
+            'active': filtered_query.filter(Ticket.status != 'Cerrado').count(),
+            'history': filtered_query.filter(Ticket.status == 'Cerrado').count(),
+        }
+        ticket_counts['all'] = filtered_query.count()
+
+        q = filtered_query
+
+        if not status and view == 'active':
+            q = q.filter(Ticket.status != 'Cerrado')
+        elif not status and view == 'history':
+            q = q.filter(Ticket.status == 'Cerrado')
 
         now = utcnow()
         closed_rank = case((Ticket.status == 'Cerrado', 1), else_=0)
