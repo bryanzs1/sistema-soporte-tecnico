@@ -434,10 +434,20 @@
               {{ form.status.label }}
               {{ form.status(class_='form-select input-enhanced') }}
             </div>
+            {% if current_user.is_admin() %}
             <div class="col-md-6 mb-3">
               {{ form.technician.label }}
               {{ form.technician(class_='form-select input-enhanced') }}
             </div>
+            {% else %}
+            <div class="col-md-6 mb-3">
+              <label class="form-label">{{ _('Assigned technician') }}</label>
+              <div class="form-control-plaintext">
+                {% if ticket.technician %}{{ ticket.technician.username }}{% else %}{{ _('Unassigned') }}{% endif %}
+              </div>
+              <small class="text-muted">{{ _('Only administrators can assign or reassign technicians') }}</small>
+            </div>
+            {% endif %}
           </div>
           {{ form.submit(class_='btn btn-primary btn-animated') }}
         </form>

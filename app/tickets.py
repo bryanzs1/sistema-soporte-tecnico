@@ -825,10 +825,13 @@ def ticket_detail(ticket_id):
         ticket.status = submitted_status
 
         submitted_technician = request.form.get('technician')
-        if submitted_technician and str(submitted_technician).isdigit():
+        if current_user.is_admin() and submitted_technician and str(submitted_technician).isdigit():
             tech_id = int(submitted_technician)
             # 0 means unassign, set to None
             ticket.technician_id = tech_id if tech_id > 0 else None
+        elif (not current_user.is_admin()) and submitted_technician is not None:
+            # Defense in depth: prevent forged requests from technicians changing assignment.
+            flash(_t('Only administrators can assign or reassign technicians'), 'warning')
 
         if ticket.first_response_at is None and ticket.status in ('En proceso', 'Esperando usuario', 'Cerrado'):
             ticket.first_response_at = utcnow()
