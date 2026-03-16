@@ -344,9 +344,17 @@ def list_tickets():
     try:
         # start with base query depending on role
         if current_user.is_admin() or current_user.is_technician():
-            q = Ticket.query
+            base_query = Ticket.query
         else:
-            q = Ticket.query.filter_by(user_id=current_user.id)
+            base_query = Ticket.query.filter_by(user_id=current_user.id)
+
+        q = base_query
+
+        ticket_counts = {
+            'active': base_query.filter(Ticket.status != 'Cerrado').count(),
+            'history': base_query.filter(Ticket.status == 'Cerrado').count(),
+        }
+        ticket_counts['all'] = ticket_counts['active'] + ticket_counts['history']
 
         # apply filters from query string
         view = request.args.get('view', type=str) or 'active'
@@ -440,6 +448,7 @@ def list_tickets():
         priorities = Ticket.priorities()
 
         return render_template('tickets/list.html', tickets=tickets,
+                               ticket_counts=ticket_counts,
                                view=view,
                                status=status, category=category, priority=priority,
                                start_date=start_date, end_date=end_date, keyword=keyword,
@@ -488,6 +497,7 @@ def list_tickets():
                 })
 
             return render_template('tickets/list.html', tickets=fallback_tickets,
+                                   ticket_counts=ticket_counts,
                                    view=view,
                                    status=None, category=None, priority=None,
                                    start_date=None, end_date=None, keyword=None,
@@ -509,6 +519,7 @@ def list_tickets():
             except Exception:
                 current_app.logger.exception('Failed to write audit log for ticket_list_fallback_error')
             return render_template('tickets/list.html', tickets=[],
+                                   ticket_counts=ticket_counts,
                                    view=view,
                                    status=None, category=None, priority=None,
                                    start_date=None, end_date=None, keyword=None,

@@ -5,9 +5,9 @@
   <h2>{{ _('Tickets') }}</h2>
 
   <div class="d-flex flex-wrap gap-2 mb-3">
-    <a class="btn {% if view == 'active' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='active', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('Active tickets') }}</a>
-    <a class="btn {% if view == 'history' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='history', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('History') }}</a>
-    <a class="btn {% if view == 'all' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='all', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('All tickets') }}</a>
+    <a class="btn {% if view == 'active' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='active', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('Active tickets') }} ({{ ticket_counts.active if ticket_counts is defined else 0 }})</a>
+    <a class="btn {% if view == 'history' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='history', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('History') }} ({{ ticket_counts.history if ticket_counts is defined else 0 }})</a>
+    <a class="btn {% if view == 'all' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}" href="{{ url_for('tickets.list_tickets', view='all', category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword) }}">{{ _('All tickets') }} ({{ ticket_counts.all if ticket_counts is defined else 0 }})</a>
   </div>
 
   <div class="card mb-3 p-3">
