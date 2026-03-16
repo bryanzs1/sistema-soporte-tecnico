@@ -2169,6 +2169,16 @@ footer {
     max-width: clamp(360px, calc(var(--keyword-len, 8) * 1ch + 13rem), 560px);
 }
 
+@media (min-width: 1200px) {
+    .tickets-keyword-col {
+        flex: 0 0 auto;
+    }
+
+    .tickets-filter-form input[name="keyword"] {
+        width: clamp(360px, calc(var(--keyword-len, 8) * 1ch + 13rem), 560px);
+    }
+}
+
 @media (max-width: 1199px) {
     .tickets-keyword-col,
     .tickets-filter-actions-col {
