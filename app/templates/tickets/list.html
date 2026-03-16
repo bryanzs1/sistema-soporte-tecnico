@@ -136,6 +136,13 @@
                   <button type="submit" class="btn btn-sm btn-outline-success">{{ _('Take ticket') }}</button>
                 </form>
                 {% endif %}
+                {% if current_user.is_technician() and ticket.technician_id and ticket.technician_id == current_user.id and ticket.status != 'Cerrado' %}
+                <form method="post" action="{{ url_for('tickets.release_ticket', ticket_id=ticket.id) }}">
+                  {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                  <input type="hidden" name="next" value="list">
+                  <button type="submit" class="btn btn-sm btn-outline-secondary">{{ _('Release ticket') }}</button>
+                </form>
+                {% endif %}
               </div>
             </td>
           </tr>

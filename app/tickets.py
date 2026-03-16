@@ -876,6 +876,45 @@ def take_ticket(ticket_id):
     return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
 
+@bp.route('/<int:ticket_id>/release', methods=['POST'])
+@login_required
+def release_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    if not current_user.is_technician() and not current_user.is_admin():
+        abort(403)
+
+    if ticket.status == 'Cerrado':
+        flash(_t('Closed tickets cannot be released'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    if not ticket.technician_id:
+        flash(_t('This ticket is already unassigned'), 'info')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    if current_user.is_technician() and ticket.technician_id != current_user.id:
+        flash(_t('You can only release tickets assigned to you'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    ticket.technician_id = None
+    if ticket.status != 'Cerrado':
+        ticket.status = 'Abierto'
+
+    db.session.add(TicketComment(
+        ticket_id=ticket.id,
+        user_id=current_user.id,
+        message=_t('Ticket released by {username} and returned to the unassigned queue').format(username=current_user.username),
+    ))
+    db.session.commit()
+
+    flash(_t('Ticket #{id} was released successfully').format(id=ticket.id), 'success')
+
+    next_target = request.form.get('next')
+    if next_target == 'list':
+        return redirect(url_for('tickets.list_tickets'))
+    return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+
 @bp.route('/<int:ticket_id>/reopen', methods=['POST'])
 @login_required
 def reopen_ticket(ticket_id):
