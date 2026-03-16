@@ -1,3 +1,7 @@
+# CRITICAL: Monkey patch BEFORE any other imports to greenify all locks/sockets/threading
+import eventlet
+eventlet.monkey_patch(all=True)
+
 import os
 from app import create_app, db
 from app.models import User, Ticket, TicketOption

@@ -1,3 +1,12 @@
+# CRITICAL: Attempt to ensure eventlet monkey patching (primary responsibility: run.py & wsgi.py)
+# This is a defensive measure in case the entry point scripts haven't yet run monkey_patch
+try:
+    import eventlet
+    eventlet.monkey_patch(all=True, thread=True)
+except Exception as e:
+    import sys
+    print(f"[WARNING] Eventlet monkey patch failed: {e}", file=sys.stderr)
+
 from flask import Flask, current_app, session, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
@@ -9,15 +18,6 @@ from flask_talisman import Talisman
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from datetime import datetime, timedelta, timezone
-
-# Ensure eventlet monkey patching is applied (defensive, in case wsgi.py hasn't yet)
-try:
-    import eventlet
-    if not hasattr(eventlet, '_patched'):
-        eventlet.monkey_patch(all=True)
-        eventlet._patched = True
-except Exception:
-    pass
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
