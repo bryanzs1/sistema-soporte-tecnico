@@ -49,9 +49,18 @@
     <div class="col-12 col-xl-auto tickets-filter-actions-col">
       <div class="d-flex flex-column flex-sm-row gap-2 tickets-filter-actions">
       <button type="submit" class="btn btn-primary text-white">{{ _('Filter') }}</button>
-      <div class="btn-group tickets-export-group">
+      <div class="btn-group tickets-export-group d-none d-xl-flex">
         <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', view=view, status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a>
         <a class="btn btn-secondary text-dark" href="{{ url_for('tickets.export_tickets', view=view, status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a>
+      </div>
+      <div class="dropdown tickets-export-dropdown d-xl-none">
+        <button class="btn btn-secondary text-dark dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          {{ _('Export') }}
+        </button>
+        <ul class="dropdown-menu w-100">
+          <li><a class="dropdown-item" href="{{ url_for('tickets.export_tickets', view=view, status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='csv') }}">{{ _('Export CSV') }}</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('tickets.export_tickets', view=view, status=status, category=category, priority=priority, start_date=start_date, end_date=end_date, keyword=keyword, format='xlsx') }}">{{ _('Export XLSX') }}</a></li>
+        </ul>
       </div>
       </div>
     </div>

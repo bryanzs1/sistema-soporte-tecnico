@@ -2155,6 +2155,10 @@ footer {
     white-space: nowrap;
 }
 
+.tickets-export-dropdown {
+    min-width: 160px;
+}
+
 .tickets-keyword-col {
     min-width: 280px;
 }
@@ -2303,6 +2307,10 @@ footer {
     .tickets-export-group {
         display: grid;
         grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .tickets-export-dropdown {
         width: 100%;
     }
 
