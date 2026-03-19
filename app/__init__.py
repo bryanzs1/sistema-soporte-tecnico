@@ -1320,7 +1320,8 @@ def create_app(config_class=None):
 
             if 'last_activity' not in user_columns:
                 with db.engine.connect() as conn:
-                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP'))
+                    # Use NULL default for SQLite compatibility (CURRENT_TIMESTAMP is non-constant in ALTER TABLE)
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN last_activity TIMESTAMP DEFAULT NULL'))
                     conn.commit()
                 app.logger.warning('Added last_activity column to user table')
 

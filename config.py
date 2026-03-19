@@ -56,11 +56,13 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
     SQLALCHEMY_ECHO = False
-    
-    # SQLite doesn't need pool configuration
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'connect_args': {'timeout': 15}
-    }
+
+    # Only pass SQLite-specific timeout when not using an external DB URL
+    SQLALCHEMY_ENGINE_OPTIONS = (
+        {'connect_args': {'timeout': 15}}
+        if not os.environ.get('DATABASE_URL')
+        else {}
+    )
 
 
 class ProductionConfig(Config):
@@ -68,11 +70,11 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_ECHO = False
-    
+
     # Security: Force HTTPS in production
     TALISMAN_FORCE_HTTPS = True
     SESSION_COOKIE_SECURE = True
-    
+
     # In production, prefer PostgreSQL URL from env vars.
     # Render usually provides DATABASE_URL; some platforms use SQLALCHEMY_DATABASE_URI.
     # Fallback to SQLite only to avoid startup crash during initial setup.
@@ -81,7 +83,7 @@ class ProductionConfig(Config):
         or os.environ.get('SQLALCHEMY_DATABASE_URI')
         or 'sqlite:///' + os.path.join(basedir, 'instance', 'soporte.db')
     )
-    
+
     # PostgreSQL connection pool configuration for production
     # NOTE: connect_args timeout is for SQLite only, not PostgreSQL
     SQLALCHEMY_ENGINE_OPTIONS = {
