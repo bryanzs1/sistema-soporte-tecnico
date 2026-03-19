@@ -1,12 +1,3 @@
-# CRITICAL: Attempt to ensure eventlet monkey patching (primary responsibility: run.py & wsgi.py)
-# This is a defensive measure in case the entry point scripts haven't yet run monkey_patch
-try:
-    import eventlet
-    eventlet.monkey_patch(all=True, thread=True)
-except Exception as e:
-    import sys
-    print(f"[WARNING] Eventlet monkey patch failed: {e}", file=sys.stderr)
-
 from flask import Flask, current_app, session, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
@@ -1122,8 +1113,8 @@ def create_app(config_class=None):
     if configured_async_mode:
         socketio_async_mode = configured_async_mode
     else:
-        # Eventlet is preferred in production, but Python 3.13 compatibility may require fallback.
-        socketio_async_mode = 'threading' if sys.version_info >= (3, 13) else 'eventlet'
+        # Default to threading to avoid eventlet deprecation issues in modern Python/Gunicorn.
+        socketio_async_mode = 'threading'
     socketio_logging_env = os.environ.get('SOCKETIO_LOGGING')
     if socketio_logging_env is None:
         # Keep logs quiet by default in Render production; verbose locally for troubleshooting.

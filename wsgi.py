@@ -1,11 +1,7 @@
 """
 WSGI entry point for production deployment with Flask-SocketIO.
-For use with Gunicorn eventlet workers: gunicorn -k eventlet -w 1 wsgi:app
+For use with Gunicorn gthread workers: gunicorn -k gthread --threads 8 -w 1 wsgi:app
 """
-# CRITICAL: Monkey patch BEFORE any other imports to greenify all locks/sockets/threading
-import eventlet
-eventlet.monkey_patch(all=True)
-
 import os
 import sys
 
