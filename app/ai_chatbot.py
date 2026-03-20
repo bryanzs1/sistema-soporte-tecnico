@@ -6,11 +6,67 @@ Provides automatic answers to frequently asked questions and common problems.
 import logging
 import unicodedata
 from typing import Dict, Optional, List
+from datetime import datetime, timedelta
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+# Conversation memory: {user_id: [{'role': 'user'|'assistant', 'content': str, 'timestamp': datetime}, ...]}
+_conversation_history = {}
+_MAX_HISTORY_LENGTH = 20
+_HISTORY_TIMEOUT = 3600  # 1 hour
+
+def _cleanup_old_conversations():
+    """Remove conversations older than timeout."""
+    now = datetime.utcnow()
+    for user_id, messages in list(_conversation_history.items()):
+        if messages and (now - messages[-1].get('timestamp', now)).total_seconds() > _HISTORY_TIMEOUT:
+            del _conversation_history[user_id]
+
+def get_conversation_history(user_id: int) -> List[Dict]:
+    """Get conversation history for a user, cleaned up."""
+    _cleanup_old_conversations()
+    return _conversation_history.get(user_id, [])
+
+def add_to_conversation(user_id: int, role: str, content: str):
+    """Add a message to conversation history."""
+    if user_id not in _conversation_history:
+        _conversation_history[user_id] = []
+    
+    _conversation_history[user_id].append({
+        'role': role,
+        'content': content,
+        'timestamp': datetime.utcnow(),
+    })
+    
+    # Keep only recent messages
+    if len(_conversation_history[user_id]) > _MAX_HISTORY_LENGTH:
+        _conversation_history[user_id] = _conversation_history[user_id][-_MAX_HISTORY_LENGTH:]
+
+def _build_system_prompt(lang: str) -> str:
+    """Build system prompt for technical support assistant."""
+    if lang == 'es':
+        return """Eres un asistente técnico de soporte profesional para empresas. 
+Tu rol es ayudar a empleados a resolver problemas técnicos de IT.
+
+IMPORTANTE:
+- Responde SOLO sobre temas técnicos: redes, hardware, software, contraseñas, VPN, impresoras, etc.
+- Sé conciso y útil. Proporciona pasos claros para resolver problemas.
+- Si es un problema que no puedas resolver fácilmente, sugiere crear un ticket.
+- Responde siempre en español.
+- Usa lenguaje profesional pero amable."""
+    else:
+        return """You are a professional technical support assistant for companies.
+Your role is to help employees resolve IT technical problems.
+
+IMPORTANT:
+- Respond ONLY about technical topics: networks, hardware, software, passwords, VPN, printers, etc.
+- Be concise and helpful. Provide clear steps to resolve problems.
+- If it's a problem you can't easily resolve, suggest creating a support ticket.
+- Always respond in English.
+- Use professional but friendly language."""
 
 # Knowledge base of common issues and solutions.
 # Each entry supports English and Spanish so the same assistant can work in
@@ -394,6 +450,127 @@ def get_chatbot() -> ChatBot:
     if _chatbot is None:
         _chatbot = ChatBot()
     return _chatbot
+
+
+def _call_llm_api(messages: List[Dict], lang: str = 'en') -> Optional[str]:
+    """Call an LLM API (Groq or OpenAI) for intelligent responses."""
+    import os
+    import requests
+    
+    # Try Groq first (free tier with generous limits)
+    groq_api_key = os.environ.get('GROQ_API_KEY')
+    if groq_api_key:
+        try:
+            response = requests.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                headers={
+                    'Authorization': f'Bearer {groq_api_key}',
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'model': 'mixtral-8x7b-32768',
+                    'messages': messages,
+                    'max_tokens': 500,
+                    'temperature': 0.7,
+                },
+                timeout=10,
+            )
+            if response.status_code == 200:
+                return response.json()['choices'][0]['message']['content'].strip()
+        except Exception as e:
+            logger.warning(f'Groq API error: {e}')
+    
+    # Try OpenAI as fallback
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    if openai_api_key:
+        try:
+            response = requests.post(
+                'https://api.openai.com/v1/chat/completions',
+                headers={
+                    'Authorization': f'Bearer {openai_api_key}',
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'model': 'gpt-3.5-turbo',
+                    'messages': messages,
+                    'max_tokens': 500,
+                    'temperature': 0.7,
+                },
+                timeout=10,
+            )
+            if response.status_code == 200:
+                return response.json()['choices'][0]['message']['content'].strip()
+        except Exception as e:
+            logger.warning(f'OpenAI API error: {e}')
+    
+    return None
+
+
+def converse_with_assistant(user_id: int, user_message: str, lang: str = 'en') -> Dict:
+    """Have an intelligent conversation with the assistant using LLM if available.
+    
+    Falls back to knowledge base if no LLM is configured.
+    
+    Args:
+        user_id: User ID for conversation history
+        user_message: User's message
+        lang: Language ('en' or 'es')
+    
+    Returns:
+        Dict with reply, used_llm flag, and confidence
+    """
+    conversation = get_conversation_history(user_id)
+    add_to_conversation(user_id, 'user', user_message)
+    
+    # Build messages for LLM
+    system_prompt = _build_system_prompt(lang)
+    messages = [{'role': 'system', 'content': system_prompt}]
+    
+    # Add conversation history (last 10 messages for context)
+    for msg in conversation[-10:]:
+        messages.append({
+            'role': msg['role'],
+            'content': msg['content'],
+        })
+    
+    # Add current user message
+    messages.append({'role': 'user', 'content': user_message})
+    
+    # Try LLM first
+    llm_response = _call_llm_api(messages, lang)
+    
+    if llm_response:
+        add_to_conversation(user_id, 'assistant', llm_response)
+        return {
+            'reply': llm_response,
+            'used_llm': True,
+            'confidence': 0.9,
+        }
+    
+    # Fallback to knowledge base
+    kb_answer = answer_question(user_message, lang=lang)
+    
+    if kb_answer:
+        add_to_conversation(user_id, 'assistant', kb_answer['answer'])
+        return {
+            'reply': kb_answer['answer'],
+            'used_llm': False,
+            'confidence': kb_answer['confidence'],
+            'ticket_category': kb_answer.get('ticket_category'),
+        }
+    
+    # Default fallback response
+    if lang == 'es':
+        default_reply = "No estoy seguro cómo ayudarte con eso. ¿Puedes describir el problema con más detalle? O crea un ticket y un técnico te ayudará."
+    else:
+        default_reply = "I'm not sure how to help with that. Can you describe the issue in more detail? Or create a support ticket and a technician will assist you."
+    
+    add_to_conversation(user_id, 'assistant', default_reply)
+    return {
+        'reply': default_reply,
+        'used_llm': False,
+        'confidence': 0.0,
+    }
 
 
 def answer_question(question: str, lang: str = 'en') -> Optional[Dict]:

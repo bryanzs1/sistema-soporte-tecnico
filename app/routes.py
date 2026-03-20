@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from app import translate
-from app.ai_chatbot import answer_question
+from app.ai_chatbot import answer_question, converse_with_assistant
 
 bp = Blueprint('main', __name__)
 
@@ -46,33 +46,33 @@ def assistant_chat():
             'reply': translate('Please describe your issue in a bit more detail so I can help you better.', lang),
         }), 400
 
-    answer = answer_question(message, lang=lang)
+    # Get intelligent response from assistant (LLM with KB fallback)
+    user_id = current_user.id
+    result = converse_with_assistant(user_id, message, lang=lang)
+    
     create_ticket_url = url_for(
         'tickets.create_ticket',
         title=_assistant_title_from_message(message, lang),
         description=message,
-        category=(answer or {}).get('ticket_category', ''),
+        category=result.get('ticket_category', ''),
     )
 
-    if answer:
-        return jsonify({
-            'ok': True,
-            'matched': True,
-            'reply': answer['answer'],
-            'confidence': answer['confidence'],
-            'category': answer.get('ticket_category'),
-            'category_label': translate(answer.get('ticket_category', ''), lang),
-            'create_ticket_url': create_ticket_url,
-            'create_ticket_label': translate('Create ticket with this context', lang),
-        })
-
-    return jsonify({
+    # Return response with context for ticket creation
+    response = {
         'ok': True,
-        'matched': False,
-        'reply': translate("I couldn't find a precise answer yet, but I can help you create a ticket with the information you've already typed.", lang),
+        'reply': result['reply'],
+        'confidence': result['confidence'],
+        'used_llm': result.get('used_llm', False),
         'create_ticket_url': create_ticket_url,
         'create_ticket_label': translate('Create ticket with this context', lang),
-    })
+    }
+    
+    # Add category if knowledge base was used or found
+    if result.get('ticket_category'):
+        response['category'] = result['ticket_category']
+        response['category_label'] = translate(result['ticket_category'], lang)
+    
+    return jsonify(response)
 
 
 @bp.route('/lang/<lang>')
