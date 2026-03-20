@@ -6,7 +6,7 @@ Provides automatic answers to frequently asked questions and common problems.
 import logging
 import unicodedata
 from typing import Dict, Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -458,30 +458,42 @@ def _call_llm_api(messages: List[Dict], lang: str = 'en') -> Optional[str]:
     import requests
     
     # Try Groq first (free tier with generous limits)
-    groq_api_key = os.environ.get('GROQ_API_KEY')
+    groq_api_key = (os.environ.get('GROQ_API_KEY') or '').strip()
     if groq_api_key:
-        try:
-            response = requests.post(
-                'https://api.groq.com/openai/v1/chat/completions',
-                headers={
-                    'Authorization': f'Bearer {groq_api_key}',
-                    'Content-Type': 'application/json',
-                },
-                json={
-                    'model': 'mixtral-8x7b-32768',
-                    'messages': messages,
-                    'max_tokens': 500,
-                    'temperature': 0.7,
-                },
-                timeout=10,
-            )
-            if response.status_code == 200:
-                return response.json()['choices'][0]['message']['content'].strip()
-        except Exception as e:
-            logger.warning(f'Groq API error: {e}')
+        groq_models = [
+            'llama-3.3-70b-versatile',
+            'llama-3.1-8b-instant',
+            'mixtral-8x7b-32768',
+        ]
+        for model in groq_models:
+            try:
+                response = requests.post(
+                    'https://api.groq.com/openai/v1/chat/completions',
+                    headers={
+                        'Authorization': f'Bearer {groq_api_key}',
+                        'Content-Type': 'application/json',
+                    },
+                    json={
+                        'model': model,
+                        'messages': messages,
+                        'max_tokens': 500,
+                        'temperature': 0.7,
+                    },
+                    timeout=20,
+                )
+                if response.status_code == 200:
+                    content = response.json().get('choices', [{}])[0].get('message', {}).get('content', '')
+                    if content and content.strip():
+                        return content.strip()
+                else:
+                    logger.warning('Groq API non-200 (model=%s, status=%s, body=%s)', model, response.status_code, response.text[:280])
+            except Exception as e:
+                logger.warning('Groq API error (model=%s): %s', model, e)
+    else:
+        logger.warning('GROQ_API_KEY is not configured or is empty.')
     
     # Try OpenAI as fallback
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai_api_key = (os.environ.get('OPENAI_API_KEY') or '').strip()
     if openai_api_key:
         try:
             response = requests.post(
@@ -491,15 +503,19 @@ def _call_llm_api(messages: List[Dict], lang: str = 'en') -> Optional[str]:
                     'Content-Type': 'application/json',
                 },
                 json={
-                    'model': 'gpt-3.5-turbo',
+                    'model': 'gpt-4o-mini',
                     'messages': messages,
                     'max_tokens': 500,
                     'temperature': 0.7,
                 },
-                timeout=10,
+                timeout=20,
             )
             if response.status_code == 200:
-                return response.json()['choices'][0]['message']['content'].strip()
+                content = response.json().get('choices', [{}])[0].get('message', {}).get('content', '')
+                if content and content.strip():
+                    return content.strip()
+            else:
+                logger.warning('OpenAI API non-200 (status=%s, body=%s)', response.status_code, response.text[:280])
         except Exception as e:
             logger.warning(f'OpenAI API error: {e}')
     
