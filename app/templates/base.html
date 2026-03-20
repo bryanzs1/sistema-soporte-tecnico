@@ -401,9 +401,11 @@
         const closeButton = root.querySelector('.support-assistant-close');
         const form = document.getElementById('support-assistant-form');
         const input = document.getElementById('support-assistant-input');
+        const sendButton = form ? form.querySelector('button[type="submit"]') : null;
         const messages = document.getElementById('support-assistant-messages');
         const chips = root.querySelectorAll('.support-assistant-chip');
         const endpoint = root.dataset.endpoint;
+        let isSending = false;
 
         function setOpenState(isOpen) {
           panel.hidden = !isOpen;
@@ -449,8 +451,13 @@
 
         async function sendMessage(message) {
           const text = (message || '').trim();
-          if (!text) {
+          if (!text || isSending) {
             return;
+          }
+
+          isSending = true;
+          if (sendButton) {
+            sendButton.disabled = true;
           }
 
           setOpenState(true);
@@ -480,6 +487,12 @@
           } catch (error) {
             pending.remove();
             appendMessage('assistant', root.dataset.errorLabel);
+          } finally {
+            isSending = false;
+            if (sendButton) {
+              sendButton.disabled = false;
+            }
+            input.focus();
           }
         }
 
@@ -494,6 +507,13 @@
         form.addEventListener('submit', function (event) {
           event.preventDefault();
           sendMessage(input.value);
+        });
+
+        input.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(input.value);
+          }
         });
 
         chips.forEach(function (chip) {
