@@ -1,7 +1,17 @@
 from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify
 from flask_login import login_required
 
+from app import translate
+from app.ai_chatbot import answer_question
+
 bp = Blueprint('main', __name__)
+
+
+def _assistant_title_from_message(message, lang):
+    normalized = ' '.join((message or '').split())
+    if not normalized:
+        return translate('Support request', lang)
+    return normalized[:137] + '...' if len(normalized) > 140 else normalized
 
 
 @bp.route('/')
@@ -20,6 +30,49 @@ def health_check():
 def presence_ping():
     """Lightweight endpoint to keep authenticated user presence up to date."""
     return ('', 204)
+
+
+@bp.route('/assistant/chat', methods=['POST'])
+@login_required
+def assistant_chat():
+    """User-facing support assistant endpoint for the floating chatbot."""
+    lang = session.get('lang', 'en')
+    data = request.get_json(silent=True) or {}
+    message = ' '.join((data.get('message') or '').split())
+
+    if len(message) < 3:
+        return jsonify({
+            'ok': False,
+            'reply': translate('Please describe your issue in a bit more detail so I can help you better.', lang),
+        }), 400
+
+    answer = answer_question(message, lang=lang)
+    create_ticket_url = url_for(
+        'tickets.create_ticket',
+        title=_assistant_title_from_message(message, lang),
+        description=message,
+        category=(answer or {}).get('ticket_category', ''),
+    )
+
+    if answer:
+        return jsonify({
+            'ok': True,
+            'matched': True,
+            'reply': answer['answer'],
+            'confidence': answer['confidence'],
+            'category': answer.get('ticket_category'),
+            'category_label': translate(answer.get('ticket_category', ''), lang),
+            'create_ticket_url': create_ticket_url,
+            'create_ticket_label': translate('Create ticket with this context', lang),
+        })
+
+    return jsonify({
+        'ok': True,
+        'matched': False,
+        'reply': translate("I couldn't find a precise answer yet, but I can help you create a ticket with the information you've already typed.", lang),
+        'create_ticket_url': create_ticket_url,
+        'create_ticket_label': translate('Create ticket with this context', lang),
+    })
 
 
 @bp.route('/lang/<lang>')

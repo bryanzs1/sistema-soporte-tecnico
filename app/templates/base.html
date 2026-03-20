@@ -144,6 +144,44 @@
       </div>
       <a href="{{ url_for('main.terms_and_conditions') }}" class="cookie-consent-link">{{ _('Terms and Conditions') }}</a>
     </div>
+    {% if current_user.is_authenticated %}
+    <div id="support-assistant"
+         class="support-assistant"
+         data-endpoint="{{ url_for('main.assistant_chat') }}"
+         data-thinking-label="{{ _('Assistant is thinking...') }}"
+         data-error-label="{{ _('I could not process your request right now. Please create a ticket and a technician will help you.') }}"
+         data-category-label="{{ _('Suggested category') }}">
+      <button type="button" class="support-assistant-toggle" aria-label="{{ _('Open support assistant') }}">
+        <i class="bi bi-chat-dots-fill"></i>
+      </button>
+      <section class="support-assistant-panel" hidden aria-label="{{ _('Support Assistant') }}">
+        <div class="support-assistant-header">
+          <div>
+            <strong>{{ _('Support Assistant') }}</strong>
+            <div class="support-assistant-subtitle">{{ _('Ask me about password, VPN, printers, email, or general technical issues.') }}</div>
+          </div>
+          <button type="button" class="support-assistant-close" aria-label="{{ _('Close assistant') }}">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="support-assistant-body" id="support-assistant-messages">
+          <div class="support-assistant-message is-assistant">
+            <div class="support-assistant-bubble">{{ _('How can I help you today?') }}</div>
+          </div>
+        </div>
+        <div class="support-assistant-chips">
+          <button type="button" class="support-assistant-chip" data-message="{{ _('I need help resetting my password') }}">{{ _('Password reset') }}</button>
+          <button type="button" class="support-assistant-chip" data-message="{{ _('I cannot connect to the VPN') }}">{{ _('VPN access') }}</button>
+          <button type="button" class="support-assistant-chip" data-message="{{ _('My printer is not working') }}">{{ _('Printer issue') }}</button>
+          <button type="button" class="support-assistant-chip" data-message="{{ _('I am not receiving emails') }}">{{ _('Email issue') }}</button>
+        </div>
+        <form class="support-assistant-form" id="support-assistant-form" data-unsaved-guard="false">
+          <textarea class="support-assistant-input" id="support-assistant-input" rows="3" placeholder="{{ _('Describe your issue...') }}"></textarea>
+          <button type="submit" class="btn btn-primary support-assistant-send">{{ _('Send') }}</button>
+        </form>
+      </section>
+    </div>
+    {% endif %}
     <!-- Bootstrap JS bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -349,5 +387,122 @@
         });
       });
     </script>
+
+    {% if current_user.is_authenticated %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const root = document.getElementById('support-assistant');
+        if (!root) {
+          return;
+        }
+
+        const panel = root.querySelector('.support-assistant-panel');
+        const toggleButton = root.querySelector('.support-assistant-toggle');
+        const closeButton = root.querySelector('.support-assistant-close');
+        const form = document.getElementById('support-assistant-form');
+        const input = document.getElementById('support-assistant-input');
+        const messages = document.getElementById('support-assistant-messages');
+        const chips = root.querySelectorAll('.support-assistant-chip');
+        const endpoint = root.dataset.endpoint;
+
+        function setOpenState(isOpen) {
+          panel.hidden = !isOpen;
+          root.classList.toggle('is-open', isOpen);
+          toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          if (isOpen) {
+            input.focus();
+          }
+        }
+
+        function appendMessage(role, text, options) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'support-assistant-message ' + (role === 'user' ? 'is-user' : 'is-assistant');
+
+          const bubble = document.createElement('div');
+          bubble.className = 'support-assistant-bubble';
+          bubble.textContent = text;
+          wrapper.appendChild(bubble);
+
+          if (options && options.categoryLabel) {
+            const meta = document.createElement('div');
+            meta.className = 'support-assistant-meta';
+            meta.textContent = root.dataset.categoryLabel + ': ' + options.categoryLabel;
+            wrapper.appendChild(meta);
+          }
+
+          if (options && options.url && options.label) {
+            const action = document.createElement('a');
+            action.className = 'support-assistant-action btn btn-sm btn-outline-primary';
+            action.href = options.url;
+            action.textContent = options.label;
+            wrapper.appendChild(action);
+          }
+
+          messages.appendChild(wrapper);
+          messages.scrollTop = messages.scrollHeight;
+          return wrapper;
+        }
+
+        function appendThinking() {
+          return appendMessage('assistant', root.dataset.thinkingLabel || '...');
+        }
+
+        async function sendMessage(message) {
+          const text = (message || '').trim();
+          if (!text) {
+            return;
+          }
+
+          setOpenState(true);
+          appendMessage('user', text);
+          input.value = '';
+          const pending = appendThinking();
+
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({ message: text })
+            });
+
+            const payload = await response.json();
+            pending.remove();
+
+            appendMessage('assistant', payload.reply || root.dataset.errorLabel, {
+              url: payload.create_ticket_url,
+              label: payload.create_ticket_label,
+              categoryLabel: payload.category_label
+            });
+          } catch (error) {
+            pending.remove();
+            appendMessage('assistant', root.dataset.errorLabel);
+          }
+        }
+
+        toggleButton.addEventListener('click', function () {
+          setOpenState(panel.hidden);
+        });
+
+        closeButton.addEventListener('click', function () {
+          setOpenState(false);
+        });
+
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          sendMessage(input.value);
+        });
+
+        chips.forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            sendMessage(chip.dataset.message || chip.textContent);
+          });
+        });
+      });
+    </script>
+    {% endif %}
   </body>
 </html>

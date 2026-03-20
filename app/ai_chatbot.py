@@ -3,8 +3,8 @@
 Provides automatic answers to frequently asked questions and common problems.
 """
 
-import os
 import logging
+import unicodedata
 from typing import Dict, Optional, List
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -12,21 +12,18 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-# Knowledge base of common issues and solutions
-# Format: {
-#   'keywords': ['search', 'term'],
-#   'patterns': ['pattern to match'],
-#   'response': 'automated response text',
-#   'category': 'Hardware|Software|Network|Account|Other',
-#   'confidence_min': 0.7  # min similarity to consider a match
-# }
+# Knowledge base of common issues and solutions.
+# Each entry supports English and Spanish so the same assistant can work in
+# both languages without relying on external translation services.
 
 KNOWLEDGE_BASE = [
     {
         'id': 1,
-        'keywords': ['password', 'login', 'access', 'forgot', 'reset', 'locked'],
+        'keywords_en': ['password', 'login', 'access', 'forgot', 'reset', 'locked', 'account', 'forgot password', 'cannot log in', 'reset password'],
+        'keywords_es': ['contrasena', 'contraseña', 'acceso', 'ingreso', 'login', 'olvide', 'restablecer', 'bloqueado', 'cuenta', 'no puedo entrar', 'recuperar clave'],
         'category': 'Account',
-        'response': """I can help you reset your password!
+        'ticket_category': 'Accesos y cuentas',
+        'response_en': """I can help you reset your password!
 
 **Quick steps:**
 1. Go to the login page
@@ -36,14 +33,26 @@ KNOWLEDGE_BASE = [
 5. Create a new password
 
 **Still having issues?** Reply to this ticket and a technician will help you within 30 minutes.""",
+        'response_es': """Puedo ayudarte a restablecer tu contraseña.
+
+**Pasos rápidos:**
+1. Ve a la pantalla de inicio de sesión
+2. Haz clic en "¿Olvidaste tu contraseña?"
+3. Ingresa tu correo
+4. Revisa tu bandeja de entrada para el enlace
+5. Crea una nueva contraseña
+
+**Si el problema continúa:** crea un ticket y un técnico te ayudará lo antes posible.""",
         'category_slug': 'account_access',
-        'confidence_min': 0.6,
+        'confidence_min': 0.5,
     },
     {
         'id': 2,
-        'keywords': ['printer', 'printing', 'print', 'not printing', 'paper', 'toner'],
+        'keywords_en': ['printer', 'printing', 'print', 'not printing', 'paper', 'toner'],
+        'keywords_es': ['impresora', 'imprimir', 'impresion', 'impresión', 'no imprime', 'papel', 'toner', 'tinta', 'no puedo imprimir', 'error de impresora'],
         'category': 'Hardware',
-        'response': """Let me help with your printer issue!
+        'ticket_category': 'Impresoras',
+        'response_en': """Let me help with your printer issue!
 
 **Try these steps first:**
 1. Check if printer is powered on (green light)
@@ -56,14 +65,26 @@ KNOWLEDGE_BASE = [
 - Tell us the printer model
 - What error message do you see?
 - A technician will check remotely""",
+    'response_es': """Voy a ayudarte con el problema de impresión.
+
+**Prueba primero esto:**
+1. Verifica que la impresora esté encendida
+2. Confirma que tenga papel en la bandeja
+3. Revisa si hay atasco de papel
+4. Reinicia la impresora durante 30 segundos
+5. En tu equipo vuelve a seleccionar o reiniciar la impresora
+
+**Si sigue fallando:** indícame el modelo y el error que aparece para abrir el ticket mejor clasificado.""",
         'category_slug': 'hardware_printer',
         'confidence_min': 0.7,
     },
     {
         'id': 3,
-        'keywords': ['wifi', 'internet', 'network', 'connection', 'connected', 'not connecting'],
+    'keywords_en': ['wifi', 'internet', 'network', 'connection', 'connected', 'not connecting'],
+    'keywords_es': ['wifi', 'internet', 'red', 'conexion', 'conexión', 'sin internet', 'no conecta', 'no tengo red', 'no hay internet', 'problema de red'],
         'category': 'Network',
-        'response': """I can help with your network connection!
+    'ticket_category': 'Red',
+    'response_en': """I can help with your network connection!
 
 **Quick troubleshooting:**
 1. Restart your router (unplug 30 seconds)
@@ -78,14 +99,26 @@ KNOWLEDGE_BASE = [
 - Do other devices work?
 
 A technician will investigate if needed.""",
+    'response_es': """Puedo ayudarte con el problema de red.
+
+**Diagnóstico rápido:**
+1. Reinicia el router o punto de acceso
+2. Si usas cable, desconéctalo y vuelve a conectarlo
+3. Olvida la red WiFi y vuelve a conectarte
+4. Acércate al router si estás por WiFi
+5. Reinicia tu equipo
+
+**Para escalarlo mejor:** dime si usas cable o WiFi y si otros equipos sí tienen conexión.""",
         'category_slug': 'network_wifi',
         'confidence_min': 0.65,
     },
     {
         'id': 4,
-        'keywords': ['slow', 'lag', 'frozen', 'sluggish', 'hang', 'performance'],
+    'keywords_en': ['slow', 'lag', 'frozen', 'sluggish', 'hang', 'performance'],
+    'keywords_es': ['lento', 'lentitud', 'congelado', 'trabado', 'se cuelga', 'rendimiento', 'muy lento', 'mi computadora esta lenta', 'mi computadora está lenta'],
         'category': 'Software',
-        'response': """Your device is running slowly? Let's speed it up!
+    'ticket_category': 'Software',
+    'response_en': """Your device is running slowly? Let's speed it up!
 
 **Quick fixes:**
 1. Restart your computer (save work first)
@@ -100,14 +133,26 @@ A technician will investigate if needed.""",
 - Any error messages?
 
 Technician can run diagnostics if needed.""",
+    'response_es': """Si tu equipo está lento, empecemos por lo básico.
+
+**Acciones rápidas:**
+1. Reinicia el equipo
+2. Cierra programas o pestañas que no necesites
+3. Revisa si el CPU o la memoria están saturados
+4. Limpia caché del navegador si el problema es web
+5. Desactiva extensiones innecesarias
+
+**Si sigue igual:** dime qué aplicación falla y desde cuándo notas la lentitud.""",
         'category_slug': 'performance_slow',
         'confidence_min': 0.7,
     },
     {
         'id': 5,
-        'keywords': ['software', 'install', 'download', 'app', 'program', 'license'],
+    'keywords_en': ['software', 'install', 'download', 'app', 'program', 'license'],
+    'keywords_es': ['software', 'instalar', 'instalacion', 'instalación', 'descargar', 'aplicacion', 'aplicación', 'programa', 'licencia', 'no puedo instalar', 'activar licencia'],
         'category': 'Software',
-        'response': """Need software installed or licensed?
+    'ticket_category': 'Software',
+    'response_en': """Need software installed or licensed?
 
 **What we can help with:**
 - Installing approved company software
@@ -122,14 +167,24 @@ Technician can run diagnostics if needed.""",
 
 ⚠️ **Security note:** Only install software approved by IT
 """,
+    'response_es': """Si necesitas instalar software o activar una licencia, puedo orientarte.
+
+**Qué debemos confirmar:**
+- Nombre exacto del software
+- Si tiene aprobación interna
+- Qué error aparece o en qué paso falla
+
+**Importante:** solo debe instalarse software aprobado por TI. Si quieres, te dejo el ticket ya prellenado con esta información.""",
         'category_slug': 'software_install',
         'confidence_min': 0.65,
     },
     {
         'id': 6,
-        'keywords': ['email', 'outlook', 'gmail', 'send', 'receive', 'not receiving'],
+    'keywords_en': ['email', 'outlook', 'gmail', 'send', 'receive', 'not receiving'],
+    'keywords_es': ['correo', 'outlook', 'gmail', 'enviar', 'recibir', 'no recibo', 'no llegan correos', 'correo corporativo', 'no puedo enviar correos', 'no puedo recibir correos'],
         'category': 'Software',
-        'response': """Having email trouble?
+    'ticket_category': 'Correo corporativo',
+    'response_en': """Having email trouble?
 
 **Try these steps:**
 1. Restart Outlook/email app
@@ -144,14 +199,26 @@ Technician can run diagnostics if needed.""",
 - Any error codes shown?
 
 Technician can reset credentials if needed.""",
+    'response_es': """Si tienes problemas con el correo, revisa esto primero.
+
+**Pasos iniciales:**
+1. Reinicia Outlook o tu cliente de correo
+2. Verifica que tengas conexión a internet
+3. Confirma que la contraseña siga siendo válida
+4. Revisa correo no deseado
+5. Si usas Outlook, actualiza la contraseña de la cuenta
+
+**Para ayudarte mejor:** dime si no puedes enviar, recibir o ambas cosas.""",
         'category_slug': 'email_issues',
         'confidence_min': 0.7,
     },
     {
         'id': 7,
-        'keywords': ['vpn', 'remote', 'access', 'connection', 'cannot access'],
+    'keywords_en': ['vpn', 'remote', 'access', 'connection', 'cannot access'],
+    'keywords_es': ['vpn', 'remoto', 'acceso remoto', 'conexion remota', 'conexión remota', 'no puedo acceder', 'no puedo conectarme a la vpn', 'no conecta la vpn', 'problema con vpn'],
         'category': 'Network',
-        'response': """Having trouble with VPN or remote access?
+    'ticket_category': 'VPN y conectividad remota',
+    'response_en': """Having trouble with VPN or remote access?
 
 **Check first:**
 1. Internet connection working?
@@ -166,8 +233,18 @@ Technician can reset credentials if needed.""",
 - Desktop or laptop?
 
 A technician can verify your account access.""",
+    'response_es': """Si tienes problemas con la VPN o el acceso remoto, empieza por aquí.
+
+**Valida primero:**
+1. Que tu internet funcione
+2. Reinicia la aplicación VPN
+3. Intenta reconectarte
+4. Verifica tus credenciales
+5. Si puedes, prueba otra red
+
+**Cuando lo escales:** incluye el mensaje de error, el nombre del servicio y si usas laptop o desktop.""",
         'category_slug': 'vpn_remote',
-        'confidence_min': 0.6,
+        'confidence_min': 0.5,
     },
 ]
 
@@ -185,13 +262,11 @@ class ChatBot:
     def _train(self):
         """Train TF-IDF vectorizer on knowledge base."""
         try:
-            # Combine all keywords for each KB entry
-            kb_texts = [' '.join(entry['keywords']) for entry in self.knowledge_base]
+            kb_texts = [self._entry_text(entry) for entry in self.knowledge_base]
             
             if kb_texts:
                 self.vectorizer = TfidfVectorizer(
                     lowercase=True,
-                    stop_words='english',
                     analyzer='char',
                     ngram_range=(2, 3),
                     min_df=1
@@ -200,8 +275,61 @@ class ChatBot:
                 logger.info(f"ChatBot trained on {len(self.knowledge_base)} knowledge base entries")
         except Exception as e:
             logger.warning(f"Error training ChatBot: {e}")
+
+    def _entry_text(self, entry: Dict) -> str:
+        keywords = entry.get('keywords_en', []) + entry.get('keywords_es', [])
+        category_tokens = [
+            entry.get('category', ''),
+            entry.get('ticket_category', ''),
+            entry.get('category_slug', ''),
+        ]
+        return ' '.join(token for token in keywords + category_tokens if token)
+
+    def _localized_response(self, entry: Dict, lang: str) -> str:
+        if lang == 'es':
+            return entry.get('response_es') or entry.get('response_en', '')
+        return entry.get('response_en') or entry.get('response_es', '')
+
+    def _normalize_text(self, text: str) -> str:
+        normalized = unicodedata.normalize('NFKD', (text or '').lower())
+        return ''.join(ch for ch in normalized if not unicodedata.combining(ch))
+
+    def _build_answer(self, entry: Dict, lang: str, confidence: float) -> Dict:
+        return {
+            'answer': self._localized_response(entry, lang),
+            'confidence': round(float(confidence), 3),
+            'kb_entry_id': entry['id'],
+            'category': entry['category'],
+            'ticket_category': entry.get('ticket_category'),
+            'category_slug': entry.get('category_slug'),
+            'can_escalate': True,
+        }
+
+    def _direct_match(self, question: str, lang: str) -> Optional[Dict]:
+        normalized_question = self._normalize_text(question)
+        if not normalized_question:
+            return None
+
+        best_entry = None
+        best_score = 0.0
+        for entry in self.knowledge_base:
+            score = 0.0
+            for term in entry.get('keywords_en', []) + entry.get('keywords_es', []):
+                normalized_term = self._normalize_text(term)
+                if normalized_term and normalized_term in normalized_question:
+                    score += 1.4 if (' ' in normalized_term or len(normalized_term) >= 8) else 1.0
+
+            if score > best_score:
+                best_entry = entry
+                best_score = score
+
+        if best_entry and best_score >= 1.0:
+            confidence = min(0.99, 0.55 + (best_score * 0.08))
+            return self._build_answer(best_entry, lang, confidence)
+
+        return None
     
-    def find_answer(self, question: str) -> Optional[Dict]:
+    def find_answer(self, question: str, lang: str = 'en') -> Optional[Dict]:
         """Find best matching answer for user question.
         
         Args:
@@ -220,6 +348,10 @@ class ChatBot:
             return None
         
         try:
+            direct_answer = self._direct_match(question, lang)
+            if direct_answer is not None:
+                return direct_answer
+
             # Vectorize the question
             q_vector = self.vectorizer.transform([question.lower()])
             
@@ -235,14 +367,7 @@ class ChatBot:
             
             # Only return if confidence is high enough
             if best_score >= min_confidence:
-                return {
-                    'answer': kb_entry['response'],
-                    'confidence': round(float(best_score), 3),
-                    'kb_entry_id': kb_entry['id'],
-                    'category': kb_entry['category'],
-                    'category_slug': kb_entry.get('category_slug'),
-                    'can_escalate': True,  # User can escalate if not satisfied
-                }
+                return self._build_answer(kb_entry, lang, best_score)
             
             return None
             
@@ -271,7 +396,7 @@ def get_chatbot() -> ChatBot:
     return _chatbot
 
 
-def answer_question(question: str) -> Optional[Dict]:
+def answer_question(question: str, lang: str = 'en') -> Optional[Dict]:
     """Find automatic answer for a question.
     
     Args:
@@ -281,7 +406,7 @@ def answer_question(question: str) -> Optional[Dict]:
         Answer dict or None
     """
     chatbot = get_chatbot()
-    return chatbot.find_answer(question)
+    return chatbot.find_answer(question, lang=lang)
 
 
 def should_auto_respond(title: str, description: str = "", confidence_threshold: float = 0.75) -> bool:

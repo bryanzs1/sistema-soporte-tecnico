@@ -120,6 +120,193 @@
     border-color: var(--color-success) !important;
 }
 
+.support-assistant {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 1085;
+}
+
+.support-assistant-toggle {
+    width: 64px;
+    height: 64px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: #fff;
+    box-shadow: 0 20px 45px rgba(30, 64, 175, 0.28);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.support-assistant-panel {
+    position: absolute;
+    right: 0;
+    bottom: 80px;
+    width: min(380px, calc(100vw - 1.5rem));
+    max-height: min(72vh, 620px);
+    border: 1px solid rgba(30, 64, 175, 0.12);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16);
+    overflow: hidden;
+}
+
+.support-assistant-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1rem 0.75rem;
+    background: linear-gradient(145deg, rgba(30, 64, 175, 0.08), rgba(59, 130, 246, 0.04));
+    border-bottom: 1px solid rgba(30, 64, 175, 0.08);
+}
+
+.support-assistant-subtitle {
+    color: var(--color-text-secondary);
+    font-size: 0.86rem;
+    margin-top: 0.2rem;
+    line-height: 1.35;
+}
+
+.support-assistant-close {
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    padding: 0.25rem;
+}
+
+.support-assistant-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    overflow-y: auto;
+    max-height: 320px;
+    background:
+        radial-gradient(circle at top left, rgba(14, 165, 233, 0.07), transparent 40%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.98));
+}
+
+.support-assistant-message {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.support-assistant-message.is-user {
+    align-items: flex-end;
+}
+
+.support-assistant-message.is-assistant {
+    align-items: flex-start;
+}
+
+.support-assistant-bubble {
+    max-width: 88%;
+    padding: 0.85rem 1rem;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
+.support-assistant-message.is-user .support-assistant-bubble {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: #fff;
+    border-bottom-right-radius: 6px;
+}
+
+.support-assistant-message.is-assistant .support-assistant-bubble {
+    background: #fff;
+    color: var(--color-text-primary);
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-bottom-left-radius: 6px;
+}
+
+.support-assistant-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    padding: 0 0.15rem;
+}
+
+.support-assistant-action {
+    align-self: flex-start;
+    border-radius: 999px;
+}
+
+.support-assistant-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0 1rem 1rem;
+}
+
+.support-assistant-chip {
+    border: 1px solid rgba(30, 64, 175, 0.16);
+    background: rgba(30, 64, 175, 0.05);
+    color: var(--color-primary);
+    border-radius: 999px;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.82rem;
+}
+
+.support-assistant-form {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0 1rem 1rem;
+}
+
+.support-assistant-input {
+    width: 100%;
+    resize: none;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 16px;
+    padding: 0.85rem 1rem;
+    color: var(--color-text-primary);
+    background: #fff;
+}
+
+.support-assistant-input:focus {
+    outline: none;
+    border-color: rgba(30, 64, 175, 0.48);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.support-assistant-send {
+    justify-self: end;
+    border-radius: 999px;
+    min-width: 110px;
+}
+
+@media (max-width: 576px) {
+    .support-assistant {
+        right: 1rem;
+        left: 1rem;
+        bottom: 1rem;
+    }
+
+    .support-assistant-toggle {
+        margin-left: auto;
+        display: flex;
+    }
+
+    .support-assistant-panel {
+        right: 0;
+        left: 0;
+        width: auto;
+        bottom: 78px;
+        max-height: 70vh;
+    }
+
+    .support-assistant-bubble {
+        max-width: 100%;
+    }
+}
+
 .btn-success:hover {
     background-color: var(--color-success-hover) !important;
     border-color: var(--color-success-hover) !important;

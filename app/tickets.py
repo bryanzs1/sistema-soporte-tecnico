@@ -691,6 +691,19 @@ def list_tickets():
 def create_ticket():
     form = TicketForm()
     form.creator_name.data = current_user.username
+    if request.method == 'GET':
+        requested_title = (request.args.get('title') or '').strip()
+        requested_description = (request.args.get('description') or '').strip()
+        requested_category = (request.args.get('category') or '').strip()
+        valid_categories = {value for value, _label in form.category.choices}
+
+        if requested_title and not form.title.data:
+            form.title.data = requested_title[:140]
+        if requested_description and not form.description.data:
+            form.description.data = requested_description
+        if requested_category in valid_categories:
+            form.category.data = requested_category
+
     if form.validate_on_submit():
         ticket = Ticket(
             title=form.title.data,
