@@ -195,13 +195,10 @@
 
     const userId = '{{ current_user.id if current_user.is_authenticated else "anon" }}';
     const storageKey = 'ticketsTableLayout:' + userId;
-    const layoutEndpoint = '{{ url_for("tickets.save_table_layout") }}';
-    const serverState = {{ (ticket_table_layout or {'order': [], 'hidden': []}) | tojson }};
     const headers = Array.from(headerRow.querySelectorAll('th[data-col-key]'));
     const defaultOrder = headers.map(function (h) { return h.dataset.colKey; });
     const labels = Object.fromEntries(headers.map(function (h) { return [h.dataset.colKey, h.textContent.trim()]; }));
     let state = { order: defaultOrder.slice(), hidden: [] };
-    let persistTimer = null;
 
     function getColumnCells(key) {
       return Array.from(table.querySelectorAll('.ticket-col-' + key));
@@ -209,22 +206,6 @@
 
     function saveState() {
       localStorage.setItem(storageKey, JSON.stringify(state));
-      if (persistTimer) {
-        clearTimeout(persistTimer);
-      }
-      persistTimer = setTimeout(function () {
-        fetch(layoutEndpoint, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: JSON.stringify(state)
-        }).catch(function () {
-          // Keep UX resilient: local preferences still work even if sync fails.
-        });
-      }, 250);
     }
 
     function applyStateCandidate(candidate) {
@@ -242,13 +223,10 @@
     }
 
     function loadState() {
-      // Use server state first so preferences are shared across devices.
-      applyStateCandidate(serverState);
       try {
         const raw = localStorage.getItem(storageKey);
         if (!raw) return;
         const parsed = JSON.parse(raw);
-        // Local state has priority if user customized in this browser.
         applyStateCandidate(parsed);
       } catch (e) {
         state = { order: defaultOrder.slice(), hidden: [] };
