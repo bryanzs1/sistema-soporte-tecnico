@@ -364,6 +364,9 @@ TRANSLATIONS = {
         'Join the support system and manage tickets efficiently': 'Únete al sistema de soporte y gestiona tickets de manera eficiente',
         'Go to Tickets': 'Ir a Tickets',
         'Sign In Now': 'Entrar Ahora'
+        , 'Customize table': 'Personalizar tabla'
+        , 'Reset table layout': 'Restablecer diseño de tabla'
+        , 'Drag and drop column headers to reorder. Enable or disable columns below.': 'Arrastra y suelta los encabezados para reordenar. Activa o desactiva columnas abajo.'
         , 'Please change the default admin password before continuing': 'Por seguridad, cambia la contraseña predeterminada de admin antes de continuar'
         , 'Password updated successfully': 'Contraseña actualizada correctamente'
         , 'New Password': 'Nueva contraseña'
@@ -934,6 +937,9 @@ TRANSLATIONS = {
         'Únete al sistema de soporte y gestiona tickets de manera eficiente': 'Join the support system and manage tickets efficiently',
         'Ir a Tickets': 'Go to Tickets',
         'Entrar Ahora': 'Sign In Now',
+        'Personalizar tabla': 'Customize table',
+        'Restablecer diseño de tabla': 'Reset table layout',
+        'Arrastra y suelta los encabezados para reordenar. Activa o desactiva columnas abajo.': 'Drag and drop column headers to reorder. Enable or disable columns below.',
         'Información Básica': 'Basic Information',
         'Opciones': 'Options',
         'Línea de tiempo': 'Timeline',
