@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), default='user')
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     last_activity = db.Column(db.DateTime, default=utcnow)
+    ticket_table_layout = db.Column(db.Text)
     
     # Security: 2FA (TOTP)
     totp_secret = db.Column(db.String(32))  # Encrypted TOTP secret

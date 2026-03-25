@@ -257,6 +257,32 @@ def _safe_datetime_text(value, fmt='%Y-%m-%d %H:%M'):
     return value.strftime(fmt) if hasattr(value, 'strftime') else None
 
 
+def _sanitize_ticket_table_layout(payload):
+    allowed_cols = {'id', 'title', 'status', 'priority', 'category', 'creator', 'sla-due', 'sla', 'action'}
+    order = payload.get('order') if isinstance(payload, dict) else None
+    hidden = payload.get('hidden') if isinstance(payload, dict) else None
+
+    if not isinstance(order, list) or not isinstance(hidden, list):
+        return None
+
+    cleaned_order = []
+    for item in order:
+        if isinstance(item, str) and item in allowed_cols and item not in cleaned_order:
+            cleaned_order.append(item)
+
+    # Always keep all known columns in deterministic order.
+    for col in ['id', 'title', 'status', 'priority', 'category', 'creator', 'sla-due', 'sla', 'action']:
+        if col not in cleaned_order:
+            cleaned_order.append(col)
+
+    cleaned_hidden = []
+    for item in hidden:
+        if isinstance(item, str) and item in allowed_cols and item not in cleaned_hidden:
+            cleaned_hidden.append(item)
+
+    return {'order': cleaned_order, 'hidden': cleaned_hidden}
+
+
 def _ticket_timeline(ticket):
     events = []
     if ticket.created_at:
@@ -531,6 +557,14 @@ def list_tickets():
         }
         ticket_counts['all'] = filtered_query.count()
 
+        table_layout = None
+        if current_user.ticket_table_layout:
+            try:
+                parsed_layout = json.loads(current_user.ticket_table_layout)
+                table_layout = _sanitize_ticket_table_layout(parsed_layout)
+            except (TypeError, ValueError):
+                table_layout = None
+
         q = filtered_query
 
         if not status and view == 'active':
@@ -598,6 +632,7 @@ def list_tickets():
         }
 
         return render_template('tickets/list.html', tickets=tickets,
+                               ticket_table_layout=table_layout,
                                ticket_counts=ticket_counts,
                                view=view,
                                status=status, category=category, priority=priority,
@@ -684,6 +719,19 @@ def list_tickets():
                                    start_date=None, end_date=None, keyword=None,
                                    categories=Ticket.default_categories(),
                                    priorities=Ticket.default_priorities())
+
+
+@bp.route('/table-layout', methods=['POST'])
+@login_required
+def save_table_layout():
+    payload = request.get_json(silent=True) or {}
+    layout = _sanitize_ticket_table_layout(payload)
+    if layout is None:
+        return jsonify({'ok': False, 'error': 'invalid_layout'}), 400
+
+    current_user.ticket_table_layout = json.dumps(layout)
+    db.session.commit()
+    return jsonify({'ok': True})
 
 
 @bp.route('/create', methods=['GET', 'POST'])
