@@ -1,4 +1,5 @@
 from flask import Flask, current_app, session, render_template, request, redirect, url_for
+from flask_wtf.csrf import generate_csrf
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
@@ -1290,6 +1291,7 @@ def create_app(config_class=None):
             'current_year': utcnow().year,
             '_': _translate,
             'current_lang': lang,
+            'csrf_token': generate_csrf,
         }
     
     # Add custom Jinja2 filters

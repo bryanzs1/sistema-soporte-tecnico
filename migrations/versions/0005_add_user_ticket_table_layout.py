@@ -1,6 +1,6 @@
 """add ticket table layout preferences to user
 
-Revision ID: 0005_add_user_ticket_table_layout
+Revision ID: 0005_ticket_table_layout
 Revises: 0004_add_user_last_activity
 Create Date: 2026-03-25 00:00:00.000000
 """
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '0005_add_user_ticket_table_layout'
+revision = '0005_ticket_table_layout'
 down_revision = '0004_add_user_last_activity'
 branch_labels = None
 depends_on = None
