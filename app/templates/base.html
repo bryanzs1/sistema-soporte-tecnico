@@ -89,7 +89,7 @@
                 </ul>
               </li>
             {% else %}
-              <li class="nav-item"><a class="btn btn-sm text-white fw-bold mx-2 btn-login-highlight" href="{{ url_for('auth.login') }}">Login</a></li>
+              <li class="nav-item"><a class="btn btn-sm text-white fw-bold mx-2 btn-login-highlight" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a></li>
             {% endif %}
           </ul>
         </div>
@@ -97,16 +97,18 @@
     </nav>
 
     <div class="alert-container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category or 'info' }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+      {% if not request.args.get('login_failed') %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category or 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      {% endif %}
     </div>
 
     {% block content %}{% endblock %}
@@ -521,6 +523,96 @@
             sendMessage(chip.dataset.message || chip.textContent);
           });
         });
+      });
+    </script>
+    {% endif %}
+
+    {% if not current_user.is_authenticated %}
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold fs-5" id="loginModalLabel">
+              <i class="bi bi-lock-fill me-2 text-primary"></i>{{ _('Login') }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2 px-4 pb-4">
+            {% if request.args.get('login_failed') %}
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category or 'danger' }} alert-dismissible fade show py-2" role="alert">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+            <form method="post" action="{{ url_for('auth.login') }}" id="loginModalForm" data-unsaved-guard="false">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="source" value="modal">
+              <div class="mb-3">
+                <label for="modal-username" class="form-label fw-medium">{{ _('Username') }}</label>
+                <input type="text" class="form-control input-enhanced" id="modal-username" name="username"
+                       placeholder="{{ _('Username') }}" required autocomplete="username">
+              </div>
+              <div class="mb-3">
+                <label for="modal-password" class="form-label fw-medium">{{ _('Password') }}</label>
+                <div class="input-group">
+                  <input type="password" class="form-control input-enhanced" id="modal-password" name="password"
+                         placeholder="{{ _('Password') }}" required autocomplete="current-password">
+                  <button class="btn btn-outline-secondary" type="button" id="modal-toggle-password"
+                          tabindex="-1" aria-label="{{ _('Show password') }}">
+                    <i class="bi bi-eye" id="modal-eye-icon"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="modal-remember-me" name="remember_me">
+                  <label class="form-check-label small" for="modal-remember-me">{{ _('Remember Me') }}</label>
+                </div>
+                <a href="{{ url_for('auth.forgot_password') }}" class="small text-primary">{{ _('Forgot your password?') }}</a>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 btn-animated btn-lg">
+                <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('Login') }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var loginModalEl = document.getElementById('loginModal');
+        if (!loginModalEl) return;
+
+        // Auto-open when redirected back after a failed login attempt
+        if (new URLSearchParams(window.location.search).has('login_failed')) {
+          var m = new bootstrap.Modal(loginModalEl);
+          m.show();
+        }
+
+        // Focus the username field every time the modal is shown
+        loginModalEl.addEventListener('shown.bs.modal', function () {
+          var usernameInput = document.getElementById('modal-username');
+          if (usernameInput && !usernameInput.value) usernameInput.focus();
+        });
+
+        // Password visibility toggle
+        var toggleBtn = document.getElementById('modal-toggle-password');
+        var passwordInput = document.getElementById('modal-password');
+        var eyeIcon = document.getElementById('modal-eye-icon');
+        if (toggleBtn && passwordInput) {
+          toggleBtn.addEventListener('click', function () {
+            var isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+          });
+        }
       });
     </script>
     {% endif %}

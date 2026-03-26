@@ -20,7 +20,8 @@
             <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-primary btn-lg btn-animated text-white">{{ _('View Tickets') }}</a>
             <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-outline-primary btn-lg btn-animated">{{ _('Create Ticket') }}</a>
           {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-animated text-white">{{ _('Sign In') }}</a>
+            <a href="#loginModal" class="btn btn-primary btn-lg btn-animated text-white"
+               data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
           {% endif %}
         </div>
       </div>
@@ -81,7 +82,8 @@
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Go to Tickets') }}</a>
       {% else %}
-        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Sign In Now') }}</a>
+        <a href="#loginModal" class="btn btn-light btn-lg btn-animated mt-3"
+           data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In Now') }}</a>
       {% endif %}
     </div>
   </div>

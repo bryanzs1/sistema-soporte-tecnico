@@ -70,6 +70,23 @@ def _resolve_user_from_reset_token(token, max_age_seconds=1800):
     return user
 
 
+def _login_fail_redirect():
+    """Redirect after a failed login attempt.
+
+    When the request came from the login modal (source=modal in POST data),
+    redirect back to the referring page with ?login_failed=1 so the modal
+    can re-open automatically.  Falls back to the normal login page."""
+    if request.form.get('source') == 'modal':
+        referrer = request.referrer or ''
+        host_url = request.host_url.rstrip('/')
+        # Same-origin check to prevent open redirect
+        if referrer and (referrer == host_url or referrer.startswith(host_url + '/')):
+            base = referrer.split('?')[0].split('#')[0]
+            return redirect(base + '?login_failed=1')
+        return redirect(url_for('main.index') + '?login_failed=1')
+    return redirect(url_for('auth.login'))
+
+
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 @limiter.limit("5 per 15 minutes", key_func=_login_rate_limit_key, methods=['POST'])
 def login():
@@ -83,7 +100,7 @@ def login():
         if user and user.is_account_locked():
             AuditHelper.log_login_attempt(user, False)
             flash(_t('Account is locked due to multiple failed login attempts. Try again later.'), 'danger')
-            return redirect(url_for('auth.login'))
+            return _login_fail_redirect()
         
         # Check credentials
         if user is None or not user.check_password(form.password.data):
@@ -96,13 +113,13 @@ def login():
                     flash(_t('Invalid username or password'), 'danger')
             else:
                 flash(_t('Invalid username or password'), 'danger')
-            return redirect(url_for('auth.login'))
+            return _login_fail_redirect()
         
         # Check if account is active
         if not user.is_active:
             AuditHelper.log_login_attempt(user, False)
             flash(_t('This account has been deactivated. Please contact an administrator.'), 'danger')
-            return redirect(url_for('auth.login'))
+            return _login_fail_redirect()
         
         # Successful login: reset failed attempts and log audit
         user.reset_failed_login()
