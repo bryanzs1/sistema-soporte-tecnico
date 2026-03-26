@@ -409,6 +409,15 @@ html {
     scrollbar-gutter: stable;
 }
 
+/* Evitar que Bootstrap desplace el fondo cuando abre un modal */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+.modal-open .navbar {
+    padding-right: 0 !important;
+}
+
 body {
     padding-top: 70px; /* keep content below fixed navbar if used */
     min-height: 100vh;
