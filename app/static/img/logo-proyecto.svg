@@ -1,0 +1,41 @@
+<svg width="720" height="220" viewBox="0 0 720 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">Soporte Empresa</title>
+  <desc id="logoDesc">Logo vectorial para el sistema de soporte tecnico corporativo</desc>
+  <defs>
+    <linearGradient id="shieldGradient" x1="24" y1="20" x2="164" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="48" y1="44" x2="142" y2="144" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#BFDBFE" stop-opacity="0.9"/>
+    </linearGradient>
+    <filter id="softShadow" x="0" y="0" width="188" height="196" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="10"/>
+      <feGaussianBlur stdDeviation="10"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.117647 0 0 0 0 0.25098 0 0 0 0 0.686275 0 0 0 0.22 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <path d="M94 12L154 34V92C154 127.58 129.74 160.28 94 170C58.26 160.28 34 127.58 34 92V34L94 12Z" fill="url(#shieldGradient)"/>
+  </g>
+
+  <path d="M93.9999 38C116.091 38 134 55.9086 134 78V79.8C134 82.451 131.851 84.6 129.2 84.6H58.7999C56.1489 84.6 53.9999 82.451 53.9999 79.8V78C53.9999 55.9086 71.9085 38 93.9999 38Z" fill="url(#accentGradient)"/>
+  <path d="M69 98.5C69 95.4624 71.4624 93 74.5 93H113.5C116.538 93 119 95.4624 119 98.5V101.5C119 119.725 108.949 136.458 94 144C79.0506 136.458 69 119.725 69 101.5V98.5Z" fill="#F8FAFC"/>
+  <path d="M82.2 96.8V72.8C82.2 66.2829 87.4829 61 94 61C100.517 61 105.8 66.2829 105.8 72.8V96.8" stroke="#1E40AF" stroke-width="8.5" stroke-linecap="round"/>
+  <path d="M90.3 111.6L94.1 115.7L101.7 107.4" stroke="#1E40AF" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g fill="#F8FAFC" opacity="0.22">
+    <circle cx="151" cy="41" r="10"/>
+    <circle cx="42" cy="141" r="7"/>
+  </g>
+
+  <text x="205" y="96" fill="#F8FAFC" font-family="Bahnschrift, Franklin Gothic Medium, Segoe UI, sans-serif" font-size="58" font-weight="700" letter-spacing="0.5">Soporte Empresa</text>
+  <text x="208" y="136" fill="#BFDBFE" font-family="Segoe UI Variable, Trebuchet MS, Helvetica Neue, sans-serif" font-size="24" font-weight="500" letter-spacing="2.5">SISTEMA DE SOPORTE TECNICO</text>
+  <rect x="208" y="152" width="274" height="6" rx="3" fill="#60A5FA" opacity="0.85"/>
+</svg>
