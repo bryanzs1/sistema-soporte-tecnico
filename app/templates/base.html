@@ -11,7 +11,14 @@
   <body class="app-bg {% block body_class %}{% endblock %}">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
       <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">{{ _('Support') }}</a>
+        <a class="navbar-brand app-brand" href="{{ url_for('main.index') }}">
+          <img
+            src="{{ url_for('static', filename='img/logo-proyecto.png') }}"
+            alt="Logo"
+            class="app-brand-logo"
+            onerror="this.style.display='none'; this.parentElement.classList.add('brand-no-logo');">
+          <span class="app-brand-text">{{ _('Support') }}</span>
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>

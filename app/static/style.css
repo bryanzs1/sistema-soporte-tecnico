@@ -59,6 +59,31 @@
     background-color: var(--color-primary) !important;
 }
 
+.app-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.app-brand-logo {
+    width: auto;
+    height: 38px;
+    max-width: 180px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
+}
+
+.app-brand-text {
+    line-height: 1;
+}
+
+.app-brand.brand-no-logo {
+    gap: 0;
+}
+
 .navbar.bg-primary:hover {
     background-color: var(--color-primary-hover) !important;
 }
@@ -2457,6 +2482,15 @@ footer {
 @media (max-width: 991px) {
     body {
         padding-top: 66px;
+    }
+
+    .app-brand-logo {
+        height: 32px;
+        max-width: 132px;
+    }
+
+    .app-brand-text {
+        font-size: 0.98rem;
     }
 
     .navbar .container-fluid {
