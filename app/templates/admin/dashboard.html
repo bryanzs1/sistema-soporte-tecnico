@@ -20,6 +20,9 @@
             <option value="{{ url_for('tickets.list_tickets', status='En proceso') }}">{{ _('In Progress') }}</option>
             <option value="{{ url_for('admin.chat_monitoring') }}">{{ _('Chat Monitoring') }}</option>
             <option value="{{ url_for('admin.online_users_list') }}">{{ _('Online Users') }}</option>
+            {% if current_user.is_admin() %}
+            <option value="{{ url_for('admin.list_companies') }}">Empresas</option>
+            {% endif %}
             <option value="{{ url_for('admin.kb_list') }}">{{ _('Knowledge Base') }}</option>
             <option value="{{ url_for('admin.executive_report') }}">{{ _('Executive Report') }}</option>
           </select>
@@ -67,6 +70,18 @@
             <span class="operations-hub-badge {{ 'is-warning' if stats.pending_kb > 0 else '' }}">{{ stats.pending_kb }}</span>
           </a>
         </div>
+        {% if current_user.is_admin() %}
+        <div class="col-xl col-lg-6 col-md-6">
+          <a class="operations-hub-link operations-hub-secondary" href="{{ url_for('admin.list_companies') }}">
+            <div class="operations-hub-icon"><i class="bi bi-buildings"></i></div>
+            <div class="operations-hub-copy">
+              <strong>Empresas</strong>
+              <small>Registrar y administrar empresas</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+        {% endif %}
         <div class="col-xl col-lg-6 col-md-12">
           <a class="operations-hub-link operations-hub-dark" href="{{ url_for('admin.executive_report') }}">
             <div class="operations-hub-icon"><i class="bi bi-bar-chart-line"></i></div>
