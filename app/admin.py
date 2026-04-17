@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from io import StringIO
 
 
-from flask import Blueprint, Response, render_template, redirect, url_for, flash, request, session, current_app
+from flask import Blueprint, Response, abort, render_template, redirect, url_for, flash, request, session, current_app
 
 bp = Blueprint('admin', __name__)
 
@@ -124,6 +124,14 @@ def tech_or_admin_required(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def _company_ticket_query():
+    return Ticket.query.filter(Ticket.company_id == current_user.company_id)
+
+
+def _ticket_in_scope(ticket):
+    return ticket.company_id == current_user.company_id
 
 
 def _sync_default_ticket_options():
@@ -370,7 +378,8 @@ def dashboard():
     from datetime import datetime
     from sqlalchemy import func
 
-    closed_tickets = Ticket.query.filter_by(status='Cerrado').all()
+    ticket_query = _company_ticket_query()
+    closed_tickets = ticket_query.filter_by(status='Cerrado').all()
     resolution_hours = []
     for ticket in closed_tickets:
         if ticket.resolved_at and ticket.created_at:
@@ -379,15 +388,15 @@ def dashboard():
 
     avg_resolution_hours = round(sum(resolution_hours) / len(resolution_hours), 2) if resolution_hours else 0
     now = utcnow()
-    overdue_count = Ticket.query.filter(
+    overdue_count = ticket_query.filter(
         Ticket.sla_due_at.isnot(None),
         Ticket.status != 'Cerrado',
         Ticket.sla_due_at < now,
     ).count()
-    reopened_total = Ticket.query.filter(Ticket.reopened_count > 0).count()
+    reopened_total = ticket_query.filter(Ticket.reopened_count > 0).count()
 
     # Due soon (uses model logic — load only open tickets with sla_due_at set)
-    open_with_sla = Ticket.query.filter(
+    open_with_sla = ticket_query.filter(
         Ticket.status != 'Cerrado',
         Ticket.sla_due_at.isnot(None),
     ).all()
@@ -395,12 +404,13 @@ def dashboard():
 
     # CSAT average
     csat_result = db.session.query(func.avg(Ticket.satisfaction_rating)).filter(
+        Ticket.company_id == current_user.company_id,
         Ticket.satisfaction_rating.isnot(None)
     ).scalar()
     csat_avg = round(float(csat_result), 1) if csat_result else None
 
     # SLA compliance % (closed on time / total closed with SLA)
-    closed_with_sla = Ticket.query.filter(
+    closed_with_sla = ticket_query.filter(
         Ticket.status == 'Cerrado',
         Ticket.sla_due_at.isnot(None),
         Ticket.resolved_at.isnot(None),
@@ -427,11 +437,11 @@ def dashboard():
         ).filter(KBArticleRejection.id.is_(None)).count()
 
     stats = {
-        'total': Ticket.query.count(),
-        'open': Ticket.query.filter_by(status='Abierto').count(),
-        'in_progress': Ticket.query.filter_by(status='En proceso').count(),
-        'waiting': Ticket.query.filter_by(status='Esperando usuario').count(),
-        'closed': Ticket.query.filter_by(status='Cerrado').count(),
+        'total': ticket_query.count(),
+        'open': ticket_query.filter_by(status='Abierto').count(),
+        'in_progress': ticket_query.filter_by(status='En proceso').count(),
+        'waiting': ticket_query.filter_by(status='Esperando usuario').count(),
+        'closed': ticket_query.filter_by(status='Cerrado').count(),
         'overdue': overdue_count,
         'avg_resolution_hours': avg_resolution_hours,
         'reopened': reopened_total,
@@ -441,7 +451,7 @@ def dashboard():
         'pending_kb': pending_kb_count,
     }
     # breakdown by category
-    cats = {c: Ticket.query.filter_by(category=c).count() for c in Ticket.categories()}
+    cats = {c: ticket_query.filter_by(category=c).count() for c in Ticket.categories()}
     return render_template('admin/dashboard.html', stats=stats, categories=cats,
                            pending_kb_articles=pending_kb_articles)
 
@@ -456,7 +466,7 @@ def chat_monitoring():
     
     try:
         # Get all tickets with their comment counts and last activity
-        tickets = Ticket.query.all()
+        tickets = _company_ticket_query().all()
         chat_data = []
         
         for ticket in tickets:
@@ -692,10 +702,12 @@ def ml_system():
         model_info = classifier.get_model_info()
         
         # Obtener estadísticas de técnicos
-        tech_stats = TechnicianStats.query.all()
+        tech_stats = TechnicianStats.query.join(User, TechnicianStats.technician_id == User.id).filter(
+            User.company_id == current_user.company_id
+        ).all()
         
         # Obtener tickets con predicciones ML
-        ml_tickets = Ticket.query.filter(
+        ml_tickets = _company_ticket_query().filter(
             Ticket.ml_suggested_technician_id.isnot(None)
         ).order_by(Ticket.created_at.desc()).limit(20).all()
         
@@ -1010,11 +1022,13 @@ def settings_ml():
         
         # Get technician stats
         from app.models import TechnicianStats
-        tech_stats = TechnicianStats.query.all()
+        tech_stats = TechnicianStats.query.join(User, TechnicianStats.technician_id == User.id).filter(
+            User.company_id == current_user.company_id
+        ).all()
         
         # Get recent tickets with ML predictions
         from app.models import Ticket
-        ml_tickets = Ticket.query.filter(
+        ml_tickets = _company_ticket_query().filter(
             Ticket.ml_suggested_technician_id.isnot(None)
         ).order_by(Ticket.created_at.desc()).limit(10).all()
 
@@ -1262,6 +1276,8 @@ def kb_search():
 def kb_from_comment(comment_id):
     comment = TicketComment.query.get_or_404(comment_id)
     ticket = comment.ticket
+    if not _ticket_in_scope(ticket):
+        abort(403)
     title = f"{ticket.title} - Respuesta"
     return redirect(url_for(
         'admin.kb_create',
@@ -1275,7 +1291,7 @@ def kb_from_comment(comment_id):
 @login_required
 @tech_or_admin_required
 def kb_from_ticket(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_query().filter(Ticket.id == ticket_id).first_or_404()
     if ticket.status != 'Cerrado':
         flash(_t('Ticket must be closed before creating a KB article'), 'warning')
         return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
@@ -1422,7 +1438,7 @@ def executive_report():
     week_start = now - timedelta(days=7)
     prev_week_start = now - timedelta(days=14)
 
-    all_tickets = Ticket.query.all()
+    all_tickets = _company_ticket_query().all()
     open_tickets = [t for t in all_tickets if t.status != 'Cerrado']
     closed_tickets = [t for t in all_tickets if t.status == 'Cerrado']
 
@@ -1435,7 +1451,10 @@ def executive_report():
     avg_resolution_hours = round(sum(res_hours) / len(res_hours), 1) if res_hours else None
 
     # CSAT
-    csat_result = db.session.query(func.avg(Ticket.satisfaction_rating)).filter(Ticket.satisfaction_rating.isnot(None)).scalar()
+    csat_result = db.session.query(func.avg(Ticket.satisfaction_rating)).filter(
+        Ticket.company_id == current_user.company_id,
+        Ticket.satisfaction_rating.isnot(None),
+    ).scalar()
     csat_avg = round(float(csat_result), 1) if csat_result else None
 
     # Overdue & due soon

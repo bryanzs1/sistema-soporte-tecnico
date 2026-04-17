@@ -30,6 +30,24 @@ def _t(text):
     return translate(text, session.get('lang', 'en'))
 
 
+def _company_ticket_query():
+    if current_user.is_authenticated and (current_user.is_admin() or current_user.is_technician()):
+        return Ticket.query.filter(Ticket.company_id == current_user.company_id)
+    return Ticket.query.filter_by(user_id=current_user.id)
+
+
+def _company_ticket_or_404(ticket_id):
+    return _company_ticket_query().filter(Ticket.id == ticket_id).first_or_404()
+
+
+def _is_same_company_ticket(ticket):
+    if not current_user.is_authenticated:
+        return False
+    if current_user.is_admin() or current_user.is_technician():
+        return ticket.company_id == current_user.company_id
+    return ticket.user_id == current_user.id
+
+
 def _translate_chat_free_text(message, target_lang):
     """Translate free-text chat content using external API when configured."""
     text = (message or '').strip()
@@ -82,14 +100,16 @@ def _translate_chat_free_text(message, target_lang):
 
 
 def _ticket_read_access(ticket):
-    return current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id
+    if current_user.is_admin() or current_user.is_technician():
+        return _is_same_company_ticket(ticket)
+    return ticket.user_id == current_user.id
 
 
 def _ticket_chat_access(ticket):
     return (
-        current_user.is_admin()
+        (current_user.is_admin() and _is_same_company_ticket(ticket))
         or ticket.user_id == current_user.id
-        or (current_user.is_technician() and ticket.technician_id == current_user.id)
+        or (current_user.is_technician() and _is_same_company_ticket(ticket) and ticket.technician_id == current_user.id)
     )
 
 
@@ -507,10 +527,7 @@ def _save_attachment(file_storage, ticket_id):
 def list_tickets():
     try:
         # start with base query depending on role
-        if current_user.is_admin() or current_user.is_technician():
-            base_query = Ticket.query
-        else:
-            base_query = Ticket.query.filter_by(user_id=current_user.id)
+        base_query = _company_ticket_query()
 
         # apply filters from query string
         view = request.args.get('view', type=str) or 'active'
@@ -651,10 +668,7 @@ def list_tickets():
         except Exception:
             current_app.logger.exception('Failed to write audit log for ticket_list_query_error')
         try:
-            if current_user.is_admin() or current_user.is_technician():
-                fallback_query = Ticket.query
-            else:
-                fallback_query = Ticket.query.filter_by(user_id=current_user.id)
+            fallback_query = _company_ticket_query()
 
             fallback_records = fallback_query.order_by(Ticket.id.desc()).limit(500).all()
             fallback_tickets = []
@@ -738,7 +752,8 @@ def create_ticket():
             description=form.description.data,
             category=form.category.data,
             priority=form.priority.data,
-            user=current_user
+            user=current_user,
+            company_id=current_user.company_id,
         )
         ticket.sla_due_at = utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
         
@@ -757,13 +772,19 @@ def create_ticket():
             
             if predictions:
                 suggested_tech_id, confidence = predictions[0]
-                ticket.ml_suggested_technician_id = suggested_tech_id
-                ticket.ml_confidence_score = confidence
-                
-                # Auto-asignar si la confianza es muy alta (>70%)
-                if confidence > 0.7:
-                    ticket.technician_id = suggested_tech_id
-                    ticket.auto_assigned = True
+                suggested_technician = User.query.filter(
+                    User.id == suggested_tech_id,
+                    User.role == 'technician',
+                    User.company_id == ticket.company_id,
+                ).first()
+                if suggested_technician:
+                    ticket.ml_suggested_technician_id = suggested_technician.id
+                    ticket.ml_confidence_score = confidence
+
+                    # Auto-asignar si la confianza es muy alta (>70%)
+                    if confidence > 0.7:
+                        ticket.technician_id = suggested_technician.id
+                        ticket.auto_assigned = True
         except Exception as e:
             # Si falla el ML, no afecta la creación del ticket
             current_app.logger.warning(f'ML prediction failed: {e}')
@@ -822,6 +843,7 @@ def request_password_reset_ticket():
         category=category,
         priority=priority,
         user=current_user,
+        company_id=current_user.company_id,
     )
     ticket.sla_due_at = utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
     
@@ -840,13 +862,19 @@ def request_password_reset_ticket():
         
         if predictions:
             suggested_tech_id, confidence = predictions[0]
-            ticket.ml_suggested_technician_id = suggested_tech_id
-            ticket.ml_confidence_score = confidence
-            
-            # Auto-asignar si la confianza es muy alta (>70%)
-            if confidence > 0.7:
-                ticket.technician_id = suggested_tech_id
-                ticket.auto_assigned = True
+            suggested_technician = User.query.filter(
+                User.id == suggested_tech_id,
+                User.role == 'technician',
+                User.company_id == ticket.company_id,
+            ).first()
+            if suggested_technician:
+                ticket.ml_suggested_technician_id = suggested_technician.id
+                ticket.ml_confidence_score = confidence
+
+                # Auto-asignar si la confianza es muy alta (>70%)
+                if confidence > 0.7:
+                    ticket.technician_id = suggested_technician.id
+                    ticket.auto_assigned = True
     except Exception as e:
         # Si falla el ML, no afecta la creación del ticket
         current_app.logger.warning(f'ML prediction failed: {e}')
@@ -863,7 +891,7 @@ def request_password_reset_ticket():
 def download_attachment(attachment_id):
     attachment = TicketAttachment.query.get_or_404(attachment_id)
     ticket = attachment.ticket
-    allowed = current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id
+    allowed = _ticket_read_access(ticket)
     if not allowed:
         abort(403)
 
@@ -879,10 +907,7 @@ def download_attachment(attachment_id):
 @login_required
 def export_tickets():
     # reuse same filter logic as list_tickets
-    if current_user.is_admin() or current_user.is_technician():
-        q = Ticket.query
-    else:
-        q = Ticket.query.filter_by(user_id=current_user.id)
+    q = _company_ticket_query()
     view = request.args.get('view', type=str) or 'active'
     if view not in ('active', 'history', 'all'):
         view = 'active'
@@ -970,7 +995,7 @@ def export_tickets():
 @bp.route('/<int:ticket_id>', methods=['GET', 'POST'])
 @login_required
 def ticket_detail(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
     # authorization: owner or tech/admin
     if not _ticket_read_access(ticket):
         flash(_t('You do not have access to this ticket'), 'danger')
@@ -988,7 +1013,8 @@ def ticket_detail(ticket_id):
         techs = User.query.filter(
             User.role == 'technician',
             User.is_active == True,
-            User.last_activity >= thirty_min_ago
+            User.last_activity >= thirty_min_ago,
+            User.company_id == ticket.company_id,
         ).order_by(User.username).all()
         # Add "Unassigned" option first
         form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, f"{t.username} (online)") for t in techs]
@@ -1071,7 +1097,7 @@ def ticket_detail(ticket_id):
 @bp.route('/<int:ticket_id>/take', methods=['POST'])
 @login_required
 def take_ticket(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
 
     if not current_user.is_technician() and not current_user.is_admin():
         abort(403)
@@ -1112,7 +1138,7 @@ def take_ticket(ticket_id):
 @bp.route('/<int:ticket_id>/release', methods=['POST'])
 @login_required
 def release_ticket(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
 
     if not current_user.is_technician() and not current_user.is_admin():
         abort(403)
@@ -1151,7 +1177,7 @@ def release_ticket(ticket_id):
 @bp.route('/<int:ticket_id>/reopen', methods=['POST'])
 @login_required
 def reopen_ticket(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
     can_reopen = current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id
     if not can_reopen:
         abort(403)
@@ -1210,7 +1236,7 @@ def reopen_ticket(ticket_id):
 @bp.route('/<int:ticket_id>/csat', methods=['POST'])
 @login_required
 def submit_csat(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
     if ticket.user_id != current_user.id:
         abort(403)
     if ticket.status != 'Cerrado':
@@ -1237,7 +1263,7 @@ def submit_csat(ticket_id):
 @bp.route('/<int:ticket_id>/chat-feed')
 @login_required
 def ticket_chat_feed(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
     if not _ticket_read_access(ticket):
         return jsonify({'error': 'forbidden'}), 403
 
@@ -1250,7 +1276,7 @@ def ticket_chat_feed(ticket_id):
 @bp.route('/<int:ticket_id>/delete', methods=['POST'])
 @login_required
 def delete_ticket(ticket_id):
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_or_404(ticket_id)
     if current_user.is_admin():
         AuditHelper.log_ticket_action(current_user.id, 'delete_blocked', ticket.id)
     else:
