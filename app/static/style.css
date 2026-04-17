@@ -895,8 +895,8 @@ footer {
 }
 
 .about-logo {
-    width: min(420px, 72vw);
-    max-height: 160px;
+    width: min(560px, 82vw);
+    max-height: 220px;
     object-fit: contain;
     filter: drop-shadow(0 12px 30px rgba(15, 23, 42, 0.24));
 }
@@ -1753,8 +1753,8 @@ footer {
 /* Responsive */
 @media (max-width: 768px) {
     .about-logo {
-        width: min(300px, 78vw);
-        max-height: 110px;
+        width: min(380px, 86vw);
+        max-height: 150px;
     }
 
     .hero-title {
