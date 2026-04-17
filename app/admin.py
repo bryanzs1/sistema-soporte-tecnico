@@ -1,3 +1,4 @@
+bp = Blueprint('admin', __name__)
 import csv
 import json
 from datetime import datetime, timezone
@@ -83,7 +84,7 @@ def edit_company(company_id):
             flash(_t('Error updating company. Please try again.'), 'danger')
     return render_template('admin/edit_company.html', form=form, company=company)
 
-bp = Blueprint('admin', __name__)
+
 
 
 def utcnow():
