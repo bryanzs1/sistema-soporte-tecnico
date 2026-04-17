@@ -14,6 +14,20 @@ from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArti
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
 from app.models import Company
 
+
+def admin_required(func):
+    """Decorator to restrict access to admins."""
+    from functools import wraps
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin():
+            flash(_t('Administrator access required'), 'warning')
+            return redirect(url_for('main.index'))
+        return func(*args, **kwargs)
+
+    return wrapper
+
 bp = Blueprint('admin', __name__)
 
 @bp.route('/companies')
