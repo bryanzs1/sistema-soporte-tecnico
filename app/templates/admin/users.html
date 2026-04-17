@@ -7,14 +7,41 @@
       <h2 class="card-title">{{ _('Users') }}</h2>
       <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">{{ _('Create User') }}</a>
       <a href="{{ url_for('admin.ticket_options') }}" class="btn btn-outline-primary mb-3">{{ _('Manage ticket options') }}</a>
+      <form method="get" class="row g-2 mb-3 align-items-end">
+        <div class="col-auto">
+          <label for="company_id" class="form-label mb-0">Empresa:</label>
+        </div>
+        <div class="col-auto">
+          <select name="company_id" id="company_id" class="form-select">
+            <option value="">Todas</option>
+            {% for company in companies %}
+              <option value="{{ company.id }}" {% if selected_company_id == company.id %}selected{% endif %}>{{ company.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-outline-secondary">Filtrar</button>
+        </div>
+      </form>
       <table class="table">
-        <thead><tr><th>ID</th><th>{{ _('Username') }}</th><th>{{ _('Email') }}</th><th>{{ _('Role') }}</th><th>{{ _('Status') }}</th><th>{{ _('Actions') }}</th></tr></thead>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>{{ _('Username') }}</th>
+            <th>{{ _('Email') }}</th>
+            <th>{{ _('Empresa') }}</th>
+            <th>{{ _('Role') }}</th>
+            <th>{{ _('Status') }}</th>
+            <th>{{ _('Actions') }}</th>
+          </tr>
+        </thead>
         <tbody>
           {% for u in users %}
             <tr>
               <td>{{ u.id }}</td>
               <td>{{ u.username }}</td>
               <td>{{ u.email }}</td>
+              <td>{% if u.company %}{{ u.company.name }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
               <td>{{ u.role }}</td>
               <td>
                 {% if u.is_active %}

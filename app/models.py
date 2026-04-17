@@ -4,6 +4,16 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 
+# --- Multiempresa: Modelo Company ---
+class Company(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Opcional: logo, dirección, etc.
+    users = db.relationship('User', backref='company', lazy=True)
+    tickets = db.relationship('Ticket', backref='company', lazy=True)
+
 
 roles = ('user', 'technician', 'admin')
 
@@ -21,12 +31,15 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), default='user')
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     last_activity = db.Column(db.DateTime, default=utcnow)
-    
+
+    # Multiempresa: relación con Company
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
+
     # Security: 2FA (TOTP)
     totp_secret = db.Column(db.String(32))  # Encrypted TOTP secret
     totp_enabled = db.Column(db.Boolean, default=False, nullable=False)
     totp_backup_codes = db.Column(db.Text)  # Comma-separated backup codes (encrypted)
-    
+
     # Security: Password Management
     password_changed_at = db.Column(db.DateTime, default=utcnow)
     failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
@@ -45,7 +58,7 @@ class User(UserMixin, db.Model):
 
     def is_technician(self):
         return self.role == 'technician'
-    
+
     def is_account_locked(self):
         """Check if account is locked due to failed login attempts"""
         if self.locked_until is None:
@@ -57,18 +70,18 @@ class User(UserMixin, db.Model):
             db.session.commit()
             return False
         return True
-    
+
     def record_failed_login(self):
         """Record a failed login attempt and lock account if needed"""
         self.failed_login_attempts = (self.failed_login_attempts or 0) + 1
         self.last_failed_login_at = utcnow()
-        
+
         # Lock account after 5 failed attempts for 15 minutes
         if self.failed_login_attempts >= 5:
             self.locked_until = utcnow() + timedelta(minutes=15)
-        
+
         db.session.commit()
-    
+
     def reset_failed_login(self):
         """Reset failed login attempts on successful login"""
         self.failed_login_attempts = 0
@@ -91,7 +104,10 @@ class Ticket(db.Model):
     first_response_at = db.Column(db.DateTime)
     resolved_at = db.Column(db.DateTime)
     reopened_count = db.Column(db.Integer, default=0, nullable=False)
-    
+
+    # Multiempresa: relación con Company
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
+
     # ML-related fields
     resolution_time_minutes = db.Column(db.Integer)  # tiempo real de resolucion
     satisfaction_rating = db.Column(db.Integer)  # 1-5 rating opcional
@@ -105,7 +121,7 @@ class Ticket(db.Model):
     sentiment_label = db.Column(db.String(20))  # 'very_negative', 'negative', 'neutral', 'positive', 'very_positive'
     sentiment_score = db.Column(db.Float)  # -1 to 1 sentiment polarity
     urgency_level = db.Column(db.String(20))  # 'high', 'medium', 'low'
-    
+
     # AI Chatbot auto-response fields
     ai_response = db.Column(db.Text)  # Automatic response text (if any)
     ai_response_id = db.Column(db.Integer)  # KB entry ID that was used

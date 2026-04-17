@@ -5,7 +5,17 @@ from wtforms import ValidationError
 from flask_wtf.file import FileField, FileAllowed
 from flask import session
 from app import translate
-from app.models import Ticket, User
+from app.models import Ticket, User, Company
+class CompanyForm(FlaskForm):
+    name = StringField('Nombre de la empresa', validators=[DataRequired(), Length(max=120)])
+    description = StringField('Descripción', validators=[Length(max=255)])
+    submit = SubmitField('Guardar')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name.label.text = tr('Company name', 'Nombre de la empresa')
+        self.description.label.text = tr('Description', 'Descripción')
+        self.submit.label.text = tr('Save', 'Guardar')
 
 
 def tr(en_text, es_text):
@@ -122,12 +132,14 @@ def company_email(form, field):
         )
 
 
+
 class NewUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
     email = StringField('Email', validators=[DataRequired(), company_email])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     role = SelectField('Role', choices=[(r, r.capitalize()) for r in ['user', 'technician', 'admin']], default='user')
+    company_id = SelectField('Empresa', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Create User')
 
     def __init__(self, *args, **kwargs):
@@ -137,7 +149,10 @@ class NewUserForm(FlaskForm):
         self.password.label.text = tr('Password', 'Contraseña')
         self.password2.label.text = tr('Repeat Password', 'Repetir contraseña')
         self.role.label.text = tr('Role', 'Rol')
+        self.company_id.label.text = tr('Company', 'Empresa')
         self.submit.label.text = tr('Create User', 'Crear usuario')
+        # Cargar empresas activas
+        self.company_id.choices = [(c.id, c.name) for c in Company.query.order_by(Company.name).all()]
 
     def validate_username(self, field):
         username = (field.data or '').strip()

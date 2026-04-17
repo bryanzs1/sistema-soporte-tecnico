@@ -1,6 +1,6 @@
 databases:
   - name: soporte-tecnico-db
-    plan: basic-256mb
+    plan: free
     region: oregon
     postgresMajorVersion: "17"
     databaseName: soporte_db
@@ -10,6 +10,7 @@ services:
   - type: web
     name: soporte-tecnico
     runtime: python
+    plan: free
     pythonVersion: 3.11
     buildCommand: bash build.sh
     preDeployCommand: python migrate_to_production.py
@@ -35,7 +36,3 @@ services:
         sync: false
       - key: DEFAULT_ADMIN_EMAIL
         sync: false
-    disk:
-      name: soporte-data
-      mountPath: /mnt/data
-      sizeGB: 1

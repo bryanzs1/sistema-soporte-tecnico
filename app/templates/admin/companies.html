@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Empresas{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Empresas registradas</h2>
+    <a href="{{ url_for('admin.create_company') }}" class="btn btn-primary mb-3">Nueva empresa</a>
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for company in companies %}
+            <tr>
+                <td>{{ company.id }}</td>
+                <td>{{ company.name }}</td>
+                <td>{{ company.description }}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_company', company_id=company.id) }}" class="btn btn-sm btn-secondary">Editar</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4" class="text-center">No hay empresas registradas.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

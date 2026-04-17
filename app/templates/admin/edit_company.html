@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Editar empresa' if company else 'Nueva empresa' }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ 'Editar empresa' if company else 'Nueva empresa' }}</h2>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control", placeholder="Nombre de la empresa") }}
+            {% for error in form.name.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", placeholder="Descripción") }}
+            {% for error in form.description.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a href="{{ url_for('admin.list_companies') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

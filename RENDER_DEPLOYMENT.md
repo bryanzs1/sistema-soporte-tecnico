@@ -34,6 +34,7 @@ git push -u origin render-production
 5. Render detectará `render.yaml` y creará:
 	- el servicio web `soporte-tecnico`
 	- la base PostgreSQL `soporte-tecnico-db`
+6. Este blueprint está ajustado para recursos `free` de Render.
 
 ### 4. Variables de Entorno en Render
 En el dashboard de Render, agrega estas variables:
@@ -60,7 +61,14 @@ DEFAULT_ADMIN_EMAIL=(recomendado)
 - Si sí tenías un dump `.sql`, puedes restaurarlo con `psql` apuntando a la nueva base.
 - Si no hay dump, podrás recrear la estructura automáticamente, pero no los registros históricos.
 
-### 7. Deploy Automático
+### 7. Límites importantes del plan gratis
+- El servicio web se desplegará en `free`.
+- La base PostgreSQL se desplegará en `free`.
+- Render sólo permite una base PostgreSQL gratis activa por workspace.
+- La base gratis expira 30 días después de creada si no la actualizas a un plan pago.
+- Los web services gratis no soportan `persistent disk`, así que los archivos locales subidos al contenedor no son permanentes.
+
+### 8. Deploy Automático
 - Cada push a `render-production` dispara un deploy automático
 - Las migraciones de BD corren automáticamente vía `preDeployCommand`
 

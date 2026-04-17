@@ -10,7 +10,60 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
 from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats
-from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm
+from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
+from app.models import Company
+@bp.route('/companies')
+@login_required
+@admin_required
+def list_companies():
+    companies = Company.query.order_by(Company.name).all()
+    return render_template('admin/companies.html', companies=companies)
+
+@bp.route('/companies/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_company():
+    form = CompanyForm()
+    if form.validate_on_submit():
+        company = Company(
+            name=form.name.data.strip(),
+            description=form.description.data.strip()
+        )
+        db.session.add(company)
+        try:
+            db.session.commit()
+            flash(_t('Company created successfully'), 'success')
+            return redirect(url_for('admin.list_companies'))
+        except IntegrityError:
+            db.session.rollback()
+            flash(_t('Company name already exists'), 'danger')
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error('Error creating company: %s', e)
+            flash(_t('Error creating company. Please try again.'), 'danger')
+    return render_template('admin/edit_company.html', form=form)
+
+@bp.route('/companies/<int:company_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    form = CompanyForm(obj=company)
+    if form.validate_on_submit():
+        company.name = form.name.data.strip()
+        company.description = form.description.data.strip()
+        try:
+            db.session.commit()
+            flash(_t('Company updated successfully'), 'success')
+            return redirect(url_for('admin.list_companies'))
+        except IntegrityError:
+            db.session.rollback()
+            flash(_t('Company name already exists'), 'danger')
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error('Error updating company: %s', e)
+            flash(_t('Error updating company. Please try again.'), 'danger')
+    return render_template('admin/edit_company.html', form=form, company=company)
 
 bp = Blueprint('admin', __name__)
 
@@ -114,13 +167,18 @@ def restore_ticket_options_defaults():
 @admin_required
 def list_users():
     try:
-        users = User.query.order_by(User.username).all()
-        return render_template('admin/users.html', users=users)
+        company_id = request.args.get('company_id', type=int)
+        companies = Company.query.order_by(Company.name).all()
+        query = User.query
+        if company_id:
+            query = query.filter(User.company_id == company_id)
+        users = query.order_by(User.username).all()
+        return render_template('admin/users.html', users=users, companies=companies, selected_company_id=company_id)
     except Exception as e:
         db.session.rollback()
         current_app.logger.exception('Error loading users list: %s', e)
         flash(_t('An unexpected error occurred'), 'danger')
-        return render_template('admin/users.html', users=[])
+        return render_template('admin/users.html', users=[], companies=[], selected_company_id=None)
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
@@ -134,6 +192,7 @@ def create_user():
             username=form.username.data.strip(),
             email=form.email.data.strip().lower(),
             role=form.role.data,
+            company_id=form.company_id.data
         )
         user.set_password(form.password.data)
         db.session.add(user)
