@@ -113,14 +113,17 @@ class CSATForm(FlaskForm):
 
 class UserRoleForm(FlaskForm):
     role = SelectField('Role', choices=[(r, r.capitalize()) for r in ['user', 'technician', 'admin']])
+    company_id = SelectField('Empresa', coerce=int, validators=[DataRequired()])
     is_active = BooleanField('Active')
     submit = SubmitField('Save')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role.label.text = tr('Role', 'Rol')
+        self.company_id.label.text = tr('Company', 'Empresa')
         self.is_active.label.text = tr('Active', 'Activo')
         self.submit.label.text = tr('Save', 'Guardar')
+        self.company_id.choices = [(c.id, c.name) for c in Company.query.order_by(Company.name).all()]
 
 
 def company_email(form, field):

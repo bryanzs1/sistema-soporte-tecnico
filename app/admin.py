@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from io import StringIO
 
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
+from flask import Blueprint, Response, render_template, redirect, url_for, flash, request, session, current_app
 
 bp = Blueprint('admin', __name__)
 
@@ -208,6 +208,10 @@ def list_users():
 
 def create_user():
     form = NewUserForm()
+    requested_company_id = request.args.get('company_id', type=int)
+    if request.method == 'GET' and requested_company_id and any(company_id == requested_company_id for company_id, _name in form.company_id.choices):
+        form.company_id.data = requested_company_id
+
     if form.validate_on_submit():
         user = User(
             username=form.username.data.strip(),
@@ -241,6 +245,7 @@ def edit_user(user_id):
     form = UserRoleForm(obj=user)
     if form.validate_on_submit():
         user.role = form.role.data
+        user.company_id = form.company_id.data
         user.is_active = form.is_active.data
         db.session.commit()
         status = _t('Active') if user.is_active else _t('Inactive')
