@@ -68,7 +68,7 @@
 .app-brand-logo {
     width: auto;
     height: 56px;
-    max-width: 250px;
+    max-width: 320px;
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
 }
@@ -2497,7 +2497,7 @@ footer {
 
     .app-brand-logo {
         height: 46px;
-        max-width: 210px;
+        max-width: 260px;
     }
 
     .navbar .container-fluid {
