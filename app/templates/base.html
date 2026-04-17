@@ -62,6 +62,11 @@
                   <li><a class="dropdown-item" href="{{ url_for('admin.settings') }}">
                     <i class="bi bi-gear"></i> {{ _('Settings') }}
                   </a></li>
+                  {% endif %}
+                  {% if current_user.is_admin() or current_user.is_technician() %}
+                  {% if not current_user.is_admin() %}
+                  <li><hr class="dropdown-divider"></li>
+                  {% endif %}
                   <li><a class="dropdown-item" href="{{ url_for('admin.kb_list') }}">
                     <i class="bi bi-journal-richtext"></i> {{ _('Knowledge Base') }}
                   </a></li>
