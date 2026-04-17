@@ -63,6 +63,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: 0.03em;
 }
 
 .app-brand-logo {
@@ -71,6 +74,13 @@
     max-width: 420px;
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
+}
+
+.app-brand-text {
+    line-height: 1;
+    font-size: 1.2rem;
+    color: #fff;
+    white-space: nowrap;
 }
 
 .app-brand.brand-no-logo {
@@ -2495,9 +2505,8 @@ footer {
         padding-top: 66px;
     }
 
-    .app-brand-logo {
-        height: 50px;
-        max-width: 300px;
+    .app-brand-text {
+        font-size: 1.05rem;
     }
 
     .navbar .container-fluid {
