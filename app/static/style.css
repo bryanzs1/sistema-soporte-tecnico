@@ -62,22 +62,15 @@
 .app-brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.7rem;
-    font-family: var(--font-heading);
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    gap: 0;
 }
 
 .app-brand-logo {
     width: auto;
-    height: 38px;
-    max-width: 180px;
+    height: 56px;
+    max-width: 250px;
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
-}
-
-.app-brand-text {
-    line-height: 1;
 }
 
 .app-brand.brand-no-logo {
@@ -2503,12 +2496,8 @@ footer {
     }
 
     .app-brand-logo {
-        height: 32px;
-        max-width: 132px;
-    }
-
-    .app-brand-text {
-        font-size: 0.98rem;
+        height: 46px;
+        max-width: 210px;
     }
 
     .navbar .container-fluid {
