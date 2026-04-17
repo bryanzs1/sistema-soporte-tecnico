@@ -1,9 +1,18 @@
+databases:
+  - name: soporte-tecnico-db
+    plan: basic-256mb
+    region: oregon
+    postgresMajorVersion: "17"
+    databaseName: soporte_db
+    user: soporte_user
+
 services:
   - type: web
     name: soporte-tecnico
-    env: python
+    runtime: python
     pythonVersion: 3.11
     buildCommand: bash build.sh
+    preDeployCommand: python migrate_to_production.py
     startCommand: gunicorn -k gthread --threads 8 -w 1 --bind 0.0.0.0:$PORT wsgi:app
     envVars:
       - key: RENDER
@@ -13,9 +22,11 @@ services:
       - key: FLASK_DEBUG
         value: 'false'
       - key: SECRET_KEY
-        sync: false
+        generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: soporte-tecnico-db
+          property: connectionString
       - key: REDIS_URL
         sync: false
       - key: DEFAULT_ADMIN_USERNAME
