@@ -809,7 +809,10 @@ def kb_suggestions():
         return jsonify([])
 
     like = f'%{query}%'
-    found = KBArticle.query.filter_by(is_active=True).filter(
+    found = KBArticle.query.join(User, KBArticle.created_by_id == User.id).filter(
+        KBArticle.is_active.is_(True),
+        User.company_id == current_user.company_id,
+    ).filter(
         (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
     ).order_by(KBArticle.updated_at.desc()).limit(6).all()
 

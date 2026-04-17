@@ -134,6 +134,29 @@ def _ticket_in_scope(ticket):
     return ticket.company_id == current_user.company_id
 
 
+def _company_user_query():
+    return User.query.filter(User.company_id == current_user.company_id)
+
+
+def _company_user_or_404(user_id):
+    return _company_user_query().filter(User.id == user_id).first_or_404()
+
+
+def _company_form_choices():
+    company = current_user.company
+    if not company:
+        return []
+    return [(company.id, company.name)]
+
+
+def _company_kb_query():
+    return KBArticle.query.join(User, KBArticle.created_by_id == User.id).filter(User.company_id == current_user.company_id)
+
+
+def _company_kb_or_404(article_id):
+    return _company_kb_query().filter(KBArticle.id == article_id).first_or_404()
+
+
 def _sync_default_ticket_options():
     """Ensure default categories and priorities exist in TicketOption catalog."""
     changes = 0
@@ -196,11 +219,9 @@ def restore_ticket_options_defaults():
 @admin_required
 def list_users():
     try:
-        company_id = request.args.get('company_id', type=int)
-        companies = Company.query.order_by(Company.name).all()
-        query = User.query
-        if company_id:
-            query = query.filter(User.company_id == company_id)
+        company_id = current_user.company_id
+        companies = [current_user.company] if current_user.company else []
+        query = _company_user_query()
         users = query.order_by(User.username).all()
         return render_template('admin/users.html', users=users, companies=companies, selected_company_id=company_id)
     except Exception as e:
@@ -216,7 +237,8 @@ def list_users():
 
 def create_user():
     form = NewUserForm()
-    requested_company_id = request.args.get('company_id', type=int)
+    form.company_id.choices = _company_form_choices()
+    requested_company_id = current_user.company_id
     if request.method == 'GET' and requested_company_id and any(company_id == requested_company_id for company_id, _name in form.company_id.choices):
         form.company_id.data = requested_company_id
 
@@ -225,7 +247,7 @@ def create_user():
             username=form.username.data.strip(),
             email=form.email.data.strip().lower(),
             role=form.role.data,
-            company_id=form.company_id.data
+            company_id=current_user.company_id
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -249,11 +271,14 @@ def create_user():
 @login_required
 @admin_required
 def edit_user(user_id):
-    user = User.query.get_or_404(user_id)
+    user = _company_user_or_404(user_id)
     form = UserRoleForm(obj=user)
+    form.company_id.choices = _company_form_choices()
+    if request.method == 'GET':
+        form.company_id.data = user.company_id
     if form.validate_on_submit():
         user.role = form.role.data
-        user.company_id = form.company_id.data
+        user.company_id = current_user.company_id
         user.is_active = form.is_active.data
         db.session.commit()
         status = _t('Active') if user.is_active else _t('Inactive')
@@ -266,7 +291,7 @@ def edit_user(user_id):
 @login_required
 @admin_required
 def reset_user_password(user_id):
-    user = User.query.get_or_404(user_id)
+    user = _company_user_or_404(user_id)
     form = AdminResetPasswordForm()
 
     if form.validate_on_submit():
@@ -321,7 +346,7 @@ def reset_user_password(user_id):
 @login_required
 @admin_required
 def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
+    user = _company_user_or_404(user_id)
 
     # Prevent self-deletion
     if user.id == current_user.id:
@@ -330,7 +355,7 @@ def delete_user(user_id):
 
     # Prevent deleting the last admin
     if user.role == 'admin':
-        admin_count = User.query.filter_by(role='admin').count()
+        admin_count = _company_user_query().filter_by(role='admin').count()
         if admin_count <= 1:
             flash(_t('Cannot delete the last administrator account.'), 'danger')
             return redirect(url_for('admin.settings_users'))
@@ -424,14 +449,14 @@ def dashboard():
     pending_kb_count = 0
     pending_kb_articles = []
     if current_user.is_admin():
-        pending_kb_query = KBArticle.query.filter_by(is_active=False).outerjoin(
+        pending_kb_query = _company_kb_query().filter(KBArticle.is_active.is_(False)).outerjoin(
             KBArticleRejection,
             KBArticleRejection.article_id == KBArticle.id,
         ).filter(KBArticleRejection.id.is_(None))
         pending_kb_count = pending_kb_query.count()
         pending_kb_articles = pending_kb_query.order_by(KBArticle.updated_at.desc()).limit(6).all()
     elif current_user.is_technician():
-        pending_kb_count = KBArticle.query.filter_by(is_active=False, created_by_id=current_user.id).outerjoin(
+        pending_kb_count = _company_kb_query().filter_by(is_active=False, created_by_id=current_user.id).outerjoin(
             KBArticleRejection,
             KBArticleRejection.article_id == KBArticle.id,
         ).filter(KBArticleRejection.id.is_(None)).count()
@@ -543,7 +568,7 @@ def online_users_list():
     # Get list of online users with their info
     users_list = []
     for user_id, user_info in online_users.items():
-        user_obj = User.query.get(user_id)
+        user_obj = _company_user_query().filter(User.id == user_id).first()
         if user_obj:
             users_list.append({
                 'user_id': user_id,
@@ -569,7 +594,7 @@ def online_users_data():
 
     users_list = []
     for user_id, user_info in online_users.items():
-        user_obj = User.query.get(user_id)
+        user_obj = _company_user_query().filter(User.id == user_id).first()
         if user_obj:
             joined_at = user_info.get('joined_at', utcnow())
             users_list.append({
@@ -929,19 +954,20 @@ def settings():
 def settings_users():
     """Gestión de usuarios desde settings"""
     try:
-        users = User.query.order_by(User.username).all()
+        users = _company_user_query().order_by(User.username).all()
         return render_template('admin/settings/users.html', users=users)
     except Exception as e:
         db.session.rollback()
         current_app.logger.exception('Error loading settings users: %s', e)
         # Fallback to legacy users view to avoid breaking admin workflow.
         try:
-            users = User.query.order_by(User.username).all()
+            users = _company_user_query().order_by(User.username).all()
         except Exception:
             db.session.rollback()
             users = []
         flash(_t('An unexpected error occurred'), 'danger')
-        return render_template('admin/users.html', users=users)
+        companies = [current_user.company] if current_user.company else []
+        return render_template('admin/users.html', users=users, companies=companies, selected_company_id=current_user.company_id)
 
 
 @bp.route('/settings/ticket-options')
@@ -1229,7 +1255,7 @@ def settings_office365_email_update():
 @tech_or_admin_required
 def kb_list():
     q = request.args.get('q', '').strip()
-    arts = KBArticle.query
+    arts = _company_kb_query()
     if not current_user.is_admin():
         arts = arts.filter(
             (KBArticle.is_active.is_(True)) |
@@ -1257,7 +1283,7 @@ def kb_search():
     results = []
     if q:
         like = f'%{q}%'
-        found = KBArticle.query.filter_by(is_active=True).filter(
+        found = _company_kb_query().filter_by(is_active=True).filter(
             (KBArticle.title.ilike(like)) | (KBArticle.content.ilike(like))
         ).limit(8).all()
         results = [{
@@ -1327,7 +1353,7 @@ def kb_create():
         if not title or not content:
             flash(_t('Title and content are required'), 'warning')
             return render_template('admin/kb_form.html', article=None,
-                                   categories=KBArticle.query.with_entities(KBArticle.category).distinct().all(),
+                                   categories=[r[0] for r in _company_kb_query().with_entities(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()],
                                    prefill_title=title,
                                    prefill_category=category,
                                    prefill_content=content)
@@ -1341,7 +1367,7 @@ def kb_create():
         db.session.commit()
         flash(_t('Article created successfully') if current_user.is_admin() else _t('Article submitted for admin approval'), 'success')
         return redirect(url_for('admin.kb_list'))
-    cats = [r[0] for r in db.session.query(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
+    cats = [r[0] for r in _company_kb_query().with_entities(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
     return render_template('admin/kb_form.html', article=None, categories=cats,
                            prefill_title=prefill_title,
                            prefill_category=prefill_category,
@@ -1352,7 +1378,7 @@ def kb_create():
 @login_required
 @tech_or_admin_required
 def kb_edit(article_id):
-    article = KBArticle.query.get_or_404(article_id)
+    article = _company_kb_or_404(article_id)
     if not current_user.is_admin() and (article.created_by_id != current_user.id or article.is_active):
         flash(_t('You can only edit your own pending KB proposals'), 'warning')
         return redirect(url_for('admin.kb_list'))
@@ -1368,7 +1394,7 @@ def kb_edit(article_id):
         db.session.commit()
         flash(_t('Article updated successfully'), 'success')
         return redirect(url_for('admin.kb_list'))
-    cats = [r[0] for r in db.session.query(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
+    cats = [r[0] for r in _company_kb_query().with_entities(KBArticle.category).filter(KBArticle.category.isnot(None)).distinct().all()]
     return render_template('admin/kb_form.html', article=article, categories=cats)
 
 
@@ -1376,7 +1402,7 @@ def kb_edit(article_id):
 @login_required
 @admin_required
 def kb_delete(article_id):
-    article = KBArticle.query.get_or_404(article_id)
+    article = _company_kb_or_404(article_id)
     db.session.delete(article)
     db.session.flush()
     db.session.commit()
@@ -1388,7 +1414,7 @@ def kb_delete(article_id):
 @login_required
 @admin_required
 def kb_approve(article_id):
-    article = KBArticle.query.get_or_404(article_id)
+    article = _company_kb_or_404(article_id)
     article.is_active = True
     existing_rejection = KBArticleRejection.query.filter_by(article_id=article.id).first()
     if existing_rejection:
@@ -1402,7 +1428,7 @@ def kb_approve(article_id):
 @login_required
 @admin_required
 def kb_reject(article_id):
-    article = KBArticle.query.get_or_404(article_id)
+    article = _company_kb_or_404(article_id)
     reason = request.form.get('reason', '').strip()
     if not reason:
         flash(_t('Please provide a rejection reason'), 'warning')
