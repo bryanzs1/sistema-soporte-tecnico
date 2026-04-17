@@ -1,4 +1,3 @@
-bp = Blueprint('admin', __name__)
 import csv
 import json
 from datetime import datetime, timezone
@@ -6,6 +5,9 @@ from io import StringIO
 
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
+
+bp = Blueprint('admin', __name__)
+
 from flask_login import login_required, current_user
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
