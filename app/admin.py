@@ -28,7 +28,7 @@ def admin_required(func):
 
     return wrapper
 
-bp = Blueprint('admin', __name__)
+
 
 @bp.route('/companies')
 @login_required
