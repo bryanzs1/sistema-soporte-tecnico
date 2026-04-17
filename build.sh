@@ -15,6 +15,6 @@ pip install -r requirements.txt
 pip install scikit-learn numpy
 
 # Run migrations if needed
-python -m flask db upgrade || true
+python -m flask db upgrade
 
 echo "Build completed successfully!"
