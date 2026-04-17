@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timezone
 from io import StringIO
 
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_required, current_user
 
@@ -12,6 +13,9 @@ from app import db, translate
 from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
 from app.models import Company
+
+bp = Blueprint('admin', __name__)
+
 @bp.route('/companies')
 @login_required
 @admin_required
