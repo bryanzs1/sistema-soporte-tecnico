@@ -1382,6 +1382,12 @@ def create_app(config_class=None):
             # Add is_active column if it doesn't exist (migration support)
             inspector = db.inspect(db.engine)
             user_columns = [col['name'] for col in inspector.get_columns('user')]
+            if 'company_id' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to user table')
+
             if 'is_active' not in user_columns:
                 with db.engine.connect() as conn:
                     conn.execute(db.text('ALTER TABLE "user" ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE'))
@@ -1440,6 +1446,12 @@ def create_app(config_class=None):
 
             # Add ML-related columns to ticket table
             ticket_columns = [col['name'] for col in inspector.get_columns('ticket')]
+
+            if 'company_id' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to ticket table')
             
             if 'resolution_time_minutes' not in ticket_columns:
                 with db.engine.connect() as conn:
@@ -1544,6 +1556,48 @@ def create_app(config_class=None):
                 from app.models import PasswordHistory
                 PasswordHistory.__table__.create(db.engine)
                 app.logger.warning('Created password_history table')
+
+            inspector = db.inspect(db.engine)
+
+            api_token_columns = [col['name'] for col in inspector.get_columns('api_token')]
+            if 'company_id' not in api_token_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE api_token ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to api_token table')
+
+            integration_columns = [col['name'] for col in inspector.get_columns('integration')]
+            if 'company_id' not in integration_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE integration ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to integration table')
+
+            audit_log_columns = [col['name'] for col in inspector.get_columns('audit_log')]
+            if 'company_id' not in audit_log_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE audit_log ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to audit_log table')
+
+            from app.models import ApiToken, Integration, AuditLog
+
+            api_tokens_without_company = ApiToken.query.filter(ApiToken.company_id.is_(None)).all()
+            for token in api_tokens_without_company:
+                if token.created_by and token.created_by.company_id:
+                    token.company_id = token.created_by.company_id
+
+            integrations_without_company = Integration.query.filter(Integration.company_id.is_(None)).all()
+            for integration in integrations_without_company:
+                if integration.created_by and integration.created_by.company_id:
+                    integration.company_id = integration.created_by.company_id
+
+            audit_logs_without_company = AuditLog.query.filter(AuditLog.company_id.is_(None)).all()
+            for log in audit_logs_without_company:
+                if log.user and log.user.company_id:
+                    log.company_id = log.user.company_id
+
+            db.session.commit()
 
             default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
             default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')

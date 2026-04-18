@@ -149,6 +149,26 @@ def _company_form_choices():
     return [(company.id, company.name)]
 
 
+def _company_api_token_query():
+    return ApiToken.query.filter(ApiToken.company_id == current_user.company_id)
+
+
+def _company_api_token_or_404(token_id):
+    return _company_api_token_query().filter(ApiToken.id == token_id).first_or_404()
+
+
+def _company_integration_query():
+    return Integration.query.filter(Integration.company_id == current_user.company_id)
+
+
+def _company_integration_or_404(integration_id):
+    return _company_integration_query().filter(Integration.id == integration_id).first_or_404()
+
+
+def _company_audit_query():
+    return AuditLog.query.filter(AuditLog.company_id == current_user.company_id)
+
+
 def _company_kb_query():
     return KBArticle.query.join(User, KBArticle.created_by_id == User.id).filter(User.company_id == current_user.company_id)
 
@@ -806,6 +826,7 @@ def create_api_token():
     token = ApiToken(
         name=name,
         token=token_value,
+        company_id=current_user.company_id,
         created_by=current_user,
         is_active=True
     )
@@ -822,7 +843,7 @@ def create_api_token():
 @admin_required
 def revoke_api_token(token_id):
     """Revoca un API token"""
-    token = ApiToken.query.get_or_404(token_id)
+    token = _company_api_token_or_404(token_id)
     token.is_active = False
     db.session.commit()
     
@@ -854,6 +875,7 @@ def create_integration():
     integration = Integration(
         platform=platform,
         name=name,
+        company_id=current_user.company_id,
         webhook_url=webhook_url,
         config=json.dumps(config) if config else None,
         created_by=current_user,
@@ -872,7 +894,7 @@ def create_integration():
 @admin_required
 def toggle_integration(integration_id):
     """Activa/desactiva una integración"""
-    integration = Integration.query.get_or_404(integration_id)
+    integration = _company_integration_or_404(integration_id)
     integration.is_active = not integration.is_active
     db.session.commit()
     
@@ -886,7 +908,7 @@ def toggle_integration(integration_id):
 @admin_required
 def delete_integration(integration_id):
     """Elimina una integración"""
-    integration = Integration.query.get_or_404(integration_id)
+    integration = _company_integration_or_404(integration_id)
     db.session.delete(integration)
     db.session.commit()
     
@@ -1128,9 +1150,9 @@ def settings_ai_update():
 @admin_required
 def settings_integrations():
     """Gestión de integraciones desde settings"""
-    api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
-    integrations = Integration.query.order_by(Integration.created_at.desc()).all()
-    office365_integration = Integration.query.filter_by(platform='office365_email').first()
+    api_tokens = _company_api_token_query().order_by(ApiToken.created_at.desc()).all()
+    integrations = _company_integration_query().order_by(Integration.created_at.desc()).all()
+    office365_integration = _company_integration_query().filter(Integration.platform == 'office365_email').first()
     office365_config = {
         'enabled': False,
         'mailbox': '',
@@ -1160,13 +1182,13 @@ def settings_audit():
     status = request.args.get('status', '').strip()
     username = request.args.get('username', '').strip()
 
-    q = AuditLog.query
+    q = _company_audit_query()
     if action:
         q = q.filter(AuditLog.action.ilike(f'%{action}%'))
     if status:
         q = q.filter(AuditLog.status == status)
     if username:
-        q = q.join(User, User.id == AuditLog.user_id, isouter=True).filter(User.username.ilike(f'%{username}%'))
+        q = q.join(User, User.id == AuditLog.user_id).filter(User.username.ilike(f'%{username}%'))
 
     logs = q.order_by(AuditLog.created_at.desc()).limit(500).all()
     return render_template('admin/settings/audit.html', logs=logs, action=action, status=status, username=username)
@@ -1181,13 +1203,13 @@ def settings_audit_export():
     status = request.args.get('status', '').strip()
     username = request.args.get('username', '').strip()
 
-    q = AuditLog.query
+    q = _company_audit_query()
     if action:
         q = q.filter(AuditLog.action.ilike(f'%{action}%'))
     if status:
         q = q.filter(AuditLog.status == status)
     if username:
-        q = q.join(User, User.id == AuditLog.user_id, isouter=True).filter(User.username.ilike(f'%{username}%'))
+        q = q.join(User, User.id == AuditLog.user_id).filter(User.username.ilike(f'%{username}%'))
 
     logs = q.order_by(AuditLog.created_at.desc()).limit(5000).all()
 
@@ -1228,7 +1250,7 @@ def settings_office365_email_update():
         'allow_external_senders': allow_external_senders,
     }
 
-    integration = Integration.query.filter_by(platform='office365_email').first()
+    integration = _company_integration_query().filter(Integration.platform == 'office365_email').first()
     if integration:
         integration.name = 'Office 365 Email Intake'
         integration.config = json.dumps(config)
@@ -1237,6 +1259,7 @@ def settings_office365_email_update():
         integration = Integration(
             platform='office365_email',
             name='Office 365 Email Intake',
+            company_id=current_user.company_id,
             config=json.dumps(config),
             created_by=current_user,
             is_active=enabled,

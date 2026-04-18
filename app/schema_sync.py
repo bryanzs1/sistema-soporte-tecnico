@@ -4,6 +4,7 @@ from app import db
 
 
 USER_COLUMNS = {
+    'company_id': 'ALTER TABLE "user" ADD COLUMN company_id INTEGER',
     'totp_secret': 'ALTER TABLE "user" ADD COLUMN totp_secret VARCHAR(32)',
     'totp_enabled': 'ALTER TABLE "user" ADD COLUMN totp_enabled BOOLEAN NOT NULL DEFAULT FALSE',
     'totp_backup_codes': 'ALTER TABLE "user" ADD COLUMN totp_backup_codes TEXT',
@@ -14,6 +15,7 @@ USER_COLUMNS = {
 }
 
 TICKET_COLUMNS = {
+    'company_id': 'ALTER TABLE ticket ADD COLUMN company_id INTEGER',
     'sla_due_at': 'ALTER TABLE ticket ADD COLUMN sla_due_at TIMESTAMP',
     'first_response_at': 'ALTER TABLE ticket ADD COLUMN first_response_at TIMESTAMP',
     'resolved_at': 'ALTER TABLE ticket ADD COLUMN resolved_at TIMESTAMP',
@@ -40,6 +42,18 @@ TICKET_ATTACHMENT_COLUMNS = {
 TICKET_OPTION_COLUMNS = {
     'active': 'ALTER TABLE ticket_option ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE',
     'created_at': 'ALTER TABLE ticket_option ADD COLUMN created_at TIMESTAMP',
+}
+
+API_TOKEN_COLUMNS = {
+    'company_id': 'ALTER TABLE api_token ADD COLUMN company_id INTEGER',
+}
+
+INTEGRATION_COLUMNS = {
+    'company_id': 'ALTER TABLE integration ADD COLUMN company_id INTEGER',
+}
+
+AUDIT_LOG_COLUMNS = {
+    'company_id': 'ALTER TABLE audit_log ADD COLUMN company_id INTEGER',
 }
 
 
@@ -85,6 +99,24 @@ def ensure_runtime_schema():
 
     try:
         changes['ticket_option'] = _ensure_columns('ticket_option', TICKET_OPTION_COLUMNS)
+    except Exception:
+        db.session.rollback()
+        raise
+
+    try:
+        changes['api_token'] = _ensure_columns('api_token', API_TOKEN_COLUMNS)
+    except Exception:
+        db.session.rollback()
+        raise
+
+    try:
+        changes['integration'] = _ensure_columns('integration', INTEGRATION_COLUMNS)
+    except Exception:
+        db.session.rollback()
+        raise
+
+    try:
+        changes['audit_log'] = _ensure_columns('audit_log', AUDIT_LOG_COLUMNS)
     except Exception:
         db.session.rollback()
         raise

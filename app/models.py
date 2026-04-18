@@ -13,6 +13,9 @@ class Company(db.Model):
     # Opcional: logo, dirección, etc.
     users = db.relationship('User', backref='company', lazy=True)
     tickets = db.relationship('Ticket', backref='company', lazy=True)
+    api_tokens = db.relationship('ApiToken', backref='company', lazy=True)
+    integrations = db.relationship('Integration', backref='company', lazy=True)
+    audit_logs = db.relationship('AuditLog', backref='company', lazy=True)
 
 
 roles = ('user', 'technician', 'admin')
@@ -295,6 +298,7 @@ class ApiToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)  # Nombre descriptivo del token
     token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True, index=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     last_used_at = db.Column(db.DateTime)
@@ -317,6 +321,7 @@ class Integration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     platform = db.Column(db.String(20), nullable=False)  # slack, teams, etc
     name = db.Column(db.String(100), nullable=False)  # Nombre descriptivo
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True, index=True)
     webhook_url = db.Column(db.String(500))  # URL del webhook para respuestas
     config = db.Column(db.Text)  # Configuración adicional (JSON)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
@@ -330,6 +335,7 @@ class Integration(db.Model):
 class AuditLog(db.Model):
     """Registro de auditoría para cambios sensibles y accesos"""
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
     action = db.Column(db.String(100), nullable=False, index=True)  # 'login', 'password_change', 'ticket_create', etc
     resource_type = db.Column(db.String(50))  # 'user', 'ticket', 'integration', etc
@@ -346,7 +352,13 @@ class AuditLog(db.Model):
     def log_action(user_id, action, resource_type=None, resource_id=None, ip_address=None, user_agent=None, status='success', details=None):
         """Helper method to log an action"""
         try:
+            company_id = None
+            if user_id:
+                user = db.session.get(User, user_id)
+                if user is not None:
+                    company_id = user.company_id
             log = AuditLog(
+                company_id=company_id,
                 user_id=user_id,
                 action=action,
                 resource_type=resource_type,

@@ -17,6 +17,88 @@ from app.ai_chatbot import answer_question
 bp = Blueprint('api', __name__)
 
 
+def _token_company_id(token):
+    return token.company_id or (token.created_by.company_id if token.created_by else None)
+
+
+def _company_ticket_query(company_id):
+    return Ticket.query.filter(Ticket.company_id == company_id)
+
+
+def _company_user_by_email(email, company_id):
+    return User.query.filter(
+        User.email == email,
+        User.company_id == company_id,
+    ).first()
+
+
+def _company_integration_query(company_id):
+    return Integration.query.filter(Integration.company_id == company_id)
+
+
+def _company_active_api_token(company_id):
+    return ApiToken.query.filter(
+        ApiToken.company_id == company_id,
+        ApiToken.is_active.is_(True),
+    ).order_by(ApiToken.created_at.asc()).first()
+
+
+def _apply_company_to_token(token):
+    company_id = _token_company_id(token)
+    if token.company_id != company_id:
+        token.company_id = company_id
+    return company_id
+
+
+def _extract_api_token_from_request(update_last_used=False):
+    token_value = request.headers.get('X-API-Token') or request.headers.get('Authorization')
+
+    if not token_value:
+        return None
+
+    if token_value.startswith('Bearer '):
+        token_value = token_value[7:]
+
+    token = ApiToken.query.filter_by(token=token_value).first()
+    if not token or not token.is_valid():
+        return None
+
+    company_id = _apply_company_to_token(token)
+    if company_id is None:
+        return None
+
+    if update_last_used:
+        token.last_used_at = datetime.utcnow()
+        db.session.commit()
+
+    return token
+
+
+def _resolve_slack_integration(verification_token):
+    integrations = Integration.query.filter_by(platform='slack', is_active=True).all()
+    if verification_token:
+        for integration in integrations:
+            config = _integration_config(integration)
+            if config.get('verification_token') == verification_token:
+                return integration
+    if len(integrations) == 1:
+        return integrations[0]
+    return None
+
+
+def _resolve_teams_integration():
+    token = _extract_api_token_from_request(update_last_used=False)
+    if token:
+        integration = _company_integration_query(_token_company_id(token)).filter_by(platform='teams', is_active=True).first()
+        return integration, token
+
+    integrations = Integration.query.filter_by(platform='teams', is_active=True).all()
+    if len(integrations) == 1:
+        return integrations[0], _company_active_api_token(integrations[0].company_id)
+
+    return None, None
+
+
 def _integration_config(integration):
     if not integration or not integration.config:
         return {}
@@ -30,26 +112,14 @@ def require_api_token(f):
     """Decorator para requerir autenticación con API token"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token_value = request.headers.get('X-API-Token') or request.headers.get('Authorization')
-        
-        if not token_value:
+        token = _extract_api_token_from_request(update_last_used=True)
+
+        if not token:
             return jsonify({'error': 'API token required'}), 401
-        
-        # Remover "Bearer " si existe
-        if token_value.startswith('Bearer '):
-            token_value = token_value[7:]
-        
-        token = ApiToken.query.filter_by(token=token_value).first()
-        
-        if not token or not token.is_valid():
-            return jsonify({'error': 'Invalid or expired API token'}), 401
-        
-        # Actualizar last_used_at
-        token.last_used_at = datetime.utcnow()
-        db.session.commit()
-        
+
         # Pasar el token al contexto
         request.api_token = token
+        request.api_company_id = _token_company_id(token)
         
         return f(*args, **kwargs)
     
@@ -98,11 +168,12 @@ def create_ticket_api():
         category = data.get('category') or Ticket.default_categories()[0]
         priority = data.get('priority') or 'Media'
         source = data.get('source', 'api')
+        company_id = request.api_company_id
         
         # Buscar o crear usuario basado en email
         user = None
         if creator_email:
-            user = User.query.filter_by(email=creator_email).first()
+            user = _company_user_by_email(creator_email.lower(), company_id)
         
         # Si no hay usuario, usar el que creó el token
         if not user:
@@ -115,6 +186,7 @@ def create_ticket_api():
             creator_name=creator_name,
             category=category,
             priority=priority,
+            company_id=company_id,
             user=user
         )
         
@@ -155,13 +227,20 @@ def create_ticket_api():
             
             if predictions:
                 suggested_tech_id, confidence = predictions[0]
-                ticket.ml_suggested_technician_id = suggested_tech_id
-                ticket.ml_confidence_score = confidence
-                
-                # Auto-asignar si la confianza es muy alta (>70%)
-                if confidence > 0.7:
-                    ticket.technician_id = suggested_tech_id
-                    ticket.auto_assigned = True
+                suggested_technician = User.query.filter(
+                    User.id == suggested_tech_id,
+                    User.company_id == company_id,
+                    User.role == 'technician',
+                    User.is_active.is_(True),
+                ).first()
+                if suggested_technician:
+                    ticket.ml_suggested_technician_id = suggested_technician.id
+                    ticket.ml_confidence_score = confidence
+                    
+                    # Auto-asignar si la confianza es muy alta (>70%)
+                    if confidence > 0.7:
+                        ticket.technician_id = suggested_technician.id
+                        ticket.auto_assigned = True
         except Exception as e:
             current_app.logger.warning(f'ML prediction failed: {e}')
         
@@ -210,7 +289,7 @@ def create_ticket_api():
 def office365_email_intake():
     """Optional endpoint for Office 365/Power Automate email-to-ticket ingestion."""
     try:
-        integration = Integration.query.filter_by(platform='office365_email', is_active=True).first()
+        integration = _company_integration_query(request.api_company_id).filter_by(platform='office365_email', is_active=True).first()
         config = _integration_config(integration)
         if not integration or not config.get('enabled', False):
             return jsonify({'error': 'Email intake is disabled'}), 503
@@ -236,7 +315,7 @@ def office365_email_intake():
         category = data.get('category') or Ticket.default_categories()[0]
         priority = data.get('priority') or 'Media'
 
-        user = User.query.filter_by(email=from_email).first() or request.api_token.created_by
+        user = _company_user_by_email(from_email, request.api_company_id) or request.api_token.created_by
         description = body
         if message_id:
             description = f"{description}\n\n[Email Message-ID: {message_id}]"
@@ -247,6 +326,7 @@ def office365_email_intake():
             creator_name=creator_name,
             category=category,
             priority=priority,
+            company_id=request.api_company_id,
             user=user,
         )
         ticket.sla_due_at = datetime.utcnow() + timedelta(hours=Ticket.sla_hours_by_priority(ticket.priority))
@@ -270,7 +350,7 @@ def office365_email_intake():
 @require_api_token
 def get_ticket_api(ticket_id):
     """Obtiene información de un ticket"""
-    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket = _company_ticket_query(request.api_company_id).filter(Ticket.id == ticket_id).first_or_404()
     
     return jsonify({
         'success': True,
@@ -301,14 +381,12 @@ def slack_webhook():
     """
     try:
         data = request.form
-        
-        # Validar token de Slack (si está configurado)
-        integration = Integration.query.filter_by(platform='slack', is_active=True).first()
-        if integration and integration.config:
-            config = json.loads(integration.config)
-            expected_token = config.get('verification_token')
-            if expected_token and data.get('token') != expected_token:
-                return jsonify({'error': 'Invalid verification token'}), 403
+        integration = _resolve_slack_integration(data.get('token'))
+        if not integration:
+            return jsonify({'error': 'Invalid or ambiguous Slack integration'}), 403
+        company_id = integration.company_id or (integration.created_by.company_id if integration.created_by else None)
+        if company_id is None:
+            return jsonify({'error': 'Slack integration is not assigned to a company'}), 403
         
         # Parsear el texto del comando
         text = data.get('text', '').strip()
@@ -329,7 +407,7 @@ def slack_webhook():
             description = text
         
         # Buscar token API activo para crear el ticket
-        api_token = ApiToken.query.filter_by(is_active=True).first()
+        api_token = _company_active_api_token(company_id)
         if not api_token:
             return jsonify({
                 'response_type': 'ephemeral',
@@ -344,6 +422,7 @@ def slack_webhook():
             creator_name=user_name,
             category='Software',  # Categoría por defecto para Slack
             priority='Media',
+            company_id=company_id,
             user=user
         )
         
@@ -364,12 +443,19 @@ def slack_webhook():
             
             if predictions:
                 suggested_tech_id, confidence = predictions[0]
-                ticket.ml_suggested_technician_id = suggested_tech_id
-                ticket.ml_confidence_score = confidence
-                
-                if confidence > 0.7:
-                    ticket.technician_id = suggested_tech_id
-                    ticket.auto_assigned = True
+                suggested_technician = User.query.filter(
+                    User.id == suggested_tech_id,
+                    User.company_id == company_id,
+                    User.role == 'technician',
+                    User.is_active.is_(True),
+                ).first()
+                if suggested_technician:
+                    ticket.ml_suggested_technician_id = suggested_technician.id
+                    ticket.ml_confidence_score = confidence
+                    
+                    if confidence > 0.7:
+                        ticket.technician_id = suggested_technician.id
+                        ticket.auto_assigned = True
         except:pass
         
         db.session.add(ticket)
@@ -415,9 +501,18 @@ def teams_webhook():
     """
     try:
         data = request.get_json()
-        
-        # Validar la integración
-        integration = Integration.query.filter_by(platform='teams', is_active=True).first()
+        integration, api_token = _resolve_teams_integration()
+        if not integration:
+            return jsonify({
+                'type': 'message',
+                'text': '❌ No se pudo resolver la integración de Teams para esta empresa.'
+            }), 403
+        company_id = integration.company_id or (integration.created_by.company_id if integration.created_by else None)
+        if company_id is None:
+            return jsonify({
+                'type': 'message',
+                'text': '❌ La integración de Teams no está asociada a una empresa.'
+            }), 403
         
         # Extraer información del mensaje
         text = data.get('text', '').strip()
@@ -437,7 +532,6 @@ def teams_webhook():
             description = text
         
         # Buscar token API
-        api_token = ApiToken.query.filter_by(is_active=True).first()
         if not api_token:
             return jsonify({
                 'type': 'message',
@@ -452,6 +546,7 @@ def teams_webhook():
             creator_name=from_name,
             category='Software',
             priority='Media',
+            company_id=company_id,
             user=user
         )
         
@@ -472,12 +567,19 @@ def teams_webhook():
             
             if predictions:
                 suggested_tech_id, confidence = predictions[0]
-                ticket.ml_suggested_technician_id = suggested_tech_id
-                ticket.ml_confidence_score = confidence
-                
-                if confidence > 0.7:
-                    ticket.technician_id = suggested_tech_id
-                    ticket.auto_assigned = True
+                suggested_technician = User.query.filter(
+                    User.id == suggested_tech_id,
+                    User.company_id == company_id,
+                    User.role == 'technician',
+                    User.is_active.is_(True),
+                ).first()
+                if suggested_technician:
+                    ticket.ml_suggested_technician_id = suggested_technician.id
+                    ticket.ml_confidence_score = confidence
+                    
+                    if confidence > 0.7:
+                        ticket.technician_id = suggested_technician.id
+                        ticket.auto_assigned = True
         except:
             pass
         
