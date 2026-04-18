@@ -143,6 +143,10 @@ def _company_user_or_404(user_id):
 
 
 def _company_form_choices():
+    # Si el usuario es superadmin, puede ver todas las empresas
+    if hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
+        from app.models import Company
+        return [(c.id, c.name) for c in Company.query.order_by(Company.name).all()]
     company = current_user.company
     if not company:
         return []
@@ -263,11 +267,13 @@ def create_user():
         form.company_id.data = requested_company_id
 
     if form.validate_on_submit():
+        # Si es superadmin, puede asignar cualquier empresa; si no, solo la suya
+        company_id = form.company_id.data if (hasattr(current_user, 'is_superadmin') and current_user.is_superadmin()) else current_user.company_id
         user = User(
             username=form.username.data.strip(),
             email=form.email.data.strip().lower(),
             role=form.role.data,
-            company_id=current_user.company_id
+            company_id=company_id
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -283,7 +289,7 @@ def create_user():
             flash(_t('Error creating user. Please try again.'), 'danger')
             return render_template('admin/edit_user.html', user=None, form=form)
 
-        flash(_t('User "{username}" created successfully with role: {role}').format(username=user.username, role=user.role), 'success')
+        flash('User created successfully', 'success')
         return redirect(url_for('admin.list_users'))
     return render_template('admin/edit_user.html', user=None, form=form)
 

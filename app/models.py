@@ -18,7 +18,7 @@ class Company(db.Model):
     audit_logs = db.relationship('AuditLog', backref='company', lazy=True)
 
 
-roles = ('user', 'technician', 'admin')
+roles = ('user', 'technician', 'admin', 'superadmin')
 
 
 def utcnow():
@@ -56,8 +56,12 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == 'admin' or self.role == 'superadmin'
+
+    def is_superadmin(self):
+        return self.role == 'superadmin'
 
     def is_technician(self):
         return self.role == 'technician'
