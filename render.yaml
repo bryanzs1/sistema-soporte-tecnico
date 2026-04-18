@@ -28,6 +28,12 @@ services:
         fromDatabase:
           name: soporte-tecnico-db
           property: connectionString
+      - key: STRIPE_API_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_DEFAULT_PRICE_ID
+        sync: false
       - key: REDIS_URL
         sync: false
       - key: DEFAULT_ADMIN_USERNAME

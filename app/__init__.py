@@ -1177,9 +1177,12 @@ def _validate_secret_key(app):
 def create_app(config_class=None):
     # Load environment variables from .env file
     load_dotenv()
-    
+
     app = Flask(__name__)
     app.config.from_object(config_class or 'config.Config')
+
+    from app.billing import bp as billing_bp
+    app.register_blueprint(billing_bp)
 
     _validate_secret_key(app)
 
@@ -1620,7 +1623,8 @@ def create_app(config_class=None):
 
             audit_logs_without_company = AuditLog.query.filter(AuditLog.company_id.is_(None)).all()
             for log in audit_logs_without_company:
-                if log.user and log.user.company_id:
+                # Evitar error si log no tiene user
+                if hasattr(log, 'user') and log.user and hasattr(log.user, 'company_id') and log.user.company_id:
                     log.company_id = log.user.company_id
 
             db.session.commit()

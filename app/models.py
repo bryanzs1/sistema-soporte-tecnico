@@ -19,6 +19,16 @@ class Company(db.Model):
     integrations = db.relationship('Integration', backref='company', lazy=True)
     audit_logs = db.relationship('AuditLog', backref='company', lazy=True)
 
+    # Stripe Billing
+    billing_status = db.Column(db.String(32), default='inactive', nullable=False)  # inactive, active, past_due, canceled
+    stripe_customer_id = db.Column(db.String(64), unique=True)
+    stripe_subscription_id = db.Column(db.String(64), unique=True)
+    stripe_price_id = db.Column(db.String(64))
+    stripe_current_period_end = db.Column(db.DateTime)
+    stripe_cancel_at_period_end = db.Column(db.Boolean, default=False)
+    stripe_last_invoice_url = db.Column(db.String(255))
+    stripe_last_payment = db.Column(db.DateTime)
+
     def deactivate(self, reason=None):
         """Desactiva la empresa y todos sus usuarios."""
         for user in self.users:
@@ -396,6 +406,18 @@ class AuditLog(db.Model):
             # Don't let logging fail the application and always reset session state.
             db.session.rollback()
             print(f'Failed to record audit log: {e}')
+
+
+class BillingEvent(db.Model):
+    """Historial de eventos de facturación Stripe por empresa."""
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False, index=True)
+    event_type = db.Column(db.String(64), nullable=False)
+    event_id = db.Column(db.String(128), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False, index=True)
+    data = db.Column(db.Text)
+
+    company = db.relationship('Company', backref=db.backref('billing_events', lazy='dynamic', cascade='all, delete-orphan'))
 
 
 class PasswordHistory(db.Model):

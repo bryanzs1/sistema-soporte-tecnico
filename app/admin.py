@@ -1,3 +1,4 @@
+import os
 import csv
 import json
 from datetime import datetime, timezone
@@ -13,7 +14,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats, BillingEvent
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
 from app.models import Company
 
@@ -1282,6 +1283,52 @@ def settings_audit_export():
         mimetype='text/csv',
         headers={'Content-Disposition': 'attachment; filename=audit_logs.csv'}
     )
+
+
+@bp.route('/settings/billing')
+@login_required
+@admin_required
+def settings_billing():
+    company = current_user.company
+    if company is None:
+        flash(_t('Tu usuario no tiene una empresa asignada.'), 'warning')
+        return redirect(url_for('admin.settings_companies'))
+
+    billing_feedback = request.args.get('billing', '').strip().lower()
+    if billing_feedback == 'success':
+        flash(_t('El proceso de pago se inició correctamente. Stripe confirmará el estado en unos segundos.'), 'success')
+    elif billing_feedback == 'canceled':
+        flash(_t('El proceso de pago fue cancelado.'), 'warning')
+
+    billing_events = BillingEvent.query.filter_by(company_id=company.id).order_by(BillingEvent.created_at.desc()).limit(50).all()
+    return render_template(
+        'admin/settings/billing.html',
+        company=company,
+        billing_events=billing_events,
+        stripe_configured=bool(os.environ.get('STRIPE_API_KEY', '').strip()),
+        default_price_id=(os.environ.get('STRIPE_DEFAULT_PRICE_ID', '') or '').strip(),
+    )
+
+
+@bp.route('/settings/billing/price', methods=['POST'])
+@login_required
+@admin_required
+def settings_billing_price_update():
+    company = current_user.company
+    if company is None:
+        flash(_t('Tu usuario no tiene una empresa asignada.'), 'warning')
+        return redirect(url_for('admin.settings_companies'))
+
+    price_id = (request.form.get('stripe_price_id') or '').strip()
+    company.stripe_price_id = price_id or None
+    db.session.commit()
+
+    if company.stripe_price_id:
+        flash(_t('Price ID de Stripe actualizado correctamente.'), 'success')
+    else:
+        flash(_t('Price ID de Stripe eliminado. Se usará STRIPE_DEFAULT_PRICE_ID si está configurado.'), 'info')
+
+    return redirect(url_for('admin.settings_billing'))
 
 
 @bp.route('/settings/integrations/office365-email', methods=['POST'])

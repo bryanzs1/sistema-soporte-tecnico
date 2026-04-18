@@ -19,6 +19,7 @@ pillow
 sentry-sdk
 marshmallow
 cryptography
+stripe
 
 # development/testing helpers
 requests

@@ -43,9 +43,32 @@ FLASK_ENV=production
 FLASK_DEBUG=false
 SECRET_KEY=(se genera automáticamente si creas el servicio desde el Blueprint)
 DATABASE_URL=(Render la enlaza automáticamente a la base `soporte-tecnico-db`)
+STRIPE_API_KEY=sk_live_xxx o sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STRIPE_DEFAULT_PRICE_ID=price_xxx
 DEFAULT_ADMIN_USERNAME=(recomendado)
 DEFAULT_ADMIN_PASSWORD=(recomendado)
 DEFAULT_ADMIN_EMAIL=(recomendado)
+```
+
+### 4.1 Variables Stripe recomendadas
+- `STRIPE_API_KEY`: clave secreta de Stripe del entorno que vayas a usar (`test` o `live`).
+- `STRIPE_WEBHOOK_SECRET`: secreto del endpoint webhook de Stripe para validar eventos entrantes.
+- `STRIPE_DEFAULT_PRICE_ID`: ID del precio recurrente por defecto que usará Checkout para nuevas suscripciones.
+- `REDIS_URL`: opcional, recomendado para endurecer rate limiting en producción.
+
+Webhook a registrar en Stripe:
+```
+https://TU-DOMINIO-RENDER.onrender.com/billing/webhook/stripe
+```
+
+Eventos mínimos recomendados en Stripe:
+```
+checkout.session.completed
+customer.subscription.updated
+customer.subscription.deleted
+invoice.payment_succeeded
+invoice.payment_failed
 ```
 
 ### 5. Si Render borró tu base anterior
