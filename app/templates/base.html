@@ -600,8 +600,9 @@
         var loginModalEl = document.getElementById('loginModal');
         if (!loginModalEl) return;
 
-        // Auto-open when redirected back after a failed login attempt
-        if (new URLSearchParams(window.location.search).has('login_failed')) {
+        // Auto-open when the login flow redirects to the homepage.
+        var loginParams = new URLSearchParams(window.location.search);
+        if (loginParams.has('login_failed') || loginParams.has('open_login')) {
           var m = new bootstrap.Modal(loginModalEl);
           m.show();
         }

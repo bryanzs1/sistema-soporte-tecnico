@@ -15,9 +15,9 @@ with app.app_context():
         db.session.commit()
 
     with app.test_client() as client:
-        r = client.get('/auth/login')
+        r = client.get('/?open_login=1')
         soup = BeautifulSoup(r.data, 'html.parser')
-        token = soup.find('input', {'id': 'csrf_token'})['value']
+        token = soup.find('input', {'name': 'csrf_token'})['value']
         print('obtained csrf', token)
         r2 = client.post('/auth/login', data={'username':'admin','password':'admin','csrf_token':token}, follow_redirects=True)
         print('post status', r2.status_code)

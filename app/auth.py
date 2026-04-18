@@ -84,7 +84,7 @@ def _login_fail_redirect():
             base = referrer.split('?')[0].split('#')[0]
             return redirect(base + '?login_failed=1')
         return redirect(url_for('main.index') + '?login_failed=1')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('main.index') + '?login_failed=1')
 
 
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
@@ -92,6 +92,9 @@ def _login_fail_redirect():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+    if request.method == 'GET':
+        query_flag = 'login_failed=1' if request.args.get('login_failed') else 'open_login=1'
+        return redirect(url_for('main.index') + f'?{query_flag}')
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -138,7 +141,7 @@ def login():
             return redirect(url_for('auth.force_password_change'))
         flash(_t('Welcome back, {username}!').format(username=user.username), 'success')
         return redirect(url_for('main.index'))
-    return render_template('auth/login.html', form=form)
+    return redirect(url_for('main.index') + '?open_login=1')
 
 
 @bp.route('/forgot-password', methods=['GET', 'POST'], endpoint='forgot_password')
