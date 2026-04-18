@@ -56,6 +56,11 @@ AUDIT_LOG_COLUMNS = {
     'company_id': 'ALTER TABLE audit_log ADD COLUMN company_id INTEGER',
 }
 
+COMPANY_COLUMNS = {
+    'is_active': 'ALTER TABLE company ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE',
+    'deactivation_reason': 'ALTER TABLE company ADD COLUMN deactivation_reason VARCHAR(255)',
+}
+
 
 def _ensure_columns(table_name, columns):
     inspector = inspect(db.engine)
@@ -117,6 +122,12 @@ def ensure_runtime_schema():
 
     try:
         changes['audit_log'] = _ensure_columns('audit_log', AUDIT_LOG_COLUMNS)
+    except Exception:
+        db.session.rollback()
+        raise
+
+    try:
+        changes['company'] = _ensure_columns('company', COMPANY_COLUMNS)
     except Exception:
         db.session.rollback()
         raise

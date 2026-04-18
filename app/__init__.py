@@ -1394,6 +1394,20 @@ def create_app(config_class=None):
             # Add is_active column if it doesn't exist (migration support)
             inspector = db.inspect(db.engine)
             user_columns = [col['name'] for col in inspector.get_columns('user')]
+            company_columns = [col['name'] for col in inspector.get_columns('company')]
+
+            if 'is_active' not in company_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE company ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE'))
+                    conn.commit()
+                app.logger.warning('Added is_active column to company table')
+
+            if 'deactivation_reason' not in company_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE company ADD COLUMN deactivation_reason VARCHAR(255)'))
+                    conn.commit()
+                app.logger.warning('Added deactivation_reason column to company table')
+
             if 'company_id' not in user_columns:
                 with db.engine.connect() as conn:
                     conn.execute(db.text('ALTER TABLE "user" ADD COLUMN company_id INTEGER'))
