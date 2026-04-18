@@ -121,7 +121,13 @@ def login():
         # Check if account is active
         if not user.is_active:
             AuditHelper.log_login_attempt(user, False)
-            flash(_t('This account has been deactivated. Please contact an administrator.'), 'danger')
+            # Si la empresa está desactivada, mostrar razón
+            company = user.company
+            if company and not company.is_active:
+                reason = company.deactivation_reason or _t('Su empresa está inactiva. Contacte a soporte.')
+                flash(_t(f'Acceso denegado: {reason}'), 'danger')
+            else:
+                flash(_t('Esta cuenta ha sido desactivada. Contacte a un administrador.'), 'danger')
             return _login_fail_redirect()
         
         # Successful login: reset failed attempts and log audit

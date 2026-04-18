@@ -1,3 +1,31 @@
+@bp.route('/companies/<int:company_id>/deactivate', methods=['POST'])
+@login_required
+@admin_required
+def deactivate_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    reason = request.form.get('reason') or 'Empresa desactivada por el administrador.'
+    company.deactivate(reason)
+    flash(_t('Empresa desactivada correctamente.'), 'success')
+    return redirect(url_for('admin.settings_companies'))
+
+@bp.route('/companies/<int:company_id>/activate', methods=['POST'])
+@login_required
+@admin_required
+def activate_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    company.activate()
+    flash(_t('Empresa activada correctamente.'), 'success')
+    return redirect(url_for('admin.settings_companies'))
+
+@bp.route('/companies/<int:company_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    db.session.delete(company)
+    db.session.commit()
+    flash(_t('Empresa eliminada correctamente.'), 'success')
+    return redirect(url_for('admin.settings_companies'))
 import csv
 import json
 from datetime import datetime, timezone

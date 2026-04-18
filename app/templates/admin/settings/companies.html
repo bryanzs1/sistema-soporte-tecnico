@@ -33,6 +33,25 @@
                         <td>{{ company.description or '-' }}</td>
                         <td>
                             <a href="{{ url_for('admin.edit_company', company_id=company.id) }}" class="btn btn-sm btn-outline-secondary">{{ _('Edit') }}</a>
+                            {% if company.is_active %}
+                            <form method="post" action="{{ url_for('admin.deactivate_company', company_id=company.id) }}" style="display:inline;">
+                                <input type="hidden" name="reason" value="Empresa desactivada por falta de pago." />
+                                <button type="submit" class="btn btn-sm btn-outline-warning ms-1" onclick="return confirm('{{ _('¿Seguro que deseas desactivar esta empresa?') }}');">
+                                    <i class="bi bi-lock"></i> {{ _('Desactivar') }}
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{{ url_for('admin.activate_company', company_id=company.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-success ms-1" onclick="return confirm('{{ _('¿Seguro que deseas activar esta empresa?') }}');">
+                                    <i class="bi bi-unlock"></i> {{ _('Activar') }}
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="{{ url_for('admin.delete_company', company_id=company.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('{{ _('¿Seguro que deseas eliminar esta empresa? Esta acción no se puede deshacer.') }}');">
+                                    <i class="bi bi-trash"></i> {{ _('Eliminar') }}
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 {% else %}

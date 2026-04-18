@@ -6,6 +6,24 @@ from sqlalchemy.exc import SQLAlchemyError
 
 # --- Multiempresa: Modelo Company ---
 class Company(db.Model):
+        is_active = db.Column(db.Boolean, default=True, nullable=False)
+        deactivation_reason = db.Column(db.String(255), nullable=True)
+
+        def deactivate(self, reason=None):
+            """Desactiva la empresa y todos sus usuarios."""
+            for user in self.users:
+                user.is_active = False
+            self.is_active = False
+            self.deactivation_reason = reason
+            db.session.commit()
+
+        def activate(self):
+            """Activa la empresa y todos sus usuarios."""
+            for user in self.users:
+                user.is_active = True
+            self.is_active = True
+            self.deactivation_reason = None
+            db.session.commit()
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.String(255))
