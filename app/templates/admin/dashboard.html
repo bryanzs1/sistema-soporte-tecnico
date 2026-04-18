@@ -21,7 +21,7 @@
             <option value="{{ url_for('admin.chat_monitoring') }}">{{ _('Chat Monitoring') }}</option>
             <option value="{{ url_for('admin.online_users_list') }}">{{ _('Online Users') }}</option>
             {% if current_user.is_admin() %}
-            <option value="{{ url_for('admin.settings_companies') }}">Empresas</option>
+            <option value="{{ url_for('admin.settings_companies') }}">{{ _('Companies') }}</option>
             {% endif %}
             <option value="{{ url_for('admin.kb_list') }}">{{ _('Knowledge Base') }}</option>
             <option value="{{ url_for('admin.executive_report') }}">{{ _('Executive Report') }}</option>
@@ -75,8 +75,8 @@
           <a class="operations-hub-link operations-hub-secondary" href="{{ url_for('admin.settings_companies') }}">
             <div class="operations-hub-icon"><i class="bi bi-buildings"></i></div>
             <div class="operations-hub-copy">
-              <strong>Empresas</strong>
-              <small>Registrar y administrar empresas</small>
+              <strong>{{ _('Companies') }}</strong>
+              <small>{{ _('Register and manage companies') }}</small>
             </div>
             <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
           </a>

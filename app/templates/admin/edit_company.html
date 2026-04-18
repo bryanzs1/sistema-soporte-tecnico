@@ -1,26 +1,26 @@
 {% extends 'base.html' %}
-{% block title %}{{ 'Editar empresa' if company else 'Nueva empresa' }}{% endblock %}
+{% block title %}{{ _('Edit company') if company else _('New company') }}{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <h2>{{ 'Editar empresa' if company else 'Nueva empresa' }}</h2>
+    <h2>{{ _('Edit company') if company else _('New company') }}</h2>
     <form method="post">
         {{ form.hidden_tag() }}
         <div class="mb-3">
             {{ form.name.label(class="form-label") }}
-            {{ form.name(class="form-control", placeholder="Nombre de la empresa") }}
+            {{ form.name(class="form-control", placeholder=_('Company name')) }}
             {% for error in form.name.errors %}
                 <div class="text-danger small">{{ error }}</div>
             {% endfor %}
         </div>
         <div class="mb-3">
             {{ form.description.label(class="form-label") }}
-            {{ form.description(class="form-control", placeholder="Descripción") }}
+            {{ form.description(class="form-control", placeholder=_('Description')) }}
             {% for error in form.description.errors %}
                 <div class="text-danger small">{{ error }}</div>
             {% endfor %}
         </div>
-        <button type="submit" class="btn btn-success">Guardar</button>
-        <a href="{{ url_for('admin.settings_companies') }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success">{{ _('Save') }}</button>
+        <a href="{{ url_for('admin.settings_companies') }}" class="btn btn-secondary">{{ _('Cancel') }}</a>
     </form>
 </div>
 {% endblock %}
