@@ -1,0 +1,48 @@
+{% extends 'admin/settings/layout.html' %}
+
+{% block title %}{{ _('Companies') }} - {% endblock %}
+
+{% block settings_content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="h4 mb-1"><i class="bi bi-buildings me-2"></i>{{ _('Companies') }}</h2>
+                <p class="text-muted mb-0">{{ _('Register and manage the companies available in the platform.') }}</p>
+            </div>
+            <a href="{{ url_for('admin.create_company') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>{{ _('New company') }}
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Description') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for company in companies %}
+                    <tr>
+                        <td>{{ company.id }}</td>
+                        <td>{{ company.name }}</td>
+                        <td>{{ company.description or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_company', company_id=company.id) }}" class="btn btn-sm btn-outline-secondary">{{ _('Edit') }}</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">{{ _('No companies registered yet.') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

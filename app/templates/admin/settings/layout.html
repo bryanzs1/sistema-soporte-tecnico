@@ -19,6 +19,10 @@
                    class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_users' %}active{% endif %}">
                     <i class="bi bi-people me-2"></i>{{ _('User Management') }}
                 </a>
+                <a href="{{ url_for('admin.settings_companies') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_companies' %}active{% endif %}">
+                    <i class="bi bi-buildings me-2"></i>{{ _('Companies') }}
+                </a>
                 <a href="{{ url_for('admin.settings_ticket_options') }}" 
                    class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_ticket_options' %}active{% endif %}">
                     <i class="bi bi-card-checklist me-2"></i>{{ _('Ticket Options') }}

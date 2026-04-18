@@ -37,8 +37,7 @@ def admin_required(func):
 @login_required
 @admin_required
 def list_companies():
-    companies = Company.query.order_by(Company.name).all()
-    return render_template('admin/companies.html', companies=companies)
+    return redirect(url_for('admin.settings_companies'))
 
 @bp.route('/companies/create', methods=['GET', 'POST'])
 @login_required
@@ -54,7 +53,7 @@ def create_company():
         try:
             db.session.commit()
             flash(_t('Company created successfully'), 'success')
-            return redirect(url_for('admin.list_companies'))
+            return redirect(url_for('admin.settings_companies'))
         except IntegrityError:
             db.session.rollback()
             flash(_t('Company name already exists'), 'danger')
@@ -76,7 +75,7 @@ def edit_company(company_id):
         try:
             db.session.commit()
             flash(_t('Company updated successfully'), 'success')
-            return redirect(url_for('admin.list_companies'))
+            return redirect(url_for('admin.settings_companies'))
         except IntegrityError:
             db.session.rollback()
             flash(_t('Company name already exists'), 'danger')
@@ -996,6 +995,15 @@ def settings_users():
         flash(_t('An unexpected error occurred'), 'danger')
         companies = [current_user.company] if current_user.company else []
         return render_template('admin/users.html', users=users, companies=companies, selected_company_id=current_user.company_id)
+
+
+@bp.route('/settings/companies')
+@login_required
+@admin_required
+def settings_companies():
+    """Gestión de empresas desde settings"""
+    companies = Company.query.order_by(Company.name).all()
+    return render_template('admin/settings/companies.html', companies=companies)
 
 
 @bp.route('/settings/ticket-options')
