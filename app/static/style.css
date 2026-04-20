@@ -3484,8 +3484,8 @@ footer {
 
     .navbar .container,
     .navbar .container-fluid {
-        padding-left: 0.9rem;
-        padding-right: 0.9rem;
+        padding-left: 0.3rem;
+        padding-right: 0.3rem;
     }
 
     .navbar-collapse {
@@ -3498,14 +3498,15 @@ footer {
     }
 
     .app-menu-panel {
-        align-items: stretch;
+        align-items: center;
+        gap: 0.18rem;
     }
 
     .app-nav-group,
     .app-nav-actions,
     .nav-guest-actions {
-        gap: 0.55rem;
-        align-items: stretch;
+        gap: 0.14rem;
+        align-items: center;
     }
 
     .navbar-nav .nav-link,
@@ -3513,8 +3514,9 @@ footer {
     .app-secondary-action {
         width: 100%;
         justify-content: flex-start;
-        padding-top: 0.8rem;
-        padding-bottom: 0.8rem;
+        padding-top: 0.48rem;
+        padding-bottom: 0.48rem;
+        font-size: 0.97rem;
     }
 
     .app-user-toggle,
