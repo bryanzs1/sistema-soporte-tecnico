@@ -78,19 +78,15 @@
           <li>{{ 'Escalable para tu equipo' if is_es else 'Scalable for your team' }}</li>
         </ul>
         <div class="plan-actions">
-          {% if current_user.is_authenticated and current_user.is_admin() and has_monthly_price %}
+          {% if has_monthly_price %}
           <button type="button" class="btn btn-primary btn-lg pricing-checkout-btn" data-plan="monthly">
             {{ 'Suscribirme con PayPal' if is_es else 'Subscribe with PayPal' }}
           </button>
-          {% elif not has_monthly_price %}
+          {% else %}
           <button type="button" class="btn btn-lg pricing-disabled-btn" disabled>
             {{ 'Próximamente' if is_es else 'Coming soon' }}
           </button>
           <p class="plan-status-note">{{ 'Este plan estará disponible muy pronto.' if is_es else 'This plan will be available very soon.' }}</p>
-          {% elif current_user.is_authenticated and not current_user.is_admin() %}
-          <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary btn-lg">{{ 'Solicitar acceso al administrador' if is_es else 'Ask your admin for access' }}</a>
-          {% else %}
-          <a href="#loginModal" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Inicia sesión para continuar' if is_es else 'Sign in to continue' }}</a>
           {% endif %}
         </div>
       </article>
@@ -118,19 +114,15 @@
           <li>{{ 'Prioridad para planificación anual' if is_es else 'Priority for annual planning' }}</li>
         </ul>
         <div class="plan-actions">
-          {% if current_user.is_authenticated and current_user.is_admin() and has_annual_price %}
+          {% if has_annual_price %}
           <button type="button" class="btn btn-warning btn-lg pricing-checkout-btn" data-plan="annual">
             {{ 'Elegir anual con PayPal' if is_es else 'Choose annual with PayPal' }}
           </button>
-          {% elif not has_annual_price %}
+          {% else %}
           <button type="button" class="btn btn-lg pricing-disabled-btn" disabled>
             {{ 'Próximamente' if is_es else 'Coming soon' }}
           </button>
           <p class="plan-status-note">{{ 'La oferta anual se activará en breve.' if is_es else 'The annual offer will be enabled shortly.' }}</p>
-          {% elif current_user.is_authenticated and not current_user.is_admin() %}
-          <a href="{{ url_for('main.index') }}" class="btn btn-outline-warning btn-lg">{{ 'Solicitar acceso al administrador' if is_es else 'Ask your admin for access' }}</a>
-          {% else %}
-          <a href="#loginModal" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Inicia sesión para continuar' if is_es else 'Sign in to continue' }}</a>
           {% endif %}
         </div>
       </article>
@@ -182,6 +174,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const cards = document.querySelectorAll('[data-plan-card]');
   const checkoutButtons = document.querySelectorAll('.pricing-checkout-btn');
   const activeClass = 'is-active';
+  const redirectingText = {{ ('Redirigiendo...' if is_es else 'Redirecting...') | tojson }};
+  const checkoutErrorText = {{ ('No se pudo iniciar el checkout.' if is_es else 'Unable to start checkout.') | tojson }};
+  const paypalConnectionErrorText = {{ ('Ocurrió un error al conectar con PayPal.' if is_es else 'An error occurred while connecting to PayPal.') | tojson }};
 
   function setActivePlan(plan) {
     toggles.forEach((toggle) => {
@@ -207,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const plan = button.dataset.plan;
       const originalText = button.textContent;
       button.disabled = true;
-      button.textContent = {{ '"Redirigiendo..."' if is_es else '"Redirecting..."' }};
+      button.textContent = redirectingText;
 
       try {
         const res = await fetch('/billing/create-checkout-session', {
@@ -220,9 +215,9 @@ document.addEventListener('DOMContentLoaded', function () {
           window.location = data.checkout_url;
           return;
         }
-        alert(data.error || {{ '"No se pudo iniciar el checkout."' if is_es else '"Unable to start checkout."' }});
+        alert(data.error || checkoutErrorText);
       } catch (error) {
-        alert({{ '"Ocurrió un error al conectar con PayPal."' if is_es else '"An error occurred while connecting to PayPal."' }});
+        alert(paypalConnectionErrorText);
       } finally {
         button.disabled = false;
         button.textContent = originalText;
