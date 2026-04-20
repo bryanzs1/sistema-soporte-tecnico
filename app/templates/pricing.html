@@ -89,11 +89,13 @@
       </article>
     </div>
 
+    {% if current_user.is_authenticated and current_user.is_admin() and (not has_monthly_price or not has_annual_price) %}
     <div class="pricing-footnote">
       <p>
-        {{ 'Los botones de suscripción usan Price IDs configurados en el servidor. Si no ves una opción disponible, revisa STRIPE_MONTHLY_PRICE_ID y STRIPE_ANNUAL_PRICE_ID en Render.' if is_es else 'Subscription buttons use server-configured Price IDs. If an option is unavailable, verify STRIPE_MONTHLY_PRICE_ID and STRIPE_ANNUAL_PRICE_ID in Render.' }}
+        {{ 'Aviso para administrador: falta configurar uno o más Price ID de Stripe para habilitar todos los planes en esta página.' if is_es else 'Admin notice: one or more Stripe Price IDs are still missing, so not every plan is enabled on this page.' }}
       </p>
     </div>
+    {% endif %}
   </div>
 </section>
 
