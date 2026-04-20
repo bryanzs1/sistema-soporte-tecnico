@@ -54,6 +54,11 @@
           <button type="button" class="btn btn-primary btn-lg pricing-checkout-btn" data-plan="monthly">
             {{ 'Suscribirme mensual' if is_es else 'Subscribe monthly' }}
           </button>
+          {% elif not has_monthly_price %}
+          <button type="button" class="btn btn-outline-secondary btn-lg" disabled>
+            {{ 'Próximamente' if is_es else 'Coming soon' }}
+          </button>
+          <p class="plan-status-note">{{ 'Este plan estará disponible muy pronto.' if is_es else 'This plan will be available very soon.' }}</p>
           {% elif current_user.is_authenticated and not current_user.is_admin() %}
           <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary btn-lg">{{ 'Solicitar acceso al administrador' if is_es else 'Ask your admin for access' }}</a>
           {% else %}
@@ -80,6 +85,11 @@
           <button type="button" class="btn btn-warning btn-lg pricing-checkout-btn" data-plan="annual">
             {{ 'Elegir plan anual' if is_es else 'Choose annual plan' }}
           </button>
+          {% elif not has_annual_price %}
+          <button type="button" class="btn btn-outline-secondary btn-lg" disabled>
+            {{ 'Próximamente' if is_es else 'Coming soon' }}
+          </button>
+          <p class="plan-status-note">{{ 'La oferta anual se activará en breve.' if is_es else 'The annual offer will be enabled shortly.' }}</p>
           {% elif current_user.is_authenticated and not current_user.is_admin() %}
           <a href="{{ url_for('main.index') }}" class="btn btn-outline-warning btn-lg">{{ 'Solicitar acceso al administrador' if is_es else 'Ask your admin for access' }}</a>
           {% else %}
