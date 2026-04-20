@@ -21,28 +21,6 @@ def index():
     return render_template('index.html')
 
 
-@bp.route('/pricing')
-def pricing():
-    lang = session.get('lang', 'en')
-    return render_template(
-        'pricing.html',
-        monthly_price_display=os.environ.get(
-            'PAYPAL_MONTHLY_PRICE_DISPLAY',
-            '$29/mo' if lang == 'en' else 'US$29/mes',
-        ).strip(),
-        annual_price_display=os.environ.get(
-            'PAYPAL_ANNUAL_PRICE_DISPLAY',
-            '$290/yr' if lang == 'en' else 'US$290/año',
-        ).strip(),
-        annual_offer_text=os.environ.get(
-            'PAYPAL_ANNUAL_OFFER_TEXT',
-            'Get 2 months free (annual)' if lang == 'en' else 'Obtén 2 meses gratis pagando anual',
-        ).strip(),
-        has_monthly_price=bool(os.environ.get('PAYPAL_MONTHLY_PLAN_ID', '').strip()),
-        has_annual_price=bool(os.environ.get('PAYPAL_ANNUAL_PLAN_ID', '').strip()),
-    )
-
-
 @bp.route('/health')
 def health_check():
     """Health check endpoint for Render"""
