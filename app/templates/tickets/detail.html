@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}Ticket {{ ticket.id }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
 {% block content %}
-<div class="container mt-4 ticket-detail-page">
+<section class="app-page-shell ticket-detail-page">
+<div class="container">
   <div class="mb-5">
     {% if not ticket.is_closed() and (ticket.is_overdue() or (ticket.is_due_soon() and not ticket.technician)) %}
     <div class="alert alert-{{ 'danger' if ticket.is_overdue() else 'warning' }} d-flex align-items-center gap-3 mb-4" role="alert">
@@ -19,10 +21,14 @@
       </div>
     </div>
     {% endif %}
-    <h2 class="mb-4">Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
+    <div class="app-page-hero app-page-hero-compact">
+      <span class="app-page-kicker">{{ _('Case Overview') }}</span>
+      <h1 class="app-page-title">Ticket #{{ ticket.id }} - {{ ticket.title }}</h1>
+      <p class="app-page-subtitle">{{ _('Review the case status, collaborate in real time and close the request from a unified premium workspace.') }}</p>
+    </div>
 
     <!-- Timeline - Always visible below title -->
-    <div class="section-card mb-4">
+    <div class="section-card app-surface-card mb-4">
       <h3>{{ _('Timeline') }}</h3>
       {% if timeline %}
         <ul class="list-group list-group-flush">
@@ -42,7 +48,7 @@
     </div>
     
     <!-- Main Details Card -->
-    <div class="section-card mb-4">
+    <div class="section-card app-surface-card mb-4">
       <h3>{{ _('Details') }}</h3>
       <div class="row">
         <div class="col-md-6 mb-3">
@@ -77,7 +83,7 @@
     </div>
 
     <!-- SLA Information Card -->
-    <div class="section-card mb-4">
+    <div class="section-card app-surface-card mb-4">
       <h3>{{ _('SLA Information') }}</h3>
       <div class="row">
         <div class="col-md-6 mb-3">
@@ -197,7 +203,7 @@
 
     <!-- CSAT Card (only ticket creator, only when closed) -->
     {% if ticket.status == 'Cerrado' and ticket.user and ticket.user_id == current_user.id %}
-    <div class="section-card mb-4">
+    <div class="section-card app-surface-card mb-4">
       <h3><i class="bi bi-star-half me-2"></i>{{ _('Rate your experience') }}</h3>
       {% if ticket.satisfaction_rating %}
         <div class="d-flex align-items-center gap-1 mb-1">
@@ -226,7 +232,7 @@
     {% endif %}
 
     <!-- Attachments Card -->
-    <div class="section-card mb-4">
+    <div class="section-card app-surface-card mb-4">
       <h3>{{ _('Attachments') }}</h3>
       {% if attachments %}
         <ul class="list-group list-group-flush">
@@ -243,7 +249,7 @@
     </div>
 
     <!-- Direct Chat Card -->
-    <div class="section-card mb-4">
+    <div class="section-card app-surface-card mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h3 class="mb-0">{{ _('Direct chat') }}</h3>
@@ -425,7 +431,7 @@
 
     <!-- Admin Update Section -->
     {% if current_user.is_admin() or current_user.is_technician() %}
-      <div class="section-card">
+      <div class="section-card app-surface-card">
         <h3>{{ _('Update ticket') }}</h3>
         <form method="post" id="ticket-update-form">
           {{ form.hidden_tag() }}
@@ -660,4 +666,5 @@
     })();
   </script>
 </div>
+</section>
 {% endblock %}

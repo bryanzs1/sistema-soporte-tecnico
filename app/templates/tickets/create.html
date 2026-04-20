@@ -1,17 +1,23 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('New Ticket') }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
 {% block content %}
-<div class="container mt-4 create-ticket-page">
+<section class="app-page-shell create-ticket-page">
+<div class="container">
   <div class="mb-5">
-    <h2 class="mb-4">{{ _('Create a new ticket') }}</h2>
+    <div class="app-page-hero">
+      <span class="app-page-kicker">{{ _('Support Workflow') }}</span>
+      <h1 class="app-page-title">{{ _('Create a new ticket') }}</h1>
+      <p class="app-page-subtitle">{{ _('Describe the issue clearly and the platform will route it with the same polished experience used across the refreshed interface.') }}</p>
+    </div>
     
     <!-- Main Form Card -->
-    <div class="form-card">
+    <div class="form-card app-surface-card app-form-layout-card">
       <form method="post" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         
         <!-- Basic Information Section -->
-        <div class="section-card mb-4">
+        <div class="section-card app-surface-card mb-4">
           <h3>{{ _('Basic Information') }}</h3>
           
           <div class="row mb-3 g-3">
@@ -40,7 +46,7 @@
             {{ form.description(class_='form-control input-enhanced', rows=5, placeholder=_('Describe the issue in detail')) }}
           </div>
 
-          <div class="alert alert-light border mb-0" role="status">
+          <div class="alert alert-light border mb-0 app-soft-status" role="status">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
               <strong>{{ _('Suggested solutions from Knowledge Base') }}</strong>
               <small class="text-muted">{{ _('Type at least 3 characters in description') }}</small>
@@ -50,7 +56,7 @@
         </div>
         
         <!-- Options Section -->
-        <div class="section-card mb-4">
+        <div class="section-card app-surface-card mb-4">
           <h3>{{ _('Options') }}</h3>
           
           <div class="row g-3">
@@ -64,7 +70,7 @@
         </div>
         
         <!-- Attachment Section -->
-        <div class="section-card mb-4">
+        <div class="section-card app-surface-card mb-4">
           <h3>{{ _('Attachments') }}</h3>
           
           <div class="mb-3">
@@ -76,13 +82,14 @@
         
         <!-- Submit Section -->
         <div class="d-flex flex-column flex-md-row gap-3 create-ticket-actions">
-          {{ form.submit(class_='btn btn-primary btn-animated btn-lg', value=_('Create Ticket')) }}
-          <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-secondary btn-lg">{{ _('Cancel') }}</a>
+          {{ form.submit(class_='btn btn-primary btn-animated btn-lg app-primary-action', value=_('Create Ticket')) }}
+          <a href="{{ url_for('tickets.list_tickets') }}" class="btn app-secondary-action btn-lg">{{ _('Cancel') }}</a>
         </div>
       </form>
     </div>
   </div>
 </div>
+</section>
 
 <script>
   (function () {

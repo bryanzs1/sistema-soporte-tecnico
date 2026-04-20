@@ -4025,3 +4025,227 @@ footer {
         font-size: 1.55rem;
     }
 }
+
+    /* ===== SHARED PAGE SYSTEM ===== */
+    .app-page-body {
+        background:
+            radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 32%),
+            radial-gradient(circle at top right, rgba(14, 165, 233, 0.09), transparent 28%),
+            linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    }
+
+    .app-page-shell {
+        position: relative;
+        padding: 124px 0 72px;
+    }
+
+    .app-page-hero {
+        max-width: 820px;
+        margin-bottom: 2rem;
+    }
+
+    .app-page-hero-compact {
+        max-width: 720px;
+    }
+
+    .app-page-kicker {
+        display: inline-block;
+        margin-bottom: 0.85rem;
+        padding: 0.42rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        color: #1d4ed8;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .app-page-title {
+        margin: 0 0 0.85rem;
+        font-size: clamp(2rem, 4vw, 3.35rem);
+        line-height: 1.05;
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .app-page-subtitle {
+        margin: 0;
+        max-width: 720px;
+        color: #475569;
+        font-size: 1.02rem;
+        line-height: 1.7;
+    }
+
+    .app-surface-card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.95));
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 24px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    }
+
+    .app-form-card {
+        padding: 0;
+        border-radius: 28px;
+    }
+
+    .app-form-layout-card {
+        padding: 2rem;
+    }
+
+    .app-form-card .card-title,
+    .app-form-layout-card .card-title {
+        color: #0f172a;
+    }
+
+    .app-muted-panel {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.98));
+        color: #e2e8f0;
+        border-radius: 22px;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+    }
+
+    .app-muted-panel .card-title,
+    .app-muted-panel .small,
+    .app-muted-panel li,
+    .app-muted-panel .text-primary {
+        color: #e2e8f0 !important;
+    }
+
+    .auth-shell-container {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 0;
+    }
+
+    .app-inline-link {
+        color: #2563eb;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .app-inline-link:hover,
+    .app-inline-link:focus {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    .app-soft-status {
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.96), rgba(219, 234, 254, 0.9));
+        border-color: rgba(96, 165, 250, 0.32) !important;
+        border-radius: 18px;
+    }
+
+    .app-segmented-nav {
+        margin-bottom: 1.2rem;
+    }
+
+    .app-pill-button {
+        border-radius: 999px;
+        padding: 0.72rem 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        background: rgba(255, 255, 255, 0.72);
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .app-pill-button:hover,
+    .app-pill-button:focus {
+        color: #0f172a;
+        background: rgba(241, 245, 249, 0.96);
+    }
+
+    .app-pill-button.is-active {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        box-shadow: 0 18px 32px rgba(37, 99, 235, 0.18);
+    }
+
+    .app-filter-card {
+        border-radius: 24px;
+    }
+
+    .app-filter-card .form-control,
+    .app-filter-card .form-select,
+    .app-form-card .form-control,
+    .app-form-card .form-select,
+    .app-form-layout-card .form-control,
+    .app-form-layout-card .form-select,
+    .app-form-card .input-group-text,
+    .app-form-layout-card .input-group-text {
+        border-color: rgba(148, 163, 184, 0.24);
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    .app-ticket-table-surface {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 24px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    }
+
+    .tickets-list-page .excel-table-container.app-ticket-table-surface {
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .tickets-list-page .excel-table thead {
+        background: linear-gradient(180deg, #0f172a, #1e293b);
+    }
+
+    .tickets-list-page .excel-table tbody tr.ticket-row:hover {
+        background: rgba(37, 99, 235, 0.04);
+    }
+
+    .tickets-columns-card strong,
+    .ticket-detail-page .section-card h3,
+    .create-ticket-page .section-card h3 {
+        color: #0f172a;
+    }
+
+    .app-empty-state {
+        border-radius: 24px;
+        border: 1px solid rgba(96, 165, 250, 0.25);
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.96), rgba(219, 234, 254, 0.92));
+    }
+
+    .ticket-detail-page .detail-item {
+        border-bottom-color: rgba(148, 163, 184, 0.24);
+    }
+
+    .ticket-detail-text {
+        color: #334155;
+    }
+
+    .ticket-detail-page .list-group-item,
+    .ticket-detail-page .modal-content {
+        border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    .ticket-detail-page .modal-content {
+        border-radius: 24px;
+    }
+
+    .ticket-detail-page .comments-list .content-card {
+        border-left-width: 3px;
+        border-radius: 18px;
+    }
+
+    @media (max-width: 991px) {
+        .app-page-shell {
+            padding: 104px 0 54px;
+        }
+
+        .app-page-title {
+            font-size: clamp(1.8rem, 7vw, 2.5rem);
+        }
+
+        .app-form-layout-card {
+            padding: 1rem;
+        }
+
+        .app-pill-button,
+        .tickets-list-primary-actions .btn,
+        .create-ticket-actions .btn {
+            width: 100%;
+        }
+    }
