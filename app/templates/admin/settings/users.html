@@ -2,19 +2,21 @@
 {% block title %}{{ _('User Management') }}{% endblock %}
 
 {% block settings_content %}
-<div class="card">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><i class="bi bi-people me-2"></i>{{ _('User Management') }}</h5>
-    </div>
+<div class="card app-surface-card admin-settings-card">
     <div class="card-body">
+        <div class="admin-section-header">
+            <div>
+                <h5 class="mb-1"><i class="bi bi-people me-2"></i>{{ _('User Management') }}</h5>
+                <p class="text-muted mb-0">{{ _('Create, edit, and manage system users and their roles') }}</p>
+            </div>
+            <a href="{{ url_for('admin.create_user') }}" class="btn app-primary-action">
+                <i class="bi bi-person-plus me-1"></i>{{ _('Create User') }}
+            </a>
+        </div>
         <p class="text-muted">{{ _('Create, edit, and manage system users and their roles') }}</p>
-        
-        <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">
-            <i class="bi bi-person-plus me-1"></i>{{ _('Create User') }}
-        </a>
-        
-        <div class="table-responsive">
-            <table class="table table-hover">
+
+        <div class="table-responsive app-admin-table-wrap">
+            <table class="table table-hover app-admin-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -48,13 +50,13 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a class="btn btn-sm btn-info text-white" href="{{ url_for('admin.edit_user', user_id=u.id) }}">
+                            <a class="btn btn-sm app-secondary-action" href="{{ url_for('admin.edit_user', user_id=u.id) }}">
                                 <i class="bi bi-pencil-square me-1"></i>{{ _('Edit') }}
                             </a>
-                            <a class="btn btn-sm btn-warning text-dark" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">
+                            <a class="btn btn-sm app-secondary-action" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">
                                 <i class="bi bi-key me-1"></i>{{ _('Reset Password') }}
                             </a>
-                            <button class="btn btn-sm btn-danger"
+                            <button class="btn btn-sm btn-outline-danger"
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteUserModal"
                                     data-user-id="{{ u.id }}"
@@ -71,7 +73,7 @@
         </div>
         
         {% if not users %}
-        <div class="alert alert-info mt-3">
+        <div class="alert alert-info mt-3 app-empty-state">
             {{ _('No users found. Create the first user to get started.') }}
         </div>
         {% endif %}
@@ -81,12 +83,12 @@
 <!-- Delete User Confirmation Modal -->
 <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
+        <div class="modal-content app-login-modal">
+            <div class="modal-header app-login-modal-header">
                 <h5 class="modal-title" id="deleteUserModalLabel">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ _('Delete User') }}
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>{{ _('Are you sure you want to permanently delete user') }} <strong id="deleteUsername"></strong>?</p>
@@ -94,7 +96,7 @@
                 <p class="text-muted mb-0">{{ _('Existing records will be reassigned to administrator') }} <strong>{{ current_user.username }}</strong>.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn app-secondary-action" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
                 <form id="deleteUserForm" method="POST" action="">
                     {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
                     <button type="submit" class="btn btn-danger">

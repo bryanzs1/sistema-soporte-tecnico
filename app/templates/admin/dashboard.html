@@ -1,11 +1,17 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('Control Panel') }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
 {% block content %}
-<div class="container mt-4 admin-dashboard-page">
+<section class="app-page-shell admin-dashboard-page">
+<div class="container">
   <div class="mb-5">
-    <h2 class="mb-4">{{ _('Control Panel') }}</h2>
+    <div class="app-page-hero">
+      <span class="app-page-kicker">{{ _('Operations Center') }}</span>
+      <h1 class="app-page-title">{{ _('Control Panel') }}</h1>
+      <p class="app-page-subtitle">{{ _('Monitor operational flow, inspect service health and move between critical admin actions from a unified workspace.') }}</p>
+    </div>
 
-    <div class="section-card operations-hub-card mb-4">
+    <div class="section-card app-surface-card operations-hub-card mb-4">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
         <div>
           <h3 class="mb-1">{{ _('Operations Hub') }}</h3>
@@ -225,7 +231,7 @@
   <!-- Categories Section -->
   <div class="row">
     <div class="col-12">
-      <div class="section-card">
+      <div class="section-card app-surface-card">
         <h3>{{ _('By category') }}</h3>
         <ul class="list-group list-group-flush">
           {% for cat, count in categories.items() %}
@@ -242,7 +248,7 @@
   {% if current_user.is_admin() and pending_kb_articles %}
   <div class="row mt-4">
     <div class="col-12">
-      <div class="section-card">
+      <div class="section-card app-surface-card">
         <h3>{{ _('Pending KB Proposals') }}</h3>
         <div class="table-responsive">
           <table class="table table-sm mb-0">
@@ -286,6 +292,7 @@
   </div>
   {% endif %}
 </div>
+</section>
 <script>
 function dashboardKbRejectWithReason(form) {
   const reason = window.prompt("{{ _('Enter rejection reason') }}");

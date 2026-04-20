@@ -1,71 +1,44 @@
-{% extends "base.html" %}
+{% extends 'admin/settings/layout.html' %}
 
 {% block title %}{{ _('Settings') }}{% endblock %}
 
-{% block content %}
-<div class="container-fluid mt-4 settings-page">
-    <div class="row mb-4">
-        <div class="col">
-            <h1><i class="bi bi-gear me-2"></i>{{ _('System Settings') }}</h1>
-            <p class="text-muted">{{ _('Manage all system configurations and settings in one place') }}</p>
+{% block settings_content %}
+<div class="app-surface-card admin-settings-overview">
+    <div class="admin-section-header">
+        <div>
+            <h2 class="h4 mb-1">{{ _('Settings Hub') }}</h2>
+            <p class="text-muted mb-0">{{ _('Manage all system configurations and settings in one place') }}</p>
         </div>
     </div>
-    
-    <!-- Settings Navigation Tabs -->
-    <div class="row g-3 settings-layout-row">
-        <div class="col-12 col-lg-3 settings-sidebar-col">
-            <!-- Sidebar Navigation -->
-            <div class="list-group sticky-top settings-sidebar-nav">
-                <a href="{{ url_for('admin.settings_users') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'users' %}active{% endif %}">
-                    <i class="bi bi-people me-2"></i>{{ _('User Management') }}
-                </a>
-                <a href="{{ url_for('admin.settings_companies') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'companies' %}active{% endif %}">
-                    <i class="bi bi-buildings me-2"></i>{{ _('Companies') }}
-                </a>
-                <a href="{{ url_for('admin.settings_ticket_options') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'ticket_options' %}active{% endif %}">
-                    <i class="bi bi-card-checklist me-2"></i>{{ _('Ticket Options') }}
-                </a>
-                <a href="{{ url_for('admin.settings_ml') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'ml_system' %}active{% endif %}">
-                    <i class="bi bi-cpu me-2"></i>{{ _('ML Classification System') }}
-                </a>
-                <a href="{{ url_for('admin.settings_ai') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'ai_system' %}active{% endif %}">
-                    <i class="bi bi-lightbulb me-2"></i>{{ _('AI System') }}
-                </a>
-                <a href="{{ url_for('admin.settings_integrations') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'integrations' %}active{% endif %}">
-                    <i class="bi bi-link-45deg me-2"></i>{{ _('Chat Integrations') }}
-                </a>
-                <a href="{{ url_for('admin.settings_audit') }}" 
-                   class="list-group-item list-group-item-action {% if active_tab == 'audit' %}active{% endif %}">
-                    <i class="bi bi-shield-check me-2"></i>{{ _('Audit Logs') }}
-                </a>
-            </div>
+    <div class="row g-3 admin-settings-overview-grid">
+        <div class="col-md-6">
+            <a class="admin-settings-tile" href="{{ url_for('admin.settings_users') }}">
+                <i class="bi bi-people"></i>
+                <strong>{{ _('User Management') }}</strong>
+                <span>{{ _('Create, edit, and manage system users and their roles') }}</span>
+            </a>
         </div>
-        
-        <div class="col-12 col-lg-9 settings-content-col">
-            <!-- Content Area - Loaded via include or route -->
-            {% block settings_content %}{% endblock %}
+        <div class="col-md-6">
+            <a class="admin-settings-tile" href="{{ url_for('admin.settings_companies') }}">
+                <i class="bi bi-buildings"></i>
+                <strong>{{ _('Companies') }}</strong>
+                <span>{{ _('Register and manage companies linked to the platform') }}</span>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a class="admin-settings-tile" href="{{ url_for('admin.settings_ticket_options') }}">
+                <i class="bi bi-card-checklist"></i>
+                <strong>{{ _('Ticket Options') }}</strong>
+                <span>{{ _('Control categories, priorities and routing rules') }}</span>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a class="admin-settings-tile" href="{{ url_for('admin.settings_integrations') }}">
+                <i class="bi bi-link-45deg"></i>
+                <strong>{{ _('Chat Integrations') }}</strong>
+                <span>{{ _('Connect external channels and automation endpoints') }}</span>
+            </a>
         </div>
     </div>
 </div>
-
-<style>
-    .list-group-item.active {
-        background-color: var(--bs-primary);
-        border-color: var(--bs-primary);
-    }
-    
-    .list-group-item:hover {
-        background-color: var(--bs-light);
-    }
-    
-    .sticky-top {
-        top: 70px;
-    }
-</style>
 {% endblock %}
