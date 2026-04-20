@@ -28,15 +28,15 @@ def pricing():
         'pricing.html',
         monthly_price_display=os.environ.get(
             'PAYPAL_MONTHLY_PRICE_DISPLAY',
-            '$29' if lang == 'en' else 'US$29',
+            '$29/mo' if lang == 'en' else 'US$29/mes',
         ).strip(),
         annual_price_display=os.environ.get(
             'PAYPAL_ANNUAL_PRICE_DISPLAY',
-            '$290' if lang == 'en' else 'US$290',
+            '$290/yr' if lang == 'en' else 'US$290/año',
         ).strip(),
         annual_offer_text=os.environ.get(
             'PAYPAL_ANNUAL_OFFER_TEXT',
-            'Save 2 months' if lang == 'en' else 'Ahorra 2 meses',
+            'Get 2 months free (annual)' if lang == 'en' else 'Obtén 2 meses gratis pagando anual',
         ).strip(),
         has_monthly_price=bool(os.environ.get('PAYPAL_MONTHLY_PLAN_ID', '').strip()),
         has_annual_price=bool(os.environ.get('PAYPAL_ANNUAL_PLAN_ID', '').strip()),
