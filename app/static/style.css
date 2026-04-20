@@ -13,117 +13,109 @@
     --color-success-text: #065F46;
     
     /* Error (Tickets críticos, errores) */
-        /* Paleta tipo Tailwind */
-        --color-primary: #2563eb;
-        --color-primary-hover: #1d4ed8;
-        --color-primary-active: #1e40af;
-        --color-secondary: #38bdf8;
-        --color-bg-general: #0f172a;
-        --color-bg-card: #1e293b;
-        --color-border: #334155;
-        --color-text-primary: #f1f5f9;
-        --color-text-secondary: #94a3b8;
-        --font-body: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-        --font-heading: 'Inter', 'Bahnschrift', 'Segoe UI', sans-serif;
+    --color-error: #EF4444;
+    --color-error-hover: #DC2626;
+    --color-error-bg: #FEF2F2;
+    --color-error-text: #7F1D1D;
+    
+    /* Warning (Pendiente, SLA próximo) */
+    --color-warning: #F59E0B;
+    --color-warning-hover: #D97706;
+    --color-warning-bg: #FFFBEB;
+    --color-warning-text: #78350F;
+    
+    /* Info (Nuevos tickets, notificaciones) */
+    --color-info: #0EA5E9;
+    --color-info-hover: #0284C7;
     --color-info-bg: #F0F9FF;
     --color-info-text: #0C4A6E;
     
-        background: rgba(15, 23, 42, 0.80) !important;
-        border-bottom: 1.5px solid var(--color-border);
-        backdrop-filter: blur(12px);
-        box-shadow: 0 2px 16px 0 rgba(30, 41, 59, 0.10);
+    /* Neutros */
+    --color-bg-general: #F9FAFB;
     --color-bg-card: #FFFFFF;
     --color-border: #E5E7EB;
     --color-text-primary: #111827;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.55rem;
-        font-family: var(--font-heading);
-        font-weight: 800;
-        letter-spacing: -0.01em;
-        text-decoration: none;
-        font-size: 1.35rem;
-        color: #fff;
-        text-shadow: 0 2px 12px rgba(30,64,175,0.10);
+    --color-text-secondary: #6B7280;
+    --font-body: "Segoe UI Variable", "Trebuchet MS", "Helvetica Neue", sans-serif;
+    --font-heading: "Bahnschrift", "Franklin Gothic Medium", "Segoe UI", sans-serif;
+    
+    /* Bootstrap Override */
+    --bs-primary: #1E40AF;
+    --bs-primary-rgb: 30, 64, 175;
     --bs-success: #10B981;
     --bs-success-rgb: 16, 185, 129;
     --bs-danger: #EF4444;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(37,99,235,0.10));
-        border: 1.5px solid var(--color-primary);
-        box-shadow: 0 2px 10px rgba(30,64,175,0.10);
+    --bs-danger-rgb: 239, 68, 68;
+    --bs-warning: #F59E0B;
+    --bs-warning-rgb: 245, 158, 11;
+    --bs-info: #0EA5E9;
+    --bs-info-rgb: 14, 165, 233;
+    --bs-secondary: #3B82F6;
+    --bs-secondary-rgb: 59, 130, 246;
+}
+
 /* Override Bootstrap navbar colors */
 .navbar.bg-primary {
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.78)) !important;
-        width: 14px;
-        height: 14px;
-        border-radius: 999px;
-        background: radial-gradient(circle at 30% 30%, #38bdf8, #2563eb 55%, #1e40af 100%);
-        box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
-        flex: 0 0 auto;
+    backdrop-filter: blur(16px);
+}
+
+.app-brand {
+    display: inline-flex;
+    align-items: center;
     gap: 0.75rem;
     font-family: var(--font-heading);
     font-weight: 700;
-        color: var(--color-text-secondary) !important;
-        font-weight: 700;
-        border-radius: 8px;
-        padding: 0.48rem 0.85rem !important;
-        font-size: 1.01rem;
-        background: transparent;
-        transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+}
+
+.app-brand-mark-wrap {
+    width: 38px;
     height: 38px;
     border-radius: 14px;
-        color: #fff !important;
-        background: linear-gradient(90deg, var(--color-primary) 60%, var(--color-secondary) 100%);
-        box-shadow: 0 2px 8px 0 rgba(59,130,246,0.10);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(180deg, rgba(59, 130, 246, 0.16), rgba(37, 99, 235, 0.08));
     border: 1px solid rgba(96, 165, 250, 0.2);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 26px rgba(2, 6, 23, 0.22);
-        background: linear-gradient(90deg, var(--color-primary) 60%, var(--color-secondary) 100%);
-        color: #fff !important;
-        border-radius: 12px;
-        font-weight: 800;
-        padding: 0.65rem 1.6rem;
-        font-size: 1.08rem;
-        box-shadow: 0 4px 24px 0 rgba(59,130,246,0.18);
-        border: none;
-        transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+
+.app-brand-mark {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, #bfdbfe, #3b82f6 55%, #1d4ed8 100%);
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.08), 0 0 24px rgba(59, 130, 246, 0.28);
     flex: 0 0 auto;
 }
-        background: linear-gradient(90deg, var(--color-primary-hover) 60%, var(--color-secondary) 100%);
-        color: #fff !important;
-        box-shadow: 0 8px 32px 0 rgba(59,130,246,0.22);
+
+.app-brand-copy {
+    display: flex;
     flex-direction: column;
     gap: 0.18rem;
 }
-        align-items: center;
-        gap: 0.22rem;
+
+.app-brand-kicker {
     font-size: 0.58rem;
     font-weight: 800;
     letter-spacing: 0.22em;
     line-height: 1;
-        gap: 0.22rem;
-        align-items: center;
+    color: rgba(148, 163, 184, 0.78);
+}
 
 .app-brand-logo {
     width: auto;
-        background: var(--color-bg-general);
-        min-height: 100vh;
-        color: var(--color-text-primary);
-        font-family: var(--font-body);
+    height: 62px;
+    max-width: 420px;
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
 }
 
-        background: rgba(30,41,59,0.85);
-        border: 1.5px solid var(--color-border);
-        box-shadow: 0 8px 32px rgba(30,64,175,0.10);
-        backdrop-filter: blur(2px);
+.app-brand-text {
+    line-height: 1;
+    font-size: 1.24rem;
     font-weight: 800;
     color: #fff;
     white-space: nowrap;
