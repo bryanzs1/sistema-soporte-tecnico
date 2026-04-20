@@ -27,19 +27,19 @@ def pricing():
     return render_template(
         'pricing.html',
         monthly_price_display=os.environ.get(
-            'STRIPE_MONTHLY_PRICE_DISPLAY',
+            'PAYPAL_MONTHLY_PRICE_DISPLAY',
             '$29' if lang == 'en' else 'US$29',
         ).strip(),
         annual_price_display=os.environ.get(
-            'STRIPE_ANNUAL_PRICE_DISPLAY',
+            'PAYPAL_ANNUAL_PRICE_DISPLAY',
             '$290' if lang == 'en' else 'US$290',
         ).strip(),
         annual_offer_text=os.environ.get(
-            'STRIPE_ANNUAL_OFFER_TEXT',
+            'PAYPAL_ANNUAL_OFFER_TEXT',
             'Save 2 months' if lang == 'en' else 'Ahorra 2 meses',
         ).strip(),
-        has_monthly_price=bool(os.environ.get('STRIPE_MONTHLY_PRICE_ID', '').strip()),
-        has_annual_price=bool(os.environ.get('STRIPE_ANNUAL_PRICE_ID', '').strip()),
+        has_monthly_price=bool(os.environ.get('PAYPAL_MONTHLY_PLAN_ID', '').strip()),
+        has_annual_price=bool(os.environ.get('PAYPAL_ANNUAL_PLAN_ID', '').strip()),
     )
 
 

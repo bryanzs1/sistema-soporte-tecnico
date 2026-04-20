@@ -14,7 +14,7 @@
       </p>
       <div class="pricing-badges">
         <span>{{ 'Soporte multiempresa' if is_es else 'Multi-company support' }}</span>
-        <span>{{ 'Checkout seguro con Stripe' if is_es else 'Secure Stripe checkout' }}</span>
+        <span>{{ 'Checkout seguro con PayPal' if is_es else 'Secure PayPal checkout' }}</span>
         <span>{{ 'Activación rápida' if is_es else 'Fast activation' }}</span>
       </div>
       <div class="pricing-metrics">
@@ -39,7 +39,7 @@
         <p>{{ 'La opción más sólida para equipos que quieren estabilidad operativa y mejor retorno anual.' if is_es else 'The strongest option for teams that want operational stability and better annual return.' }}</p>
         <ul class="pricing-panel-points">
           <li>{{ 'Implementación rápida para tu empresa' if is_es else 'Fast rollout for your company' }}</li>
-          <li>{{ 'Facturación segura con Stripe' if is_es else 'Secure billing with Stripe' }}</li>
+          <li>{{ 'Facturación segura con PayPal' if is_es else 'Secure billing with PayPal' }}</li>
           <li>{{ 'Control claro del costo anual' if is_es else 'Clear annual cost control' }}</li>
         </ul>
       </div>
@@ -80,7 +80,7 @@
         <div class="plan-actions">
           {% if current_user.is_authenticated and current_user.is_admin() and has_monthly_price %}
           <button type="button" class="btn btn-primary btn-lg pricing-checkout-btn" data-plan="monthly">
-            {{ 'Suscribirme mensual' if is_es else 'Subscribe monthly' }}
+            {{ 'Suscribirme con PayPal' if is_es else 'Subscribe with PayPal' }}
           </button>
           {% elif not has_monthly_price %}
           <button type="button" class="btn btn-lg pricing-disabled-btn" disabled>
@@ -120,7 +120,7 @@
         <div class="plan-actions">
           {% if current_user.is_authenticated and current_user.is_admin() and has_annual_price %}
           <button type="button" class="btn btn-warning btn-lg pricing-checkout-btn" data-plan="annual">
-            {{ 'Elegir plan anual' if is_es else 'Choose annual plan' }}
+            {{ 'Elegir anual con PayPal' if is_es else 'Choose annual with PayPal' }}
           </button>
           {% elif not has_annual_price %}
           <button type="button" class="btn btn-lg pricing-disabled-btn" disabled>
@@ -168,7 +168,7 @@
     {% if current_user.is_authenticated and current_user.is_admin() and (not has_monthly_price or not has_annual_price) %}
     <div class="pricing-footnote">
       <p>
-        {{ 'Aviso para administrador: falta configurar uno o más Price ID de Stripe para habilitar todos los planes en esta página.' if is_es else 'Admin notice: one or more Stripe Price IDs are still missing, so not every plan is enabled on this page.' }}
+        {{ 'Aviso para administrador: falta configurar uno o más Plan ID de PayPal para habilitar todos los planes en esta página.' if is_es else 'Admin notice: one or more PayPal Plan IDs are still missing, so not every plan is enabled on this page.' }}
       </p>
     </div>
     {% endif %}
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         alert(data.error || {{ '"No se pudo iniciar el checkout."' if is_es else '"Unable to start checkout."' }});
       } catch (error) {
-        alert({{ '"Ocurrió un error al conectar con Stripe."' if is_es else '"An error occurred while connecting to Stripe."' }});
+        alert({{ '"Ocurrió un error al conectar con PayPal."' if is_es else '"An error occurred while connecting to PayPal."' }});
       } finally {
         button.disabled = false;
         button.textContent = originalText;

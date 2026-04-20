@@ -1296,7 +1296,7 @@ def settings_billing():
 
     billing_feedback = request.args.get('billing', '').strip().lower()
     if billing_feedback == 'success':
-        flash(_t('El proceso de pago se inició correctamente. Stripe confirmará el estado en unos segundos.'), 'success')
+        flash(_t('El proceso de suscripción se inició correctamente. PayPal confirmará el estado en unos segundos.'), 'success')
     elif billing_feedback == 'canceled':
         flash(_t('El proceso de pago fue cancelado.'), 'warning')
 
@@ -1305,8 +1305,8 @@ def settings_billing():
         'admin/settings/billing.html',
         company=company,
         billing_events=billing_events,
-        stripe_configured=bool(os.environ.get('STRIPE_API_KEY', '').strip()),
-        default_price_id=(os.environ.get('STRIPE_DEFAULT_PRICE_ID', '') or '').strip(),
+        paypal_configured=bool(os.environ.get('PAYPAL_CLIENT_ID', '').strip() and os.environ.get('PAYPAL_CLIENT_SECRET', '').strip()),
+        default_plan_id=(os.environ.get('PAYPAL_DEFAULT_PLAN_ID', '') or '').strip(),
     )
 
 
@@ -1319,14 +1319,14 @@ def settings_billing_price_update():
         flash(_t('Tu usuario no tiene una empresa asignada.'), 'warning')
         return redirect(url_for('admin.settings_companies'))
 
-    price_id = (request.form.get('stripe_price_id') or '').strip()
-    company.stripe_price_id = price_id or None
+    plan_id = (request.form.get('paypal_plan_id') or '').strip()
+    company.stripe_price_id = plan_id or None
     db.session.commit()
 
     if company.stripe_price_id:
-        flash(_t('Price ID de Stripe actualizado correctamente.'), 'success')
+        flash(_t('Plan ID de PayPal actualizado correctamente.'), 'success')
     else:
-        flash(_t('Price ID de Stripe eliminado. Se usará STRIPE_DEFAULT_PRICE_ID si está configurado.'), 'info')
+        flash(_t('Plan ID de PayPal eliminado. Se usará PAYPAL_DEFAULT_PLAN_ID si está configurado.'), 'info')
 
     return redirect(url_for('admin.settings_billing'))
 

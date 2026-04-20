@@ -6,9 +6,9 @@
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <h2 class="h4 mb-3"><i class="bi bi-credit-card me-2"></i>{{ _('Facturación') }}</h2>
-        {% if not stripe_configured %}
+        {% if not paypal_configured %}
         <div class="alert alert-warning">
-            {{ _('Stripe aún no está configurado en el servidor. Define STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET y STRIPE_DEFAULT_PRICE_ID para activar los cobros.') }}
+            {{ _('PayPal aún no está configurado en el servidor. Define PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID y tus PLAN ID para activar los cobros.') }}
         </div>
         {% endif %}
 
@@ -21,19 +21,19 @@
             </div>
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light-subtle">
-                    <div class="small text-muted mb-1">{{ _('Precio Stripe actual') }}</div>
-                    <div class="fw-semibold">{{ company.stripe_price_id or default_price_id or _('No configurado') }}</div>
+                    <div class="small text-muted mb-1">{{ _('Plan ID actual') }}</div>
+                    <div class="fw-semibold">{{ company.stripe_price_id or default_plan_id or _('No configurado') }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light-subtle">
-                    <div class="small text-muted mb-1">{{ _('Cliente Stripe') }}</div>
+                    <div class="small text-muted mb-1">{{ _('Referencia de suscriptor PayPal') }}</div>
                     <div class="fw-semibold">{{ company.stripe_customer_id or _('Pendiente') }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light-subtle">
-                    <div class="small text-muted mb-1">{{ _('Suscripción Stripe') }}</div>
+                    <div class="small text-muted mb-1">{{ _('Suscripción PayPal') }}</div>
                     <div class="fw-semibold">{{ company.stripe_subscription_id or _('Pendiente') }}</div>
                 </div>
             </div>
@@ -53,51 +53,51 @@
 
         {% if company.billing_status == 'past_due' %}
         <div class="alert alert-warning">
-            {{ _('Stripe marcó esta suscripción con pago vencido. Revisa el portal de facturación para actualizar el método de pago.') }}
+            {{ _('PayPal marcó esta suscripción con incidencias de pago. Revisa la administración de la suscripción para actualizar el método de pago o reactivar el cobro.') }}
         </div>
         {% elif company.billing_status == 'canceled' %}
         <div class="alert alert-danger">
-            {{ _('La suscripción fue cancelada. Para reactivar el acceso, inicia un nuevo checkout o reactiva la suscripción desde Stripe.') }}
+            {{ _('La suscripción fue cancelada. Para reactivar el acceso, inicia un nuevo checkout o reactiva la suscripción desde PayPal.') }}
         </div>
         {% endif %}
 
         {% if company.stripe_last_invoice_url %}
         <div class="mb-3">
             <a class="btn btn-link px-0" href="{{ company.stripe_last_invoice_url }}" target="_blank" rel="noopener">
-                {{ _('Ver última factura en Stripe') }}
+                {{ _('Administrar suscripción en PayPal') }}
             </a>
         </div>
         {% endif %}
 
         <div class="card border-0 bg-body-tertiary mb-4">
             <div class="card-body">
-                <h5 class="h6 mb-3">{{ _('Configuración del Price ID') }}</h5>
+                <h5 class="h6 mb-3">{{ _('Configuración del Plan ID') }}</h5>
                 <form method="post" action="{{ url_for('admin.settings_billing_price_update') }}" class="row g-3 align-items-end">
                     {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
                     <div class="col-md-9">
-                        <label for="stripe_price_id" class="form-label">{{ _('Price ID de Stripe para esta empresa') }}</label>
+                        <label for="paypal_plan_id" class="form-label">{{ _('Plan ID de PayPal para esta empresa') }}</label>
                         <input
                             type="text"
                             class="form-control"
-                            id="stripe_price_id"
-                            name="stripe_price_id"
+                            id="paypal_plan_id"
+                            name="paypal_plan_id"
                             value="{{ company.stripe_price_id or '' }}"
-                            placeholder="price_..."
+                            placeholder="P-..."
                         >
                         <div class="form-text">
-                            {{ _('Si lo dejas vacío, se utilizará STRIPE_DEFAULT_PRICE_ID desde Render.') }}
+                            {{ _('Si lo dejas vacío, se utilizará PAYPAL_DEFAULT_PLAN_ID desde Render.') }}
                         </div>
                     </div>
                     <div class="col-md-3 d-grid">
-                        <button type="submit" class="btn btn-primary">{{ _('Guardar Price ID') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ _('Guardar Plan ID') }}</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <div class="mb-3">
-            <button id="btn-pay" class="btn btn-success me-2" {% if not stripe_configured %}disabled{% endif %}>{{ _('Ir a Checkout') }}</button>
-            <button id="btn-portal" class="btn btn-outline-primary" {% if not stripe_configured %}disabled{% endif %}>{{ _('Abrir portal de cliente') }}</button>
+            <button id="btn-pay" class="btn btn-success me-2" {% if not paypal_configured %}disabled{% endif %}>{{ _('Ir a PayPal Checkout') }}</button>
+            <button id="btn-portal" class="btn btn-outline-primary" {% if not paypal_configured %}disabled{% endif %}>{{ _('Administrar suscripción') }}</button>
         </div>
 
         <h5 class="mt-4">{{ _('Historial de eventos de facturación') }}</h5>
@@ -145,7 +145,7 @@ document.getElementById('btn-portal').onclick = async function() {
     if (data.portal_url) {
         window.location = data.portal_url;
     } else {
-        alert(data.error || "Error al abrir el portal de Stripe");
+        alert(data.error || "Error al abrir la gestión de suscripción en PayPal");
     }
 };
 </script>

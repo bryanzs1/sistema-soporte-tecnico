@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime, timezone
 
-import stripe
+import requests
 from flask import Blueprint, current_app, jsonify, request, url_for
 from flask_login import current_user, login_required
 
@@ -11,17 +11,52 @@ from app.models import BillingEvent, Company
 
 bp = Blueprint('billing', __name__)
 
-stripe.api_key = os.environ.get('STRIPE_API_KEY', '').strip()
 
 def utcnow():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
-def _stripe_is_configured():
-    api_key = os.environ.get('STRIPE_API_KEY', '').strip()
-    if not api_key:
-        return False
-    stripe.api_key = api_key
-    return True
+
+def _parse_paypal_datetime(value):
+    if not value:
+        return None
+    normalized = value.replace('Z', '+00:00')
+    try:
+        return datetime.fromisoformat(normalized).astimezone(timezone.utc).replace(tzinfo=None)
+    except ValueError:
+        return None
+
+
+def _paypal_api_base_url():
+    custom_base = os.environ.get('PAYPAL_API_BASE', '').strip()
+    if custom_base:
+        return custom_base.rstrip('/')
+
+    mode = os.environ.get('PAYPAL_MODE', 'sandbox').strip().lower()
+    if mode == 'live':
+        return 'https://api-m.paypal.com'
+    return 'https://api-m.sandbox.paypal.com'
+
+
+def _paypal_web_base_url():
+    mode = os.environ.get('PAYPAL_MODE', 'sandbox').strip().lower()
+    if mode == 'live':
+        return 'https://www.paypal.com'
+    return 'https://www.sandbox.paypal.com'
+
+
+def _paypal_is_configured():
+    client_id = os.environ.get('PAYPAL_CLIENT_ID', '').strip()
+    client_secret = os.environ.get('PAYPAL_CLIENT_SECRET', '').strip()
+    return bool(client_id and client_secret)
+
+
+def _paypal_client_id():
+    return os.environ.get('PAYPAL_CLIENT_ID', '').strip()
+
+
+def _paypal_client_secret():
+    return os.environ.get('PAYPAL_CLIENT_SECRET', '').strip()
+
 
 def _admin_company_required():
     if not current_user.is_authenticated:
@@ -30,22 +65,10 @@ def _admin_company_required():
         return jsonify({'error': 'Se requieren permisos de administrador.'}), 403, None
     if not current_user.company_id:
         return jsonify({'error': 'Tu usuario no tiene empresa asignada.'}), 400, None
-    company = Company.query.get(current_user.company_id)
+    company = db.session.get(Company, current_user.company_id)
     if not company:
         return jsonify({'error': 'Empresa no encontrada.'}), 404, None
     return None, None, company
-
-def _get_or_create_customer(company):
-    if company.stripe_customer_id:
-        return company.stripe_customer_id
-
-    customer = stripe.Customer.create(
-        name=company.name,
-        metadata={'company_id': str(company.id)},
-    )
-    company.stripe_customer_id = customer.id
-    db.session.commit()
-    return customer.id
 
 
 def _get_current_company():
@@ -54,18 +77,79 @@ def _get_current_company():
     return db.session.get(Company, current_user.company_id)
 
 
-def _resolve_checkout_price_id(company, requested_plan=None):
+def _resolve_paypal_plan_id(company, requested_plan=None):
     requested_plan = (requested_plan or '').strip().lower()
 
     if requested_plan == 'monthly':
-        return os.environ.get('STRIPE_MONTHLY_PRICE_ID', '').strip()
+        return os.environ.get('PAYPAL_MONTHLY_PLAN_ID', '').strip()
     if requested_plan == 'annual':
-        return os.environ.get('STRIPE_ANNUAL_PRICE_ID', '').strip()
+        return os.environ.get('PAYPAL_ANNUAL_PLAN_ID', '').strip()
 
-    return (company.stripe_price_id or os.environ.get('STRIPE_DEFAULT_PRICE_ID', '')).strip()
+    return (company.stripe_price_id or os.environ.get('PAYPAL_DEFAULT_PLAN_ID', '')).strip()
+
+
+def _paypal_manage_subscription_url(subscription_id):
+    if not subscription_id:
+        return None
+    return f"{_paypal_web_base_url()}/myaccount/autopay/connect/{subscription_id}"
+
+
+def _get_paypal_access_token():
+    if not _paypal_is_configured():
+        raise RuntimeError('PayPal no está configurado en el servidor.')
+
+    response = requests.post(
+        f"{_paypal_api_base_url()}/v1/oauth2/token",
+        auth=(_paypal_client_id(), _paypal_client_secret()),
+        data={'grant_type': 'client_credentials'},
+        headers={'Accept': 'application/json', 'Accept-Language': 'en_US'},
+        timeout=30,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    access_token = payload.get('access_token', '').strip()
+    if not access_token:
+        raise RuntimeError('PayPal no devolvió un access token válido.')
+    return access_token
+
+
+def _paypal_request(method, path, *, token=None, json_body=None, expected_statuses=None):
+    expected_statuses = expected_statuses or {200}
+    request_headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+    if token:
+        request_headers['Authorization'] = f'Bearer {token}'
+
+    response = requests.request(
+        method,
+        f"{_paypal_api_base_url()}{path}",
+        headers=request_headers,
+        json=json_body,
+        timeout=30,
+    )
+
+    payload = {}
+    if response.text:
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {'raw': response.text}
+
+    if response.status_code not in expected_statuses:
+        message = payload.get('message') or payload.get('error_description') or payload.get('raw') or 'PayPal request failed.'
+        raise RuntimeError(message)
+
+    return payload, response
+
+
+def _extract_paypal_link(payload, rel):
+    for link in payload.get('links', []) or []:
+        if link.get('rel') == rel:
+            return link.get('href')
+    return None
+
 
 def _record_billing_event(company_id, event):
-    event_id = event.get('id')
+    event_id = event.get('id') or event.get('resource', {}).get('id')
     if not event_id:
         return None
 
@@ -73,14 +157,10 @@ def _record_billing_event(company_id, event):
     if existing:
         return existing
 
-    created_unix = event.get('created')
-    created_at = utcnow()
-    if created_unix:
-        created_at = datetime.fromtimestamp(created_unix, tz=timezone.utc).replace(tzinfo=None)
-
+    created_at = _parse_paypal_datetime(event.get('create_time')) or utcnow()
     billing_event = BillingEvent(
         company_id=company_id,
-        event_type=event.get('type', 'unknown'),
+        event_type=event.get('event_type', 'unknown'),
         event_id=event_id,
         created_at=created_at,
         data=json.dumps(event),
@@ -88,126 +168,111 @@ def _record_billing_event(company_id, event):
     db.session.add(billing_event)
     return billing_event
 
-def _update_company_from_subscription(company, subscription):
+
+def _update_company_from_paypal_subscription(company, subscription):
     if not subscription:
         return
-    company.stripe_subscription_id = subscription.get('id')
-    company.stripe_price_id = (
-        subscription.get('items', {})
-        .get('data', [{}])[0]
-        .get('price', {})
-        .get('id')
+
+    company.stripe_subscription_id = subscription.get('id') or company.stripe_subscription_id
+    company.stripe_price_id = subscription.get('plan_id') or company.stripe_price_id
+
+    subscriber = subscription.get('subscriber', {}) if isinstance(subscription, dict) else {}
+    payer_reference = subscriber.get('payer_id') or subscriber.get('email_address')
+    if payer_reference:
+        company.stripe_customer_id = payer_reference
+
+    billing_info = subscription.get('billing_info', {}) if isinstance(subscription, dict) else {}
+    next_billing_time = billing_info.get('next_billing_time')
+    if next_billing_time:
+        company.stripe_current_period_end = _parse_paypal_datetime(next_billing_time)
+
+    last_payment = billing_info.get('last_payment', {}) if isinstance(billing_info, dict) else {}
+    last_payment_time = last_payment.get('time')
+    if last_payment_time:
+        company.stripe_last_payment = _parse_paypal_datetime(last_payment_time)
+
+    paypal_status = (subscription.get('status') or '').upper()
+    status_map = {
+        'ACTIVE': 'active',
+        'APPROVAL_PENDING': 'inactive',
+        'APPROVED': 'inactive',
+        'SUSPENDED': 'past_due',
+        'CANCELLED': 'canceled',
+        'EXPIRED': 'canceled',
+    }
+    mapped_status = status_map.get(paypal_status)
+    if mapped_status:
+        company.billing_status = mapped_status
+        company.is_active = mapped_status == 'active'
+
+    company.stripe_cancel_at_period_end = paypal_status in {'CANCELLED', 'EXPIRED'}
+    company.stripe_last_invoice_url = _paypal_manage_subscription_url(company.stripe_subscription_id)
+
+
+def _verify_paypal_webhook(event):
+    webhook_id = os.environ.get('PAYPAL_WEBHOOK_ID', '').strip()
+    if not webhook_id:
+        return True
+
+    token = _get_paypal_access_token()
+    payload = {
+        'auth_algo': request.headers.get('PAYPAL-AUTH-ALGO', ''),
+        'cert_url': request.headers.get('PAYPAL-CERT-URL', ''),
+        'transmission_id': request.headers.get('PAYPAL-TRANSMISSION-ID', ''),
+        'transmission_sig': request.headers.get('PAYPAL-TRANSMISSION-SIG', ''),
+        'transmission_time': request.headers.get('PAYPAL-TRANSMISSION-TIME', ''),
+        'webhook_id': webhook_id,
+        'webhook_event': event,
+    }
+
+    verification, _response = _paypal_request(
+        'POST',
+        '/v1/notifications/verify-webhook-signature',
+        token=token,
+        json_body=payload,
+        expected_statuses={200},
     )
-    period_end = subscription.get('current_period_end')
-    if period_end:
-        company.stripe_current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc).replace(tzinfo=None)
-    company.stripe_cancel_at_period_end = bool(subscription.get('cancel_at_period_end'))
+    return verification.get('verification_status') == 'SUCCESS'
 
-def create_customer_and_subscription(name, email, price_id, payment_method, customer_id=None, company=None):
-    try:
-        if not _stripe_is_configured():
-            return {
-                'success': False,
-                'error': 'Stripe no está configurado en el servidor.',
-            }
 
-        stripe_payment_method = stripe.PaymentMethod.retrieve(payment_method)
-        attached_customer_id = getattr(stripe_payment_method, 'customer', None)
-        payment_method_id = stripe_payment_method.id
+def _find_company_from_paypal_event(resource):
+    if not isinstance(resource, dict):
+        return None, None
 
-        company_customer_id = company.stripe_customer_id if company else None
+    company_id = resource.get('custom_id')
+    subscription_id = resource.get('id') or resource.get('billing_agreement_id')
 
-        if company_customer_id and attached_customer_id and company_customer_id != attached_customer_id:
-            return {
-                'success': False,
-                'error': 'El método de pago pertenece a un customer distinto al registrado para esta empresa.',
-            }
+    company = None
+    if company_id:
+        try:
+            company = db.session.get(Company, int(company_id))
+        except (TypeError, ValueError):
+            company = None
 
-        resolved_customer_id = company_customer_id or attached_customer_id or customer_id
+    if not company and subscription_id:
+        company = Company.query.filter_by(stripe_subscription_id=subscription_id).first()
 
-        if resolved_customer_id:
-            customer = stripe.Customer.modify(
-                resolved_customer_id,
-                name=name,
-                email=email,
-                description='Cliente de membresía',
-            )
-        else:
-            customer = stripe.Customer.create(
-                name=name,
-                email=email,
-                description='Cliente de membresía',
-            )
+    return company, subscription_id
 
-        if company and company.stripe_customer_id != customer.id:
-            company.stripe_customer_id = customer.id
-            db.session.commit()
 
-        if attached_customer_id and attached_customer_id != customer.id:
-            return {
-                'success': False,
-                'error': 'El método de pago ya está asociado a otro cliente en Stripe.',
-            }
+def _fetch_paypal_subscription(subscription_id):
+    token = _get_paypal_access_token()
+    subscription, _response = _paypal_request(
+        'GET',
+        f'/v1/billing/subscriptions/{subscription_id}',
+        token=token,
+        expected_statuses={200},
+    )
+    return subscription
 
-        if not attached_customer_id:
-            stripe_payment_method = stripe.PaymentMethod.attach(payment_method, customer=customer.id)
-            payment_method_id = stripe_payment_method.id
-
-        stripe.Customer.modify(
-            customer.id,
-            invoice_settings={'default_payment_method': payment_method_id},
-        )
-
-        subscription = stripe.Subscription.create(
-            customer=customer.id,
-            items=[{'price': price_id}],
-            default_payment_method=payment_method_id,
-        )
-
-        return {
-            'success': True,
-            'customer_id': customer.id,
-            'subscription_id': subscription.id,
-        }
-    except stripe.error.StripeError as e:
-        return {
-            'success': False,
-            'error': str(e),
-        }
 
 @bp.route('/billing/create-membership', methods=['POST'])
 def create_membership():
-    data = request.get_json(silent=True) or {}
-    company = _get_current_company()
+    return jsonify({
+        'success': False,
+        'error': 'Este flujo directo con método de pago ya no está disponible. Usa PayPal Checkout desde la página de precios.',
+    }), 410
 
-    name = data.get('name')
-    email = data.get('email')
-    price_id = data.get('price_id')
-    payment_method = data.get('payment_method')
-    customer_id = data.get('customer_id')
-
-    print(f"[Stripe] payment_method recibido: {payment_method}")
-    print(f"[Stripe] customer_id recibido: {customer_id}")
-
-    if not name or not email or not price_id or not payment_method:
-        return jsonify({'success': False, 'error': 'Faltan datos'}), 400
-
-    result = create_customer_and_subscription(
-        name,
-        email,
-        price_id,
-        payment_method,
-        customer_id=customer_id,
-        company=company,
-    )
-    if result['success']:
-        return jsonify({
-            'success': True,
-            'customer_id': result['customer_id'],
-            'subscription_id': result['subscription_id'],
-        }), 201
-
-    return jsonify({'success': False, 'error': result['error']}), 400
 
 @bp.route('/billing/create-checkout-session', methods=['POST'])
 @login_required
@@ -216,31 +281,49 @@ def create_checkout_session():
     if error_response:
         return error_response, status_code
 
-    if not _stripe_is_configured():
-        return jsonify({'error': 'Stripe no está configurado en el servidor.'}), 500
+    if not _paypal_is_configured():
+        return jsonify({'error': 'PayPal no está configurado en el servidor.'}), 500
 
     data = request.get_json(silent=True) or {}
     requested_plan = data.get('plan')
-
-    price_id = _resolve_checkout_price_id(company, requested_plan=requested_plan)
-    if not price_id:
-        return jsonify({'error': 'No hay un precio Stripe configurado para esta selección.'}), 400
+    plan_id = _resolve_paypal_plan_id(company, requested_plan=requested_plan)
+    if not plan_id:
+        return jsonify({'error': 'No hay un plan de PayPal configurado para esta selección.'}), 400
 
     try:
-        customer_id = _get_or_create_customer(company)
-        checkout_session = stripe.checkout.Session.create(
-            customer=customer_id,
-            payment_method_types=['card'],
-            line_items=[{'price': price_id, 'quantity': 1}],
-            mode='subscription',
-            metadata={'company_id': str(company.id)},
-            success_url=url_for('admin.settings_billing', _external=True) + '?billing=success',
-            cancel_url=url_for('admin.settings_billing', _external=True) + '?billing=canceled',
+        token = _get_paypal_access_token()
+        payload = {
+            'plan_id': plan_id,
+            'custom_id': str(company.id),
+            'application_context': {
+                'brand_name': 'Soporte IT Pro',
+                'user_action': 'SUBSCRIBE_NOW',
+                'return_url': url_for('admin.settings_billing', _external=True) + '?billing=success',
+                'cancel_url': url_for('admin.settings_billing', _external=True) + '?billing=canceled',
+            },
+        }
+
+        response_payload, _response = _paypal_request(
+            'POST',
+            '/v1/billing/subscriptions',
+            token=token,
+            json_body=payload,
+            expected_statuses={200, 201},
         )
-        return jsonify({'checkout_url': checkout_session.url})
+
+        approval_url = _extract_paypal_link(response_payload, 'approve')
+        if not approval_url:
+            return jsonify({'error': 'PayPal no devolvió un enlace de aprobación para la suscripción.'}), 502
+
+        company.stripe_subscription_id = response_payload.get('id') or company.stripe_subscription_id
+        company.stripe_price_id = plan_id
+        company.stripe_last_invoice_url = _paypal_manage_subscription_url(company.stripe_subscription_id)
+        db.session.commit()
+
+        return jsonify({'checkout_url': approval_url})
     except Exception as exc:
-        current_app.logger.error('Stripe checkout session error: %s', exc)
-        return jsonify({'error': 'No se pudo iniciar la sesión de pago.'}), 500
+        current_app.logger.error('PayPal subscription creation error: %s', exc)
+        return jsonify({'error': 'No se pudo iniciar la suscripción en PayPal.'}), 500
 
 
 @bp.route('/billing/create-portal-session', methods=['POST'])
@@ -250,96 +333,86 @@ def create_portal_session():
     if error_response:
         return error_response, status_code
 
-    if not _stripe_is_configured():
-        return jsonify({'error': 'Stripe no está configurado en el servidor.'}), 500
+    if not _paypal_is_configured():
+        return jsonify({'error': 'PayPal no está configurado en el servidor.'}), 500
 
-    if not company.stripe_customer_id:
-        return jsonify({'error': 'La empresa aún no tiene cliente Stripe.'}), 400
+    if not company.stripe_subscription_id:
+        return jsonify({'error': 'La empresa aún no tiene una suscripción de PayPal activa o pendiente.'}), 400
 
+    return jsonify({'portal_url': _paypal_manage_subscription_url(company.stripe_subscription_id)})
+
+
+@bp.route('/billing/webhook/paypal', methods=['POST'])
+def paypal_webhook():
+    if not _paypal_is_configured():
+        return 'PayPal not configured', 503
+
+    event = request.get_json(silent=True) or {}
     try:
-        portal_session = stripe.billing_portal.Session.create(
-            customer=company.stripe_customer_id,
-            return_url=url_for('admin.settings_billing', _external=True),
-        )
-        return jsonify({'portal_url': portal_session.url})
+        if not _verify_paypal_webhook(event):
+            current_app.logger.warning('Invalid PayPal webhook signature.')
+            return 'Invalid webhook', 400
     except Exception as exc:
-        current_app.logger.error('Stripe portal session error: %s', exc)
-        return jsonify({'error': 'No se pudo abrir el portal de facturación.'}), 500
-
-
-@bp.route('/billing/webhook/stripe', methods=['POST'])
-def stripe_webhook():
-    if not _stripe_is_configured():
-        return 'Stripe not configured', 503
-
-    payload = request.data
-    signature = request.headers.get('Stripe-Signature', '')
-    webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET', '').strip()
-
-    try:
-        if webhook_secret:
-            event = stripe.Webhook.construct_event(payload, signature, webhook_secret)
-        else:
-            event = json.loads(payload.decode('utf-8'))
-    except Exception as exc:
-        current_app.logger.warning('Invalid Stripe webhook: %s', exc)
+        current_app.logger.warning('PayPal webhook verification error: %s', exc)
         return 'Invalid webhook', 400
 
-    event_type = event.get('type')
-    event_object = event.get('data', {}).get('object', {})
-    metadata = event_object.get('metadata', {}) if isinstance(event_object, dict) else {}
-
-    company = None
-    company_id = metadata.get('company_id')
-    customer_id = event_object.get('customer') if isinstance(event_object, dict) else None
-
-    if company_id:
-        company = Company.query.get(int(company_id))
-    if not company and customer_id:
-        company = Company.query.filter_by(stripe_customer_id=customer_id).first()
+    event_type = event.get('event_type', '')
+    resource = event.get('resource', {}) if isinstance(event.get('resource', {}), dict) else {}
+    company, subscription_id = _find_company_from_paypal_event(resource)
 
     if not company:
-        current_app.logger.warning('Stripe webhook without matching company: %s', event_type)
+        current_app.logger.warning('PayPal webhook without matching company: %s', event_type)
         return '', 200
 
     _record_billing_event(company.id, event)
 
-    if customer_id and not company.stripe_customer_id:
-        company.stripe_customer_id = customer_id
+    try:
+        if event_type in {
+            'BILLING.SUBSCRIPTION.CREATED',
+            'BILLING.SUBSCRIPTION.ACTIVATED',
+            'BILLING.SUBSCRIPTION.UPDATED',
+            'BILLING.SUBSCRIPTION.RE-ACTIVATED',
+            'BILLING.SUBSCRIPTION.SUSPENDED',
+            'BILLING.SUBSCRIPTION.CANCELLED',
+            'BILLING.SUBSCRIPTION.EXPIRED',
+        }:
+            if subscription_id:
+                try:
+                    subscription = _fetch_paypal_subscription(subscription_id)
+                except Exception as exc:
+                    current_app.logger.warning('Unable to retrieve PayPal subscription %s: %s', subscription_id, exc)
+                    subscription = resource
+            else:
+                subscription = resource
+            _update_company_from_paypal_subscription(company, subscription)
 
-    if event_type == 'checkout.session.completed':
-        subscription_id = event_object.get('subscription')
-        company.billing_status = 'active'
-        company.is_active = True
-        if subscription_id:
-            company.stripe_subscription_id = subscription_id
-            try:
-                subscription = stripe.Subscription.retrieve(subscription_id)
-                _update_company_from_subscription(company, subscription)
-            except Exception as exc:
-                current_app.logger.warning('Unable to retrieve Stripe subscription %s: %s', subscription_id, exc)
+        elif event_type == 'PAYMENT.SALE.COMPLETED':
+            company.billing_status = 'active'
+            company.is_active = True
+            if subscription_id and not company.stripe_subscription_id:
+                company.stripe_subscription_id = subscription_id
+            company.stripe_last_invoice_url = _paypal_manage_subscription_url(company.stripe_subscription_id or subscription_id)
+            payment_time = resource.get('create_time') or event.get('create_time')
+            parsed_payment_time = _parse_paypal_datetime(payment_time)
+            if parsed_payment_time:
+                company.stripe_last_payment = parsed_payment_time
 
-    elif event_type == 'customer.subscription.updated':
-        _update_company_from_subscription(company, event_object)
-        company.billing_status = event_object.get('status') or company.billing_status or 'active'
+        elif event_type in {'BILLING.SUBSCRIPTION.PAYMENT.FAILED', 'PAYMENT.SALE.REVERSED', 'PAYMENT.SALE.REFUNDED'}:
+            company.billing_status = 'past_due'
+            company.is_active = False
+            if subscription_id and not company.stripe_subscription_id:
+                company.stripe_subscription_id = subscription_id
+            company.stripe_last_invoice_url = _paypal_manage_subscription_url(company.stripe_subscription_id or subscription_id)
 
-    elif event_type == 'customer.subscription.deleted':
-        _update_company_from_subscription(company, event_object)
-        company.billing_status = 'canceled'
-        company.is_active = False
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error('PayPal webhook processing error: %s', exc)
+        return 'Webhook processing error', 500
 
-    elif event_type == 'invoice.payment_succeeded':
-        company.billing_status = 'active'
-        company.is_active = True
-        company.stripe_last_payment = utcnow()
-        company.stripe_last_invoice_url = event_object.get('hosted_invoice_url') or company.stripe_last_invoice_url
-        subscription_id = event_object.get('subscription')
-        if subscription_id and not company.stripe_subscription_id:
-            company.stripe_subscription_id = subscription_id
-
-    elif event_type == 'invoice.payment_failed':
-        company.billing_status = 'past_due'
-        company.stripe_last_invoice_url = event_object.get('hosted_invoice_url') or company.stripe_last_invoice_url
-
-    db.session.commit()
     return '', 200
+
+
+@bp.route('/billing/webhook/stripe', methods=['POST'])
+def legacy_stripe_webhook():
+    return 'Stripe webhook disabled', 410

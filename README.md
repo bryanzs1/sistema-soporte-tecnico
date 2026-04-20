@@ -23,29 +23,20 @@
    export MAIL_SERVER=localhost
    export MAIL_PORT=25
    export MAIL_DEFAULT_SENDER="noreply@example.com"
-   export STRIPE_API_KEY="sk_test_..."
-   export STRIPE_DEFAULT_PRICE_ID="price_..."
+   export PAYPAL_CLIENT_ID="tu-client-id"
+   export PAYPAL_CLIENT_SECRET="tu-client-secret"
+   export PAYPAL_MODE="sandbox"
+   export PAYPAL_DEFAULT_PLAN_ID="P-..."
+   export PAYPAL_MONTHLY_PLAN_ID="P-..."
+   export PAYPAL_ANNUAL_PLAN_ID="P-..."
+   export PAYPAL_WEBHOOK_ID="tu-webhook-id"
    ```
 
-### Prueba rápida de membresías con Stripe
+### Suscripciones con PayPal
 
-Para probar el endpoint local de membresías sin editar el repositorio, usa variables de entorno:
+La integración actual usa PayPal Subscriptions. El flujo recomendado es entrar a `/pricing`, elegir mensual o anual y completar la aprobación en PayPal.
 
-```bash
-export TEST_MEMBERSHIP_PRICE_ID="price_..."
-export TEST_MEMBERSHIP_CUSTOMER_ID="cus_..."  # opcional
-export TEST_MEMBERSHIP_PAYMENT_METHOD="pm_card_visa"
-python test_membership.py
-```
-
-En PowerShell:
-
-```powershell
-$env:TEST_MEMBERSHIP_PRICE_ID="price_..."
-$env:TEST_MEMBERSHIP_CUSTOMER_ID="cus_..."
-$env:TEST_MEMBERSHIP_PAYMENT_METHOD="pm_card_visa"
-python test_membership.py
-```
+Configura en PayPal dos planes activos, uno mensual y otro anual, y copia sus `Plan ID` en Render usando `PAYPAL_MONTHLY_PLAN_ID` y `PAYPAL_ANNUAL_PLAN_ID`.
 
 
 
