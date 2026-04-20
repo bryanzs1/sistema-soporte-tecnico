@@ -1,90 +1,250 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('Support') }}{% endblock %}
-{% block body_class %}home-page{% endblock %}
+{% block body_class %}home-refresh-page{% endblock %}
 {% block content %}
-  <!-- Hero Section -->
-  <div class="hero-section">
-    <div class="hero-content">
-      <div class="floating-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-      </div>
-      
-      <div class="hero-text">
-        <h1 class="hero-title">{{ _('Welcome to the support system') }}</h1>
-        <p class="hero-subtitle">{{ _('Use navigation to sign in or create tickets.') }}</p>
-        
-        <div class="hero-buttons">
-          {% if current_user.is_authenticated %}
-            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-primary btn-lg btn-animated text-white">{{ _('View Tickets') }}</a>
-            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-outline-primary btn-lg btn-animated">{{ _('Create Ticket') }}</a>
-          {% else %}
-            <a href="#loginModal" class="btn btn-primary btn-lg btn-animated text-white"
-               data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
-          {% endif %}
-        </div>
+{% set is_es = current_lang == 'es' %}
+
+<style>
+  .home-refresh-page {
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 24%),
+      linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  }
+
+  .welcome-v2 {
+    color: #e2e8f0;
+    padding: 3.5rem 0 5rem;
+  }
+
+  .welcome-v2 .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .welcome-v2 .hero {
+    padding-top: 1rem;
+    text-align: center;
+  }
+
+  .welcome-v2 .hero h1 {
+    margin: 0 auto 1rem;
+    max-width: 900px;
+    color: #fff;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    line-height: 1.04;
+    font-family: var(--font-heading);
+  }
+
+  .welcome-v2 .hero .accent {
+    color: #3b82f6;
+  }
+
+  .welcome-v2 .hero p {
+    max-width: 760px;
+    margin: 0 auto 2.25rem;
+    color: #94a3b8;
+    font-size: 1.08rem;
+    line-height: 1.8;
+  }
+
+  .welcome-v2 .hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+  }
+
+  .welcome-v2 .hero-actions .btn {
+    min-width: 190px;
+    padding: 0.95rem 1.25rem;
+    border-radius: 16px;
+    font-weight: 800;
+  }
+
+  .welcome-v2 .hero-actions .btn-primary {
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.28);
+  }
+
+  .welcome-v2 .hero-actions .btn-outline-light {
+    border-color: rgba(148, 163, 184, 0.5);
+    color: #e2e8f0;
+  }
+
+  .welcome-v2 .feature-block {
+    margin-top: 4rem;
+  }
+
+  .welcome-v2 .feature-head {
+    text-align: left;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-v2 .feature-head h2 {
+    margin: 0 0 0.4rem;
+    color: #fff;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-family: var(--font-heading);
+  }
+
+  .welcome-v2 .feature-head p {
+    margin: 0;
+    color: #64748b;
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .welcome-v2 .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .welcome-v2 .feature-card {
+    padding: 2rem;
+    border-radius: 24px;
+    background: rgba(15, 23, 42, 0.58);
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    box-shadow: 0 18px 46px rgba(2, 6, 23, 0.28);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .welcome-v2 .feature-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(59, 130, 246, 0.45);
+  }
+
+  .welcome-v2 .icon-box {
+    width: 3.25rem;
+    height: 3.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+    background: rgba(37, 99, 235, 0.12);
+    color: #3b82f6;
+    font-size: 1.25rem;
+  }
+
+  .welcome-v2 .feature-card h3 {
+    margin: 0 0 0.75rem;
+    color: #fff;
+    font-size: 1.2rem;
+    font-family: var(--font-heading);
+  }
+
+  .welcome-v2 .feature-card p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .welcome-v2 .cta {
+    margin-top: 4rem;
+    padding: 2.25rem;
+    border-radius: 28px;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.24), rgba(15, 23, 42, 0.72));
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    text-align: center;
+    box-shadow: 0 22px 50px rgba(2, 6, 23, 0.26);
+  }
+
+  .welcome-v2 .cta h2 {
+    margin: 0 0 0.7rem;
+    color: #fff;
+    font-family: var(--font-heading);
+  }
+
+  .welcome-v2 .cta p {
+    max-width: 720px;
+    margin: 0 auto 1.4rem;
+    color: #bfdbfe;
+    line-height: 1.7;
+  }
+
+  .welcome-v2 .cta .btn {
+    min-width: 220px;
+    border-radius: 16px;
+    padding: 0.95rem 1.25rem;
+    font-weight: 800;
+  }
+
+  @media (max-width: 760px) {
+    .welcome-v2 .feature-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .welcome-v2 {
+      padding-top: 2rem;
+    }
+  }
+</style>
+
+<section class="welcome-v2">
+  <div class="shell">
+    <div class="hero">
+      <h1>
+        {{ 'Bienvenido al' if is_es else 'Welcome to the' }}
+        <span class="accent">{{ 'sistema de soporte' if is_es else 'support system' }}</span>
+      </h1>
+      <p>{{ _('Use navigation to sign in or create tickets.') }} {{ 'Diseñado para equipos que necesitan una operación clara, moderna y lista para trabajar en serio.' if is_es else 'Designed for teams that need a clear, modern operation ready for real work.' }}</p>
+
+      <div class="hero-actions">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-light">{{ _('View Tickets') }}</a>
+          <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary text-white">{{ _('Create Ticket') }}</a>
+        {% else %}
+          <a href="#loginModal" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
+          <a href="#loginModal" class="btn btn-primary text-white" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>
+        {% endif %}
       </div>
     </div>
-  </div>
 
-  <!-- Features Section -->
-  <div class="features-section">
-    <div class="container py-5">
-      <h2 class="section-title">{{ _('Key Features') }}</h2>
-      <p class="section-subtitle">{{ _('Everything you need for efficient support management') }}</p>
-      
-      <div class="features-grid">
-        <!-- Feature 1 -->
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-primary">
-            <i class="bi bi-robot"></i>
-          </div>
+    <div class="feature-block">
+      <div class="feature-head">
+        <h2>{{ _('Key Features') }}</h2>
+        <p>{{ _('Everything you need for efficient support management') }}</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="icon-box"><i class="bi bi-robot"></i></div>
           <h3>{{ _('AI Support Assistant') }}</h3>
           <p>{{ _('Floating assistant with AI to help resolve technical issues and guide users with actionable steps.') }}</p>
-        </div>
+        </article>
 
-        <!-- Feature 2 -->
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-danger">
-            <i class="bi bi-ticket-detailed"></i>
-          </div>
+        <article class="feature-card">
+          <div class="icon-box"><i class="bi bi-ticket-detailed"></i></div>
           <h3>{{ _('Guided Ticket Creation') }}</h3>
           <p>{{ _('Turn conversations into prefilled tickets with context, category suggestions, and faster triage.') }}</p>
-        </div>
+        </article>
 
-        <!-- Feature 3 -->
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-info">
-            <i class="bi bi-diagram-3"></i>
-          </div>
+        <article class="feature-card">
+          <div class="icon-box"><i class="bi bi-diagram-3"></i></div>
           <h3>{{ _('Automatic Classification') }}</h3>
           <p>{{ _('Detects categories like VPN, printers, email, accounts, and software to route requests correctly.') }}</p>
-        </div>
+        </article>
 
-        <!-- Feature 4 -->
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-success">
-            <i class="bi bi-graph-up-arrow"></i>
-          </div>
+        <article class="feature-card">
+          <div class="icon-box"><i class="bi bi-graph-up-arrow"></i></div>
           <h3>{{ _('Operational Dashboard') }}</h3>
           <p>{{ _('Track SLAs, ticket states, and support performance with real-time operational visibility.') }}</p>
-        </div>
+        </article>
       </div>
     </div>
-  </div>
 
-  <!-- CTA Section -->
-  <div class="cta-section">
-    <div class="container py-5 text-center">
+    <div class="cta">
       <h2>{{ _('Ready to get started?') }}</h2>
       <p>{{ _('Join the support system and manage tickets efficiently') }}</p>
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Go to Tickets') }}</a>
+        <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-light">{{ _('Go to Tickets') }}</a>
       {% else %}
-        <a href="#loginModal" class="btn btn-light btn-lg btn-animated mt-3"
-           data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In Now') }}</a>
+        <a href="#loginModal" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In Now') }}</a>
       {% endif %}
     </div>
   </div>
+</section>
 {% endblock %}
