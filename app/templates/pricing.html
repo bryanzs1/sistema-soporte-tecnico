@@ -5,6 +5,8 @@
 {% set is_es = current_lang == 'es' %}
 
 <section class="pricing-hero">
+  <div class="pricing-hero-orb pricing-hero-orb-left"></div>
+  <div class="pricing-hero-orb pricing-hero-orb-right"></div>
   <div class="container pricing-hero-inner">
     <div class="pricing-copy">
       <span class="pricing-eyebrow">{{ 'Planes diseñados para operación real' if is_es else 'Plans built for real operations' }}</span>
@@ -16,6 +18,29 @@
         <span>{{ 'Soporte multiempresa' if is_es else 'Multi-company support' }}</span>
         <span>{{ 'Checkout seguro con PayPal' if is_es else 'Secure PayPal checkout' }}</span>
         <span>{{ 'Activación rápida' if is_es else 'Fast activation' }}</span>
+      </div>
+      <div class="pricing-mini-grid">
+        <article class="pricing-mini-card">
+          <div class="pricing-mini-icon"><i class="bi bi-cpu"></i></div>
+          <div>
+            <strong>{{ 'Automatización con IA' if is_es else 'AI automation' }}</strong>
+            <span>{{ 'Respuestas más rápidas y clasificación inteligente de incidencias.' if is_es else 'Faster replies and intelligent incident classification.' }}</span>
+          </div>
+        </article>
+        <article class="pricing-mini-card">
+          <div class="pricing-mini-icon"><i class="bi bi-shield-check"></i></div>
+          <div>
+            <strong>{{ 'Operación segura' if is_es else 'Secure operations' }}</strong>
+            <span>{{ 'Control administrativo, trazabilidad y flujo de acceso empresarial.' if is_es else 'Administrative control, traceability, and enterprise-grade access flow.' }}</span>
+          </div>
+        </article>
+        <article class="pricing-mini-card">
+          <div class="pricing-mini-icon"><i class="bi bi-graph-up-arrow"></i></div>
+          <div>
+            <strong>{{ 'Visibilidad ejecutiva' if is_es else 'Executive visibility' }}</strong>
+            <span>{{ 'Indicadores claros para medir tiempos, carga operativa y servicio.' if is_es else 'Clear indicators to measure timing, workload, and service quality.' }}</span>
+          </div>
+        </article>
       </div>
       <div class="pricing-metrics">
         <div class="pricing-metric">
@@ -33,22 +58,132 @@
       </div>
     </div>
     <div class="pricing-hero-panel">
-      <div class="pricing-panel-card">
-        <div class="pricing-panel-label">{{ 'Oferta recomendada' if is_es else 'Recommended offer' }}</div>
-        <div class="pricing-panel-price">{{ annual_price_display }}</div>
-        <p>{{ 'La opción más sólida para equipos que quieren estabilidad operativa y mejor retorno anual.' if is_es else 'The strongest option for teams that want operational stability and better annual return.' }}</p>
-        <ul class="pricing-panel-points">
-          <li>{{ 'Implementación rápida para tu empresa' if is_es else 'Fast rollout for your company' }}</li>
-          <li>{{ 'Facturación segura con PayPal' if is_es else 'Secure billing with PayPal' }}</li>
-          <li>{{ 'Control claro del costo anual' if is_es else 'Clear annual cost control' }}</li>
-        </ul>
+      <div class="pricing-tech-stage" aria-hidden="true">
+        <div class="pricing-tech-chip pricing-tech-chip-top">
+          <i class="bi bi-lightning-charge"></i>
+          <span>{{ 'Mesa de ayuda de alto rendimiento' if is_es else 'High-performance help desk' }}</span>
+        </div>
+        <div class="pricing-tech-screen">
+          <div class="pricing-tech-topbar">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="pricing-tech-layout">
+            <div class="pricing-tech-sidebar">
+              <div class="pricing-tech-nav is-active"></div>
+              <div class="pricing-tech-nav"></div>
+              <div class="pricing-tech-nav"></div>
+              <div class="pricing-tech-nav short"></div>
+            </div>
+            <div class="pricing-tech-main">
+              <div class="pricing-tech-header">
+                <div>
+                  <strong>{{ 'Centro de operaciones' if is_es else 'Operations center' }}</strong>
+                  <span>{{ 'Tickets, SLA y rendimiento en una sola vista' if is_es else 'Tickets, SLA, and performance in one view' }}</span>
+                </div>
+                <div class="pricing-tech-status">
+                  <i class="bi bi-broadcast-pin"></i>
+                  <span>{{ 'En vivo' if is_es else 'Live' }}</span>
+                </div>
+              </div>
+              <div class="pricing-tech-analytics">
+                <div class="pricing-tech-chart-card">
+                  <div class="pricing-tech-card-label">{{ 'Carga operativa' if is_es else 'Operational load' }}</div>
+                  <div class="pricing-tech-bars">
+                    <span style="height: 38%"></span>
+                    <span style="height: 62%"></span>
+                    <span style="height: 52%"></span>
+                    <span style="height: 82%"></span>
+                    <span style="height: 70%"></span>
+                    <span style="height: 92%"></span>
+                  </div>
+                </div>
+                <div class="pricing-tech-stats">
+                  <div class="pricing-tech-stat-card accent-blue">
+                    <small>{{ 'Resolución' if is_es else 'Resolution' }}</small>
+                    <strong>94%</strong>
+                    <span>{{ 'Con trazabilidad completa' if is_es else 'With full traceability' }}</span>
+                  </div>
+                  <div class="pricing-tech-stat-card accent-gold">
+                    <small>{{ 'Renovación sugerida' if is_es else 'Recommended renewal' }}</small>
+                    <strong>{{ annual_price_display }}</strong>
+                    <span>{{ annual_offer_text }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pricing-tech-footer-grid">
+                <div class="pricing-tech-feed">
+                  <div class="pricing-tech-feed-item">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>{{ 'Flujo de tickets estabilizado' if is_es else 'Ticket flow stabilized' }}</span>
+                  </div>
+                  <div class="pricing-tech-feed-item">
+                    <i class="bi bi-paypal"></i>
+                    <span>{{ 'Cobro recurrente seguro con PayPal' if is_es else 'Secure recurring billing with PayPal' }}</span>
+                  </div>
+                  <div class="pricing-tech-feed-item">
+                    <i class="bi bi-robot"></i>
+                    <span>{{ 'IA asistiendo al equipo en tiempo real' if is_es else 'AI assisting the team in real time' }}</span>
+                  </div>
+                </div>
+                <div class="pricing-panel-card">
+                  <div class="pricing-panel-label">{{ 'Oferta recomendada' if is_es else 'Recommended offer' }}</div>
+                  <div class="pricing-panel-price">{{ annual_price_display }}</div>
+                  <p>{{ 'La opción más sólida para equipos que quieren estabilidad operativa y mejor retorno anual.' if is_es else 'The strongest option for teams that want operational stability and better annual return.' }}</p>
+                  <ul class="pricing-panel-points">
+                    <li>{{ 'Implementación rápida para tu empresa' if is_es else 'Fast rollout for your company' }}</li>
+                    <li>{{ 'Facturación segura con PayPal' if is_es else 'Secure billing with PayPal' }}</li>
+                    <li>{{ 'Control claro del costo anual' if is_es else 'Clear annual cost control' }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pricing-tech-chip pricing-tech-chip-bottom">
+          <i class="bi bi-shield-lock"></i>
+          <span>{{ 'Datos, seguridad y monitoreo en una misma capa' if is_es else 'Data, security, and monitoring in one layer' }}</span>
+        </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing-value-strip">
+  <div class="container">
+    <div class="pricing-value-grid">
+      <article class="pricing-value-card">
+        <i class="bi bi-diagram-3"></i>
+        <strong>{{ 'Operación conectada' if is_es else 'Connected operations' }}</strong>
+        <span>{{ 'Tickets, usuarios, roles y facturación bajo una sola plataforma.' if is_es else 'Tickets, users, roles, and billing under one platform.' }}</span>
+      </article>
+      <article class="pricing-value-card">
+        <i class="bi bi-bar-chart-line"></i>
+        <strong>{{ 'Métricas accionables' if is_es else 'Actionable metrics' }}</strong>
+        <span>{{ 'Decisiones más rápidas con paneles y seguimiento del servicio.' if is_es else 'Faster decisions with dashboards and service tracking.' }}</span>
+      </article>
+      <article class="pricing-value-card">
+        <i class="bi bi-cloud-check"></i>
+        <strong>{{ 'Despliegue profesional' if is_es else 'Professional deployment' }}</strong>
+        <span>{{ 'Acceso web, cobro recurrente y continuidad para tu empresa.' if is_es else 'Web access, recurring billing, and continuity for your company.' }}</span>
+      </article>
+      <article class="pricing-value-card">
+        <i class="bi bi-headset"></i>
+        <strong>{{ 'Experiencia moderna' if is_es else 'Modern experience' }}</strong>
+        <span>{{ 'Diseñado para equipos de soporte que operan con velocidad y orden.' if is_es else 'Designed for support teams operating with speed and order.' }}</span>
+      </article>
     </div>
   </div>
 </section>
 
 <section class="pricing-section">
   <div class="container">
+    <div class="pricing-section-heading">
+      <span>{{ 'Suscripción empresarial' if is_es else 'Enterprise subscription' }}</span>
+      <h2>{{ 'Elige el ritmo financiero que mejor encaja con tu operación' if is_es else 'Choose the billing rhythm that best fits your operation' }}</h2>
+      <p>{{ 'Misma plataforma avanzada, dos formas de contratación para adaptarse a tu presupuesto y horizonte de crecimiento.' if is_es else 'Same advanced platform, two contracting models tailored to your budget and growth horizon.' }}</p>
+    </div>
     <div class="billing-toggle-wrap" role="tablist" aria-label="{{ 'Periodo de facturación' if is_es else 'Billing period' }}">
       <button type="button" class="billing-toggle is-active" data-plan="monthly">{{ 'Mensual' if is_es else 'Monthly' }}</button>
       <button type="button" class="billing-toggle" data-plan="annual">{{ 'Anual' if is_es else 'Annual' }}</button>
@@ -154,6 +289,31 @@
           <div>{{ 'Equipos en arranque o prueba' if is_es else 'Teams starting or testing' }}</div>
           <div>{{ 'Operaciones activas y crecimiento sostenido' if is_es else 'Active operations and sustained growth' }}</div>
         </div>
+      </div>
+    </section>
+
+    <section class="pricing-showcase" aria-label="{{ 'Ventajas del sistema' if is_es else 'Platform advantages' }}">
+      <div class="pricing-showcase-copy">
+        <span>{{ 'Por qué se siente más profesional' if is_es else 'Why it feels more professional' }}</span>
+        <h3>{{ 'No es solo un sistema de tickets: es una experiencia de operación tecnológica' if is_es else 'It is not just a ticket system: it is a technology operations experience' }}</h3>
+        <p>{{ 'La plataforma combina automatización, seguridad, facturación recurrente y visibilidad ejecutiva para que tu servicio técnico opere como un entorno moderno y escalable.' if is_es else 'The platform combines automation, security, recurring billing, and executive visibility so your support service operates like a modern, scalable environment.' }}</p>
+      </div>
+      <div class="pricing-showcase-grid">
+        <article class="pricing-showcase-card">
+          <i class="bi bi-hdd-network"></i>
+          <strong>{{ 'Arquitectura centralizada' if is_es else 'Centralized architecture' }}</strong>
+          <p>{{ 'Unifica operación, administración, equipos y clientes en una sola capa de trabajo.' if is_es else 'Unifies operations, administration, teams, and customers in one work layer.' }}</p>
+        </article>
+        <article class="pricing-showcase-card">
+          <i class="bi bi-fingerprint"></i>
+          <strong>{{ 'Control y seguridad' if is_es else 'Control and security' }}</strong>
+          <p>{{ 'Roles, seguimiento, historial y gestión confiable para entornos empresariales.' if is_es else 'Roles, tracking, history, and reliable management for enterprise environments.' }}</p>
+        </article>
+        <article class="pricing-showcase-card">
+          <i class="bi bi-stars"></i>
+          <strong>{{ 'Interfaz de nueva generación' if is_es else 'Next-generation interface' }}</strong>
+          <p>{{ 'Presentación visual fuerte, foco en conversión y sensación de producto premium.' if is_es else 'Strong visual presentation, conversion focus, and a premium product feel.' }}</p>
+        </article>
       </div>
     </section>
 
