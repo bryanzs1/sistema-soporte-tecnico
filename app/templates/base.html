@@ -9,25 +9,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260420-2') }}">
   </head>
   <body class="app-bg {% block body_class %}{% endblock %}">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-      <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top app-shell-nav">
+      <div class="container">
         <a class="navbar-brand app-brand" href="{{ url_for('main.index') }}">
-          <span class="app-brand-text">Soporte IT Pro</span>
+          <span class="app-brand-text">Soporte IT <span class="app-brand-accent">Pro</span></span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.pricing') }}">
+            <li class="nav-item"><a class="nav-link app-nav-link" href="{{ url_for('main.pricing') }}">
               <i class="bi bi-tags"></i> {{ 'Precios' if current_lang == 'es' else 'Pricing' }}
             </a></li>
             {% if current_user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">
+              <li class="nav-item"><a class="nav-link app-nav-link" href="{{ url_for('tickets.list_tickets') }}">
                 <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}
               </a></li>
               {% if current_user.is_admin() or current_user.is_technician() %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+              <li class="nav-item"><a class="nav-link app-nav-link" href="{{ url_for('admin.dashboard') }}">
                 <i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}
               </a></li>
               {% endif %}
@@ -35,9 +35,14 @@
           </ul>
           <ul class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}
+              <li class="nav-item d-flex align-items-center me-2 mb-2 mb-lg-0">
+                <a class="btn btn-sm app-primary-action" href="{{ url_for('tickets.create_ticket') }}">
+                  {{ _('Create Ticket') }}
+                </a>
+              </li>
               <!-- User Dropdown Menu -->
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <a class="nav-link dropdown-toggle d-flex align-items-center app-nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   <div class="user-avatar me-2">
                     {{ current_user.username[0]|upper }}
                   </div>
@@ -86,7 +91,7 @@
               
               <!-- Language Dropdown -->
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle app-nav-link" href="#" role="button" data-bs-toggle="dropdown">
                   <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'en')|upper }}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -99,7 +104,10 @@
                 </ul>
               </li>
             {% else %}
-              <li class="nav-item"><a class="btn btn-sm text-white fw-bold mx-2 btn-login-highlight" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a></li>
+              <li class="nav-item d-flex align-items-center nav-guest-actions">
+                <a class="btn btn-sm app-secondary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
+                <a class="btn btn-sm app-primary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>
+              </li>
             {% endif %}
           </ul>
         </div>
@@ -123,7 +131,7 @@
 
     {% block content %}{% endblock %}
 
-    <footer class="footer-custom">
+    <footer class="footer-custom footer-shell">
       <div class="container text-center py-3">
         <div class="row">
           <div class="col-md-6 text-md-start">
@@ -541,14 +549,14 @@
     <!-- Login Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-header border-0 pb-0">
+        <div class="modal-content border-0 shadow app-login-modal">
+          <div class="modal-header border-0 pb-0 app-login-modal-header">
             <h5 class="modal-title fw-bold fs-5" id="loginModalLabel">
-              <i class="bi bi-lock-fill me-2 text-primary"></i>{{ _('Login') }}
+              <i class="bi bi-shield-lock me-2 text-primary"></i>{{ _('Sign In') }}
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body pt-2 px-4 pb-4">
+          <div class="modal-body pt-2 px-4 pb-4 app-login-modal-body">
             {% if request.args.get('login_failed') %}
               {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -587,8 +595,8 @@
                 </div>
                 <a href="{{ url_for('auth.forgot_password') }}" class="small text-primary">{{ _('Forgot your password?') }}</a>
               </div>
-              <button type="submit" class="btn btn-primary w-100 btn-animated btn-lg">
-                <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('Login') }}
+              <button type="submit" class="btn btn-primary w-100 btn-animated btn-lg app-login-submit">
+                <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('Sign In') }}
               </button>
             </form>
           </div>
