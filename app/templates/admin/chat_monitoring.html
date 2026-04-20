@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}Chat Monitoring - Admin{% endblock %}
 {% block content %}
-<div class="container mt-4 mb-4 chat-monitoring-page">
+<div class="app-page-shell chat-monitoring-page mb-4">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 chat-monitoring-header">
-    <h2>{{ _('Chat Monitoring') }}</h2>
+    <h2 class="admin-section-header"><i class="bi bi-eye me-2"></i>{{ _('Chat Monitoring') }}</h2>
     <div>
       <span class="badge bg-success me-2">
         <i class="bi bi-arrow-repeat"></i> {{ _('Live') }}
@@ -12,34 +12,32 @@
   </div>
 
   <!-- Filter Options -->
-  <div class="card mb-4 monitor-filter-card">
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-12 col-md-4">
-          <label class="form-label">{{ _('Filter by Status') }}</label>
-          <select class="form-select" id="status-filter">
-            <option value="">{{ _('All Statuses') }}</option>
-            {% for status in ['Abierto', 'En proceso', 'Esperando usuario', 'Cerrado'] %}
-              <option value="{{ status }}">{{ _(status) }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">{{ _('Filter by Activity') }}</label>
-          <select class="form-select" id="activity-filter">
-            <option value="">{{ _('All Chats') }}</option>
-            <option value="recent">{{ _('Last Hour') }}</option>
-            <option value="active">{{ _('With Messages') }}</option>
-          </select>
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">{{ _('Sort By') }}</label>
-          <select class="form-select" id="sort-select">
-            <option value="recent">{{ _('Most Recent') }}</option>
-            <option value="messages">{{ _('Most Messages') }}</option>
-            <option value="priority">{{ _('Priority') }}</option>
-          </select>
-        </div>
+  <div class="app-surface-card mb-4 monitor-filter-card">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label">{{ _('Filter by Status') }}</label>
+        <select class="form-select" id="status-filter">
+          <option value="">{{ _('All Statuses') }}</option>
+          {% for status in ['Abierto', 'En proceso', 'Esperando usuario', 'Cerrado'] %}
+            <option value="{{ status }}">{{ _(status) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">{{ _('Filter by Activity') }}</label>
+        <select class="form-select" id="activity-filter">
+          <option value="">{{ _('All Chats') }}</option>
+          <option value="recent">{{ _('Last Hour') }}</option>
+          <option value="active">{{ _('With Messages') }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">{{ _('Sort By') }}</label>
+        <select class="form-select" id="sort-select">
+          <option value="recent">{{ _('Most Recent') }}</option>
+          <option value="messages">{{ _('Most Messages') }}</option>
+          <option value="priority">{{ _('Priority') }}</option>
+        </select>
       </div>
     </div>
   </div>
@@ -53,7 +51,7 @@
              data-recent="{{ 'true' if item.is_recent else 'false' }}"
              data-messages="{{ item.message_count }}"
              data-priority="{{ item.ticket.priority }}">
-          <div class="card h-100 shadow-sm {% if item.is_recent %}chat-active{% else %}chat-inactive{% endif %}">
+          <div class="app-surface-card h-100 shadow-sm {% if item.is_recent %}chat-active{% else %}chat-inactive{% endif %}">
             <div class="card-body">
               <!-- Header -->
               <div class="d-flex justify-content-between align-items-start mb-3">

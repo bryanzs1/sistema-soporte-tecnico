@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('Knowledge Base') }}{% endblock %}
 {% block content %}
-<div class="container mt-4">
+<div class="app-page-shell">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</h2>
+    <h2 class="admin-section-header"><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</h2>
     {% if current_user.is_admin() or current_user.is_technician() %}
-      <a class="btn btn-primary btn-animated text-white" href="{{ url_for('admin.kb_create') }}">
+      <a class="btn app-primary-action btn-animated text-white" href="{{ url_for('admin.kb_create') }}">
         <i class="bi bi-plus-circle me-1"></i>{{ _('New Article') }}
       </a>
     {% endif %}
@@ -17,7 +17,7 @@
       <input type="text" name="q" class="form-control" value="{{ q or '' }}" placeholder="{{ _('Search articles...') }}">
     </div>
     <div class="col-auto">
-      <button type="submit" class="btn btn-primary text-white"><i class="bi bi-search"></i></button>
+      <button type="submit" class="btn app-primary-action text-white"><i class="bi bi-search"></i></button>
     </div>
     {% if q %}
       <div class="col-auto">
@@ -30,7 +30,7 @@
     <div class="row g-3">
       {% for article in articles %}
         <div class="col-12">
-          <div class="section-card">
+          <div class="app-surface-card">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
               <div>
                 <h5 class="mb-1">{{ article.title }}</h5>
