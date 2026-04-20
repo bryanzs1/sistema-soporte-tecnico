@@ -17,12 +17,31 @@
         <span>{{ 'Checkout seguro con Stripe' if is_es else 'Secure Stripe checkout' }}</span>
         <span>{{ 'Activación rápida' if is_es else 'Fast activation' }}</span>
       </div>
+      <div class="pricing-metrics">
+        <div class="pricing-metric">
+          <strong>24/7</strong>
+          <span>{{ 'Cobertura operativa' if is_es else 'Operational coverage' }}</span>
+        </div>
+        <div class="pricing-metric">
+          <strong>AI</strong>
+          <span>{{ 'Asistencia inteligente' if is_es else 'Intelligent assistance' }}</span>
+        </div>
+        <div class="pricing-metric">
+          <strong>SLA</strong>
+          <span>{{ 'Visibilidad del servicio' if is_es else 'Service visibility' }}</span>
+        </div>
+      </div>
     </div>
     <div class="pricing-hero-panel">
       <div class="pricing-panel-card">
         <div class="pricing-panel-label">{{ 'Oferta recomendada' if is_es else 'Recommended offer' }}</div>
         <div class="pricing-panel-price">{{ annual_price_display }}</div>
         <p>{{ annual_offer_text }}</p>
+        <ul class="pricing-panel-points">
+          <li>{{ 'Implementación rápida para tu empresa' if is_es else 'Fast rollout for your company' }}</li>
+          <li>{{ 'Facturación segura con Stripe' if is_es else 'Secure billing with Stripe' }}</li>
+          <li>{{ 'Control claro del costo anual' if is_es else 'Clear annual cost control' }}</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -46,6 +65,12 @@
           <h2>{{ monthly_price_display }} <small>{{ '/mes' if is_es else '/month' }}</small></h2>
           <p>{{ 'Ideal si quieres empezar sin compromiso anual.' if is_es else 'Ideal if you want to start without an annual commitment.' }}</p>
         </div>
+        <div class="plan-summary-row">
+          <div class="plan-summary-box">
+            <strong>{{ 'Flexible' if is_es else 'Flexible' }}</strong>
+            <span>{{ 'Pago recurrente mes a mes' if is_es else 'Recurring month-to-month billing' }}</span>
+          </div>
+        </div>
         <ul class="plan-features">
           <li>{{ 'Gestión completa de tickets' if is_es else 'Full ticket management' }}</li>
           <li>{{ 'Panel administrativo y reportes' if is_es else 'Admin dashboard and reporting' }}</li>
@@ -58,7 +83,7 @@
             {{ 'Suscribirme mensual' if is_es else 'Subscribe monthly' }}
           </button>
           {% elif not has_monthly_price %}
-          <button type="button" class="btn btn-outline-secondary btn-lg" disabled>
+          <button type="button" class="btn btn-lg pricing-disabled-btn" disabled>
             {{ 'Próximamente' if is_es else 'Coming soon' }}
           </button>
           <p class="plan-status-note">{{ 'Este plan estará disponible muy pronto.' if is_es else 'This plan will be available very soon.' }}</p>
@@ -80,6 +105,12 @@
           <h2>{{ annual_price_display }} <small>{{ '/año' if is_es else '/year' }}</small></h2>
           <p>{{ 'Reduce el costo total y mantén la operación protegida todo el año.' if is_es else 'Lower total cost and keep operations protected all year long.' }}</p>
         </div>
+        <div class="plan-summary-row">
+          <div class="plan-summary-box plan-summary-box-accent">
+            <strong>{{ 'Mejor valor' if is_es else 'Best value' }}</strong>
+            <span>{{ annual_offer_text }}</span>
+          </div>
+        </div>
         <ul class="plan-features">
           <li>{{ annual_offer_text }}</li>
           <li>{{ 'Mismas funciones del plan mensual' if is_es else 'Everything in the monthly plan' }}</li>
@@ -92,7 +123,7 @@
             {{ 'Elegir plan anual' if is_es else 'Choose annual plan' }}
           </button>
           {% elif not has_annual_price %}
-          <button type="button" class="btn btn-outline-secondary btn-lg" disabled>
+          <button type="button" class="btn btn-lg pricing-disabled-btn" disabled>
             {{ 'Próximamente' if is_es else 'Coming soon' }}
           </button>
           <p class="plan-status-note">{{ 'La oferta anual se activará en breve.' if is_es else 'The annual offer will be enabled shortly.' }}</p>
