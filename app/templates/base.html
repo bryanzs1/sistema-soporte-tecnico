@@ -11,8 +11,8 @@
   <body class="app-bg {% block body_class %}{% endblock %}">
     {% set endpoint = request.endpoint or '' %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top app-shell-nav">
-      <div class="container">
-        <a class="navbar-brand app-brand" href="{{ url_for('main.index') }}">
+      <div class="w-100 px-0 d-flex align-items-center" style="min-width:0;">
+        <a class="navbar-brand app-brand me-4" href="{{ url_for('main.index') }}" style="min-width: 0;">
           <span class="app-brand-mark-wrap" aria-hidden="true">
             <span class="app-brand-mark"></span>
           </span>
@@ -21,11 +21,11 @@
             <span class="app-brand-text">Soporte IT <span class="app-brand-accent">Pro</span></span>
           </span>
         </a>
-        <button class="navbar-toggler app-menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler app-menu-toggle ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse app-menu-panel" id="navbarContent">
-          <ul class="navbar-nav me-auto app-nav-group">
+        <div class="collapse navbar-collapse app-menu-panel flex-grow-1" id="navbarContent">
+          <ul class="navbar-nav me-auto app-nav-group flex-row flex-wrap" style="gap: 0.5rem;">
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.pricing' %}is-active{% endif %}" href="{{ url_for('main.pricing') }}" {% if endpoint == 'main.pricing' %}aria-current="page"{% endif %}>
               <i class="bi bi-tags"></i> {{ 'Precios' if current_lang == 'es' else 'Pricing' }}
             </a></li>
@@ -40,7 +40,7 @@
               {% endif %}
             {% endif %}
           </ul>
-          <ul class="navbar-nav ms-auto app-nav-actions">
+          <ul class="navbar-nav ms-auto app-nav-actions flex-row flex-wrap" style="gap: 0.5rem;">
             {% if current_user.is_authenticated %}
               <li class="nav-item d-flex align-items-center me-2 mb-2 mb-lg-0">
                 <a class="btn btn-sm app-primary-action" href="{{ url_for('tickets.create_ticket') }}">
