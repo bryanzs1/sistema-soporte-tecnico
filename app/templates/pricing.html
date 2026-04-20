@@ -38,6 +38,9 @@
 
     <div class="pricing-grid">
       <article class="plan-card" data-plan-card="monthly">
+        {% if has_monthly_price %}
+        <div class="plan-availability plan-availability-live">{{ 'Disponible ahora' if is_es else 'Available now' }}</div>
+        {% endif %}
         <div class="plan-card-header">
           <span class="plan-tier">{{ 'Plan mensual' if is_es else 'Monthly plan' }}</span>
           <h2>{{ monthly_price_display }} <small>{{ '/mes' if is_es else '/month' }}</small></h2>
@@ -69,6 +72,9 @@
 
       <article class="plan-card plan-card-featured" data-plan-card="annual">
         <div class="plan-ribbon">{{ 'Oferta anual' if is_es else 'Annual offer' }}</div>
+        {% if has_annual_price %}
+        <div class="plan-availability plan-availability-live">{{ 'Disponible ahora' if is_es else 'Available now' }}</div>
+        {% endif %}
         <div class="plan-card-header">
           <span class="plan-tier">{{ 'Plan anual' if is_es else 'Annual plan' }}</span>
           <h2>{{ annual_price_display }} <small>{{ '/año' if is_es else '/year' }}</small></h2>
