@@ -47,6 +47,12 @@ def _get_or_create_customer(company):
     db.session.commit()
     return customer.id
 
+
+def _get_current_company():
+    if not current_user.is_authenticated or not current_user.company_id:
+        return None
+    return db.session.get(Company, current_user.company_id)
+
 def _record_billing_event(company_id, event):
     event_id = event.get('id')
     if not event_id:
@@ -86,7 +92,7 @@ def _update_company_from_subscription(company, subscription):
         company.stripe_current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc).replace(tzinfo=None)
     company.stripe_cancel_at_period_end = bool(subscription.get('cancel_at_period_end'))
 
-def create_customer_and_subscription(name, email, price_id, payment_method, customer_id=None):
+def create_customer_and_subscription(name, email, price_id, payment_method, customer_id=None, company=None):
     try:
         if not _stripe_is_configured():
             return {
@@ -94,9 +100,23 @@ def create_customer_and_subscription(name, email, price_id, payment_method, cust
                 'error': 'Stripe no está configurado en el servidor.',
             }
 
-        if customer_id:
+        stripe_payment_method = stripe.PaymentMethod.retrieve(payment_method)
+        attached_customer_id = getattr(stripe_payment_method, 'customer', None)
+        payment_method_id = stripe_payment_method.id
+
+        company_customer_id = company.stripe_customer_id if company else None
+
+        if company_customer_id and attached_customer_id and company_customer_id != attached_customer_id:
+            return {
+                'success': False,
+                'error': 'El método de pago pertenece a un customer distinto al registrado para esta empresa.',
+            }
+
+        resolved_customer_id = company_customer_id or attached_customer_id or customer_id
+
+        if resolved_customer_id:
             customer = stripe.Customer.modify(
-                customer_id,
+                resolved_customer_id,
                 name=name,
                 email=email,
                 description='Cliente de membresía',
@@ -108,9 +128,9 @@ def create_customer_and_subscription(name, email, price_id, payment_method, cust
                 description='Cliente de membresía',
             )
 
-        stripe_payment_method = stripe.PaymentMethod.retrieve(payment_method)
-        attached_customer_id = getattr(stripe_payment_method, 'customer', None)
-        payment_method_id = stripe_payment_method.id
+        if company and company.stripe_customer_id != customer.id:
+            company.stripe_customer_id = customer.id
+            db.session.commit()
 
         if attached_customer_id and attached_customer_id != customer.id:
             return {
@@ -147,11 +167,16 @@ def create_customer_and_subscription(name, email, price_id, payment_method, cust
 @bp.route('/billing/create-membership', methods=['POST'])
 def create_membership():
     data = request.get_json(silent=True) or {}
+    company = _get_current_company()
+
     name = data.get('name')
     email = data.get('email')
     price_id = data.get('price_id')
     payment_method = data.get('payment_method')
     customer_id = data.get('customer_id')
+
+    print(f"[Stripe] payment_method recibido: {payment_method}")
+    print(f"[Stripe] customer_id recibido: {customer_id}")
 
     if not name or not email or not price_id or not payment_method:
         return jsonify({'success': False, 'error': 'Faltan datos'}), 400
@@ -162,6 +187,7 @@ def create_membership():
         price_id,
         payment_method,
         customer_id=customer_id,
+        company=company,
     )
     if result['success']:
         return jsonify({
