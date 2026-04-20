@@ -58,16 +58,40 @@ def _paypal_client_secret():
     return os.environ.get('PAYPAL_CLIENT_SECRET', '').strip()
 
 
-def _admin_company_required():
+def _resolve_admin_company(requested_company_id=None):
+    if current_user.company_id:
+        company = db.session.get(Company, current_user.company_id)
+        if company:
+            return company
+
+    if hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
+        if requested_company_id:
+            try:
+                company = db.session.get(Company, int(requested_company_id))
+            except (TypeError, ValueError):
+                company = None
+            if company:
+                return company
+
+        active_companies = Company.query.filter_by(is_active=True).order_by(Company.id.asc()).all()
+        if len(active_companies) == 1:
+            return active_companies[0]
+
+        all_companies = Company.query.order_by(Company.id.asc()).all()
+        if len(all_companies) == 1:
+            return all_companies[0]
+
+    return None
+
+
+def _admin_company_required(requested_company_id=None):
     if not current_user.is_authenticated:
         return jsonify({'error': 'Debes iniciar sesión.'}), 401, None
     if not current_user.is_admin():
         return jsonify({'error': 'Se requieren permisos de administrador.'}), 403, None
-    if not current_user.company_id:
-        return jsonify({'error': 'Tu usuario no tiene empresa asignada.'}), 400, None
-    company = db.session.get(Company, current_user.company_id)
+    company = _resolve_admin_company(requested_company_id=requested_company_id)
     if not company:
-        return jsonify({'error': 'Empresa no encontrada.'}), 404, None
+        return jsonify({'error': 'No se pudo determinar la empresa para esta suscripción. Asigna una empresa a tu usuario o indica una empresa específica.'}), 400, None
     return None, None, company
 
 
@@ -277,14 +301,14 @@ def create_membership():
 @bp.route('/billing/create-checkout-session', methods=['POST'])
 @login_required
 def create_checkout_session():
-    error_response, status_code, company = _admin_company_required()
+    data = request.get_json(silent=True) or {}
+    error_response, status_code, company = _admin_company_required(requested_company_id=data.get('company_id'))
     if error_response:
         return error_response, status_code
 
     if not _paypal_is_configured():
         return jsonify({'error': 'PayPal no está configurado en el servidor.'}), 500
 
-    data = request.get_json(silent=True) or {}
     requested_plan = data.get('plan')
     plan_id = _resolve_paypal_plan_id(company, requested_plan=requested_plan)
     if not plan_id:
@@ -329,7 +353,8 @@ def create_checkout_session():
 @bp.route('/billing/create-portal-session', methods=['POST'])
 @login_required
 def create_portal_session():
-    error_response, status_code, company = _admin_company_required()
+    data = request.get_json(silent=True) or {}
+    error_response, status_code, company = _admin_company_required(requested_company_id=data.get('company_id'))
     if error_response:
         return error_response, status_code
 
