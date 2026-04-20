@@ -400,24 +400,49 @@
     gap: 1rem;
 }
 
-.pricing-tech-header {
+.pricing-tech-commandbar {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
 }
 
-.pricing-tech-header strong {
-    display: block;
-    color: #fff;
-    font-size: 1.05rem;
+.pricing-tech-title-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.95rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.28), rgba(14, 165, 233, 0.14));
+    border: 1px solid rgba(96, 165, 250, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.pricing-tech-header span {
+.pricing-tech-title-pill i {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: #bfdbfe;
+    font-size: 1rem;
+}
+
+.pricing-tech-title-pill small {
     display: block;
-    margin-top: 0.18rem;
-    color: rgba(203, 213, 225, 0.8);
-    font-size: 0.87rem;
+    color: rgba(191, 219, 254, 0.78);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.72rem;
+}
+
+.pricing-tech-title-pill strong {
+    display: block;
+    color: #fff;
+    font-size: 0.98rem;
+    line-height: 1.25;
 }
 
 .pricing-tech-status {
@@ -1104,6 +1129,11 @@
 
     .pricing-tech-layout {
         grid-template-columns: 1fr;
+    }
+
+    .pricing-tech-commandbar {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .pricing-tech-sidebar {
