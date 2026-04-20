@@ -11,10 +11,10 @@ from app.models import BillingEvent, Company
 
 bp = Blueprint('billing', __name__)
 
+stripe.api_key = os.environ.get('STRIPE_API_KEY', '').strip()
 
 def utcnow():
     return datetime.now(timezone.utc).replace(tzinfo=None)
-
 
 def _stripe_is_configured():
     api_key = os.environ.get('STRIPE_API_KEY', '').strip()
@@ -22,7 +22,6 @@ def _stripe_is_configured():
         return False
     stripe.api_key = api_key
     return True
-
 
 def _admin_company_required():
     if not current_user.is_authenticated:
@@ -36,7 +35,6 @@ def _admin_company_required():
         return jsonify({'error': 'Empresa no encontrada.'}), 404, None
     return None, None, company
 
-
 def _get_or_create_customer(company):
     if company.stripe_customer_id:
         return company.stripe_customer_id
@@ -48,7 +46,6 @@ def _get_or_create_customer(company):
     company.stripe_customer_id = customer.id
     db.session.commit()
     return customer.id
-
 
 def _record_billing_event(company_id, event):
     event_id = event.get('id')
@@ -74,7 +71,6 @@ def _record_billing_event(company_id, event):
     db.session.add(billing_event)
     return billing_event
 
-
 def _update_company_from_subscription(company, subscription):
     if not subscription:
         return
@@ -90,6 +86,91 @@ def _update_company_from_subscription(company, subscription):
         company.stripe_current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc).replace(tzinfo=None)
     company.stripe_cancel_at_period_end = bool(subscription.get('cancel_at_period_end'))
 
+def create_customer_and_subscription(name, email, price_id, payment_method, customer_id=None):
+    try:
+        if not _stripe_is_configured():
+            return {
+                'success': False,
+                'error': 'Stripe no está configurado en el servidor.',
+            }
+
+        if customer_id:
+            customer = stripe.Customer.modify(
+                customer_id,
+                name=name,
+                email=email,
+                description='Cliente de membresía',
+            )
+        else:
+            customer = stripe.Customer.create(
+                name=name,
+                email=email,
+                description='Cliente de membresía',
+            )
+
+        stripe_payment_method = stripe.PaymentMethod.retrieve(payment_method)
+        attached_customer_id = getattr(stripe_payment_method, 'customer', None)
+        payment_method_id = stripe_payment_method.id
+
+        if attached_customer_id and attached_customer_id != customer.id:
+            return {
+                'success': False,
+                'error': 'El método de pago ya está asociado a otro cliente en Stripe.',
+            }
+
+        if not attached_customer_id:
+            stripe_payment_method = stripe.PaymentMethod.attach(payment_method, customer=customer.id)
+            payment_method_id = stripe_payment_method.id
+
+        stripe.Customer.modify(
+            customer.id,
+            invoice_settings={'default_payment_method': payment_method_id},
+        )
+
+        subscription = stripe.Subscription.create(
+            customer=customer.id,
+            items=[{'price': price_id}],
+            default_payment_method=payment_method_id,
+        )
+
+        return {
+            'success': True,
+            'customer_id': customer.id,
+            'subscription_id': subscription.id,
+        }
+    except stripe.error.StripeError as e:
+        return {
+            'success': False,
+            'error': str(e),
+        }
+
+@bp.route('/billing/create-membership', methods=['POST'])
+def create_membership():
+    data = request.get_json(silent=True) or {}
+    name = data.get('name')
+    email = data.get('email')
+    price_id = data.get('price_id')
+    payment_method = data.get('payment_method')
+    customer_id = data.get('customer_id')
+
+    if not name or not email or not price_id or not payment_method:
+        return jsonify({'success': False, 'error': 'Faltan datos'}), 400
+
+    result = create_customer_and_subscription(
+        name,
+        email,
+        price_id,
+        payment_method,
+        customer_id=customer_id,
+    )
+    if result['success']:
+        return jsonify({
+            'success': True,
+            'customer_id': result['customer_id'],
+            'subscription_id': result['subscription_id'],
+        }), 201
+
+    return jsonify({'success': False, 'error': result['error']}), 400
 
 @bp.route('/billing/create-checkout-session', methods=['POST'])
 @login_required

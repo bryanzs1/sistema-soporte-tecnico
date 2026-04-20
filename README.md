@@ -23,7 +23,29 @@
    export MAIL_SERVER=localhost
    export MAIL_PORT=25
    export MAIL_DEFAULT_SENDER="noreply@example.com"
+   export STRIPE_API_KEY="sk_test_..."
+   export STRIPE_DEFAULT_PRICE_ID="price_..."
    ```
+
+### Prueba rápida de membresías con Stripe
+
+Para probar el endpoint local de membresías sin editar el repositorio, usa variables de entorno:
+
+```bash
+export TEST_MEMBERSHIP_PRICE_ID="price_..."
+export TEST_MEMBERSHIP_CUSTOMER_ID="cus_..."  # opcional
+export TEST_MEMBERSHIP_PAYMENT_METHOD="pm_card_visa"
+python test_membership.py
+```
+
+En PowerShell:
+
+```powershell
+$env:TEST_MEMBERSHIP_PRICE_ID="price_..."
+$env:TEST_MEMBERSHIP_CUSTOMER_ID="cus_..."
+$env:TEST_MEMBERSHIP_PAYMENT_METHOD="pm_card_visa"
+python test_membership.py
+```
 
 
 
