@@ -148,6 +148,286 @@
     border-color: var(--color-success) !important;
 }
 
+.pricing-page {
+    background:
+        radial-gradient(circle at top left, rgba(30, 64, 175, 0.14), transparent 28%),
+        radial-gradient(circle at top right, rgba(245, 158, 11, 0.16), transparent 24%),
+        linear-gradient(180deg, #f7faff 0%, #eef4ff 42%, #f9fafb 100%);
+}
+
+.pricing-hero {
+    position: relative;
+    padding: 8.5rem 0 3rem;
+}
+
+.pricing-hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+    gap: 2rem;
+    align-items: center;
+}
+
+.pricing-copy h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(2.4rem, 4vw, 4.2rem);
+    line-height: 1.05;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+}
+
+.pricing-copy p {
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    max-width: 56rem;
+}
+
+.pricing-eyebrow {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(30, 64, 175, 0.1);
+    color: var(--color-primary);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+}
+
+.pricing-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.pricing-badges span {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(30, 64, 175, 0.1);
+    border-radius: 999px;
+    padding: 0.6rem 0.95rem;
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.pricing-hero-panel {
+    display: flex;
+    justify-content: center;
+}
+
+.pricing-panel-card {
+    width: min(100%, 360px);
+    padding: 2rem;
+    border-radius: 28px;
+    background: linear-gradient(145deg, #102a78, #1e40af 52%, #3b82f6);
+    color: #fff;
+    box-shadow: 0 24px 60px rgba(30, 64, 175, 0.24);
+}
+
+.pricing-panel-label {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.8;
+}
+
+.pricing-panel-price {
+    font-family: var(--font-heading);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    line-height: 1;
+    margin: 1rem 0 0.8rem;
+}
+
+.pricing-section {
+    padding: 1rem 0 4.5rem;
+}
+
+.billing-toggle-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.6rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+    margin-bottom: 2rem;
+}
+
+.billing-toggle {
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    padding: 0.85rem 1.2rem;
+    font-weight: 700;
+}
+
+.billing-toggle.is-active {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.billing-toggle-offer {
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.16);
+    color: var(--color-warning-text);
+    font-weight: 700;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.plan-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    padding: 2rem;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.plan-card:hover,
+.plan-card.is-active {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 64px rgba(15, 23, 42, 0.12);
+    border-color: rgba(30, 64, 175, 0.24);
+}
+
+.plan-card-featured {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 235, 0.96));
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.plan-ribbon {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: var(--color-warning);
+    color: var(--color-warning-text);
+    font-weight: 800;
+    font-size: 0.82rem;
+}
+
+.plan-tier {
+    display: inline-block;
+    font-size: 0.84rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
+.plan-card-header h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(2.3rem, 4vw, 3.8rem);
+    line-height: 1;
+    margin: 0.8rem 0;
+    color: var(--color-text-primary);
+}
+
+.plan-card-header h2 small {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+}
+
+.plan-card-header p {
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.65;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.plan-features li {
+    position: relative;
+    padding-left: 1.8rem;
+    color: var(--color-text-primary);
+    line-height: 1.5;
+}
+
+.plan-features li::before {
+    content: "\F26E";
+    font-family: bootstrap-icons;
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    color: var(--color-success);
+}
+
+.plan-actions {
+    margin-top: auto;
+}
+
+.plan-actions .btn {
+    width: 100%;
+    border-radius: 16px;
+    padding: 0.95rem 1.2rem;
+    font-weight: 800;
+}
+
+.pricing-footnote {
+    margin-top: 1.5rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+@media (max-width: 991.98px) {
+    .pricing-hero-inner,
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-hero {
+        padding-top: 7.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pricing-hero {
+        padding-top: 7rem;
+    }
+
+    .pricing-copy h1 {
+        font-size: 2.2rem;
+    }
+
+    .plan-card,
+    .pricing-panel-card {
+        padding: 1.4rem;
+        border-radius: 22px;
+    }
+
+    .billing-toggle-wrap {
+        width: 100%;
+        justify-content: center;
+        border-radius: 24px;
+    }
+
+    .billing-toggle {
+        flex: 1 1 140px;
+    }
+}
+
 .support-assistant {
     position: fixed;
     right: 1.5rem;

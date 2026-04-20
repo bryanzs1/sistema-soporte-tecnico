@@ -53,6 +53,17 @@ def _get_current_company():
         return None
     return db.session.get(Company, current_user.company_id)
 
+
+def _resolve_checkout_price_id(company, requested_plan=None):
+    requested_plan = (requested_plan or '').strip().lower()
+
+    if requested_plan == 'monthly':
+        return os.environ.get('STRIPE_MONTHLY_PRICE_ID', '').strip()
+    if requested_plan == 'annual':
+        return os.environ.get('STRIPE_ANNUAL_PRICE_ID', '').strip()
+
+    return (company.stripe_price_id or os.environ.get('STRIPE_DEFAULT_PRICE_ID', '')).strip()
+
 def _record_billing_event(company_id, event):
     event_id = event.get('id')
     if not event_id:
@@ -208,9 +219,12 @@ def create_checkout_session():
     if not _stripe_is_configured():
         return jsonify({'error': 'Stripe no está configurado en el servidor.'}), 500
 
-    price_id = (company.stripe_price_id or os.environ.get('STRIPE_DEFAULT_PRICE_ID', '')).strip()
+    data = request.get_json(silent=True) or {}
+    requested_plan = data.get('plan')
+
+    price_id = _resolve_checkout_price_id(company, requested_plan=requested_plan)
     if not price_id:
-        return jsonify({'error': 'No hay un precio Stripe configurado para esta empresa.'}), 400
+        return jsonify({'error': 'No hay un precio Stripe configurado para esta selección.'}), 400
 
     try:
         customer_id = _get_or_create_customer(company)

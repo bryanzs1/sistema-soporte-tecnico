@@ -1,3 +1,5 @@
+import os
+
 from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify
 from flask_login import login_required, current_user
 
@@ -17,6 +19,28 @@ def _assistant_title_from_message(message, lang):
 @bp.route('/')
 def index():
     return render_template('index.html')
+
+
+@bp.route('/pricing')
+def pricing():
+    lang = session.get('lang', 'en')
+    return render_template(
+        'pricing.html',
+        monthly_price_display=os.environ.get(
+            'STRIPE_MONTHLY_PRICE_DISPLAY',
+            '$29' if lang == 'en' else 'US$29',
+        ).strip(),
+        annual_price_display=os.environ.get(
+            'STRIPE_ANNUAL_PRICE_DISPLAY',
+            '$290' if lang == 'en' else 'US$290',
+        ).strip(),
+        annual_offer_text=os.environ.get(
+            'STRIPE_ANNUAL_OFFER_TEXT',
+            'Save 2 months' if lang == 'en' else 'Ahorra 2 meses',
+        ).strip(),
+        has_monthly_price=bool(os.environ.get('STRIPE_MONTHLY_PRICE_ID', '').strip()),
+        has_annual_price=bool(os.environ.get('STRIPE_ANNUAL_PRICE_ID', '').strip()),
+    )
 
 
 @bp.route('/health')

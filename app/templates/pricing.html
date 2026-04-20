@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Precios' if current_lang == 'es' else 'Pricing' }}{% endblock %}
+{% block body_class %}pricing-page{% endblock %}
+{% block content %}
+{% set is_es = current_lang == 'es' %}
+
+<section class="pricing-hero">
+  <div class="container pricing-hero-inner">
+    <div class="pricing-copy">
+      <span class="pricing-eyebrow">{{ 'Planes claros para equipos de soporte' if is_es else 'Clear plans for support teams' }}</span>
+      <h1>{{ 'Elige tu plan y activa tu suscripción en minutos' if is_es else 'Choose your plan and start your subscription in minutes' }}</h1>
+      <p>
+        {{ 'Empieza con facturación mensual o desbloquea la oferta anual para reducir costos y mantener cobertura continua para tu empresa.' if is_es else 'Start with monthly billing or unlock the annual offer to lower costs and keep continuous coverage for your company.' }}
+      </p>
+      <div class="pricing-badges">
+        <span>{{ 'Soporte multiempresa' if is_es else 'Multi-company support' }}</span>
+        <span>{{ 'Checkout seguro con Stripe' if is_es else 'Secure Stripe checkout' }}</span>
+        <span>{{ 'Activación rápida' if is_es else 'Fast activation' }}</span>
+      </div>
+    </div>
+    <div class="pricing-hero-panel">
+      <div class="pricing-panel-card">
+        <div class="pricing-panel-label">{{ 'Oferta recomendada' if is_es else 'Recommended offer' }}</div>
+        <div class="pricing-panel-price">{{ annual_price_display }}</div>
+        <p>{{ annual_offer_text }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing-section">
+  <div class="container">
+    <div class="billing-toggle-wrap" role="tablist" aria-label="{{ 'Periodo de facturación' if is_es else 'Billing period' }}">
+      <button type="button" class="billing-toggle is-active" data-plan="monthly">{{ 'Mensual' if is_es else 'Monthly' }}</button>
+      <button type="button" class="billing-toggle" data-plan="annual">{{ 'Anual' if is_es else 'Annual' }}</button>
+      <span class="billing-toggle-offer">{{ annual_offer_text }}</span>
+    </div>
+
+    <div class="pricing-grid">
+      <article class="plan-card" data-plan-card="monthly">
+        <div class="plan-card-header">
+          <span class="plan-tier">{{ 'Plan mensual' if is_es else 'Monthly plan' }}</span>
+          <h2>{{ monthly_price_display }} <small>{{ '/mes' if is_es else '/month' }}</small></h2>
+          <p>{{ 'Ideal si quieres empezar sin compromiso anual.' if is_es else 'Ideal if you want to start without an annual commitment.' }}</p>
+        </div>
+        <ul class="plan-features">
+          <li>{{ 'Gestión completa de tickets' if is_es else 'Full ticket management' }}</li>
+          <li>{{ 'Panel administrativo y reportes' if is_es else 'Admin dashboard and reporting' }}</li>
+          <li>{{ 'Asistente de soporte con IA' if is_es else 'AI-powered support assistant' }}</li>
+          <li>{{ 'Escalable para tu equipo' if is_es else 'Scalable for your team' }}</li>
+        </ul>
+        <div class="plan-actions">
+          {% if current_user.is_authenticated and current_user.is_admin() and has_monthly_price %}
+          <button type="button" class="btn btn-primary btn-lg pricing-checkout-btn" data-plan="monthly">
+            {{ 'Suscribirme mensual' if is_es else 'Subscribe monthly' }}
+          </button>
+          {% elif current_user.is_authenticated and not current_user.is_admin() %}
+          <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary btn-lg">{{ 'Solicitar acceso al administrador' if is_es else 'Ask your admin for access' }}</a>
+          {% else %}
+          <a href="#loginModal" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Inicia sesión para continuar' if is_es else 'Sign in to continue' }}</a>
+          {% endif %}
+        </div>
+      </article>
+
+      <article class="plan-card plan-card-featured" data-plan-card="annual">
+        <div class="plan-ribbon">{{ 'Oferta anual' if is_es else 'Annual offer' }}</div>
+        <div class="plan-card-header">
+          <span class="plan-tier">{{ 'Plan anual' if is_es else 'Annual plan' }}</span>
+          <h2>{{ annual_price_display }} <small>{{ '/año' if is_es else '/year' }}</small></h2>
+          <p>{{ 'Reduce el costo total y mantén la operación protegida todo el año.' if is_es else 'Lower total cost and keep operations protected all year long.' }}</p>
+        </div>
+        <ul class="plan-features">
+          <li>{{ annual_offer_text }}</li>
+          <li>{{ 'Mismas funciones del plan mensual' if is_es else 'Everything in the monthly plan' }}</li>
+          <li>{{ 'Mejor previsibilidad de presupuesto' if is_es else 'Better budget predictability' }}</li>
+          <li>{{ 'Prioridad para planificación anual' if is_es else 'Priority for annual planning' }}</li>
+        </ul>
+        <div class="plan-actions">
+          {% if current_user.is_authenticated and current_user.is_admin() and has_annual_price %}
+          <button type="button" class="btn btn-warning btn-lg pricing-checkout-btn" data-plan="annual">
+            {{ 'Elegir plan anual' if is_es else 'Choose annual plan' }}
+          </button>
+          {% elif current_user.is_authenticated and not current_user.is_admin() %}
+          <a href="{{ url_for('main.index') }}" class="btn btn-outline-warning btn-lg">{{ 'Solicitar acceso al administrador' if is_es else 'Ask your admin for access' }}</a>
+          {% else %}
+          <a href="#loginModal" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Inicia sesión para continuar' if is_es else 'Sign in to continue' }}</a>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+
+    <div class="pricing-footnote">
+      <p>
+        {{ 'Los botones de suscripción usan Price IDs configurados en el servidor. Si no ves una opción disponible, revisa STRIPE_MONTHLY_PRICE_ID y STRIPE_ANNUAL_PRICE_ID en Render.' if is_es else 'Subscription buttons use server-configured Price IDs. If an option is unavailable, verify STRIPE_MONTHLY_PRICE_ID and STRIPE_ANNUAL_PRICE_ID in Render.' }}
+      </p>
+    </div>
+  </div>
+</section>
+
+{% if current_user.is_authenticated and current_user.is_admin() %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const toggles = document.querySelectorAll('.billing-toggle');
+  const cards = document.querySelectorAll('[data-plan-card]');
+  const checkoutButtons = document.querySelectorAll('.pricing-checkout-btn');
+  const activeClass = 'is-active';
+
+  function setActivePlan(plan) {
+    toggles.forEach((toggle) => {
+      toggle.classList.toggle(activeClass, toggle.dataset.plan === plan);
+    });
+    cards.forEach((card) => {
+      card.classList.toggle(activeClass, card.dataset.planCard === plan);
+    });
+  }
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener('click', function () {
+      setActivePlan(toggle.dataset.plan);
+      const targetCard = document.querySelector('[data-plan-card="' + toggle.dataset.plan + '"]');
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  });
+
+  checkoutButtons.forEach((button) => {
+    button.addEventListener('click', async function () {
+      const plan = button.dataset.plan;
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = {{ '"Redirigiendo..."' if is_es else '"Redirecting..."' }};
+
+      try {
+        const res = await fetch('/billing/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan })
+        });
+        const data = await res.json();
+        if (data.checkout_url) {
+          window.location = data.checkout_url;
+          return;
+        }
+        alert(data.error || {{ '"No se pudo iniciar el checkout."' if is_es else '"Unable to start checkout."' }});
+      } catch (error) {
+        alert({{ '"Ocurrió un error al conectar con Stripe."' if is_es else '"An error occurred while connecting to Stripe."' }});
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    });
+  });
+
+  setActivePlan('annual');
+});
+</script>
+{% endif %}
+{% endblock %}

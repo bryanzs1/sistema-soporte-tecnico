@@ -19,6 +19,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.pricing') }}">
+              <i class="bi bi-tags"></i> {{ 'Precios' if current_lang == 'es' else 'Pricing' }}
+            </a></li>
             {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('tickets.list_tickets') }}">
                 <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}
