@@ -14,23 +14,41 @@
 
   .welcome-v2 {
     color: #e2e8f0;
-    padding: 3.5rem 0 5rem;
+    padding: 2.5rem 0 5rem;
   }
 
   .welcome-v2 .shell {
-    max-width: 1180px;
+    max-width: 1240px;
     margin: 0 auto;
     padding: 0 1.5rem;
   }
 
   .welcome-v2 .hero {
-    padding-top: 1rem;
-    text-align: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+    gap: 2rem;
+    align-items: center;
+    padding-top: 1.4rem;
+  }
+
+  .welcome-v2 .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.8rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.26);
+    color: #bfdbfe;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
   .welcome-v2 .hero h1 {
-    margin: 0 auto 1rem;
-    max-width: 900px;
+    margin: 0 0 1rem;
     color: #fff;
     font-size: clamp(2.5rem, 6vw, 5rem);
     line-height: 1.04;
@@ -42,16 +60,54 @@
   }
 
   .welcome-v2 .hero p {
-    max-width: 760px;
-    margin: 0 auto 2.25rem;
+    max-width: 720px;
+    margin: 0 0 1.5rem;
     color: #94a3b8;
     font-size: 1.08rem;
     line-height: 1.8;
   }
 
+  .welcome-v2 .hero-lead {
+    font-size: 1.02rem;
+  }
+
+  .welcome-v2 .hero-points {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin: 1.35rem 0 2rem;
+  }
+
+  .welcome-v2 .hero-point {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.58);
+    border: 1px solid rgba(51, 65, 85, 0.88);
+  }
+
+  .welcome-v2 .hero-point i {
+    color: #60a5fa;
+    font-size: 1.15rem;
+    margin-top: 0.1rem;
+  }
+
+  .welcome-v2 .hero-point strong {
+    display: block;
+    color: #f8fafc;
+    margin-bottom: 0.15rem;
+  }
+
+  .welcome-v2 .hero-point span {
+    color: #94a3b8;
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
   .welcome-v2 .hero-actions {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.9rem;
     flex-wrap: wrap;
   }
@@ -70,6 +126,91 @@
   .welcome-v2 .hero-actions .btn-outline-light {
     border-color: rgba(148, 163, 184, 0.5);
     color: #e2e8f0;
+  }
+
+  .welcome-v2 .hero-visual {
+    position: relative;
+  }
+
+  .welcome-v2 .hero-media-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 560px;
+    border-radius: 30px;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+    border: 1px solid rgba(96, 165, 250, 0.16);
+    box-shadow: 0 30px 70px rgba(2, 6, 23, 0.36);
+  }
+
+  .welcome-v2 .hero-media-card img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .welcome-v2 .hero-media-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.86));
+  }
+
+  .welcome-v2 .hero-media-copy {
+    position: absolute;
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 1;
+    padding: 1.25rem;
+    border-radius: 22px;
+    background: rgba(15, 23, 42, 0.74);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    backdrop-filter: blur(12px);
+  }
+
+  .welcome-v2 .hero-media-copy h3 {
+    margin: 0 0 0.45rem;
+    color: #fff;
+    font-size: 1.25rem;
+    font-family: var(--font-heading);
+  }
+
+  .welcome-v2 .hero-media-copy p {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .welcome-v2 .fact-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.2rem;
+  }
+
+  .welcome-v2 .fact-pill {
+    padding: 1rem 1.1rem;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.64);
+    border: 1px solid rgba(51, 65, 85, 0.92);
+    box-shadow: 0 18px 40px rgba(2, 6, 23, 0.2);
+  }
+
+  .welcome-v2 .fact-pill strong {
+    display: block;
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .welcome-v2 .fact-pill span {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    line-height: 1.45;
   }
 
   .welcome-v2 .feature-block {
@@ -97,7 +238,7 @@
 
   .welcome-v2 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.25rem;
   }
 
@@ -142,27 +283,193 @@
     line-height: 1.7;
   }
 
+  .welcome-v2 .project-story {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+    gap: 1.4rem;
+    align-items: stretch;
+  }
+
+  .welcome-v2 .story-panel,
+  .welcome-v2 .story-image-card,
+  .welcome-v2 .flow-card,
+  .welcome-v2 .gallery-card,
+  .welcome-v2 .cta {
+    border-radius: 28px;
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    background: rgba(15, 23, 42, 0.6);
+    box-shadow: 0 22px 50px rgba(2, 6, 23, 0.26);
+  }
+
+  .welcome-v2 .story-panel {
+    padding: 2rem;
+  }
+
+  .welcome-v2 .story-panel h2,
+  .welcome-v2 .flow-heading h2,
+  .welcome-v2 .gallery-heading h2,
+  .welcome-v2 .cta h2 {
+    color: #fff;
+    margin: 0 0 0.75rem;
+    font-family: var(--font-heading);
+  }
+
+  .welcome-v2 .story-panel p,
+  .welcome-v2 .flow-heading p,
+  .welcome-v2 .gallery-heading p,
+  .welcome-v2 .cta p {
+    color: #94a3b8;
+    line-height: 1.75;
+  }
+
+  .welcome-v2 .story-list {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.35rem;
+  }
+
+  .welcome-v2 .story-list-item {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+  }
+
+  .welcome-v2 .story-list-item i {
+    color: #60a5fa;
+    font-size: 1.1rem;
+    margin-top: 0.2rem;
+  }
+
+  .welcome-v2 .story-list-item strong {
+    display: block;
+    color: #fff;
+    margin-bottom: 0.25rem;
+  }
+
+  .welcome-v2 .story-list-item span {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .welcome-v2 .story-image-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 100%;
+  }
+
+  .welcome-v2 .story-image-card img {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    object-fit: cover;
+  }
+
+  .welcome-v2 .story-image-caption {
+    position: absolute;
+    left: 1.25rem;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.76);
+    color: #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  .welcome-v2 .flow-section,
+  .welcome-v2 .gallery-section {
+    margin-top: 4rem;
+  }
+
+  .welcome-v2 .flow-heading,
+  .welcome-v2 .gallery-heading {
+    max-width: 840px;
+    margin-bottom: 1.6rem;
+  }
+
+  .welcome-v2 .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .welcome-v2 .flow-card {
+    padding: 1.6rem;
+  }
+
+  .welcome-v2 .flow-card .step {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+    background: rgba(37, 99, 235, 0.16);
+    color: #93c5fd;
+    font-weight: 800;
+  }
+
+  .welcome-v2 .flow-card h3 {
+    color: #fff;
+    font-size: 1.08rem;
+    margin: 0 0 0.6rem;
+  }
+
+  .welcome-v2 .flow-card p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.93rem;
+    line-height: 1.65;
+  }
+
+  .welcome-v2 .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .welcome-v2 .gallery-card {
+    overflow: hidden;
+  }
+
+  .welcome-v2 .gallery-card img {
+    width: 100%;
+    height: 270px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .welcome-v2 .gallery-copy {
+    padding: 1.15rem 1.25rem 1.3rem;
+  }
+
+  .welcome-v2 .gallery-copy h3 {
+    color: #fff;
+    font-size: 1.08rem;
+    margin: 0 0 0.45rem;
+  }
+
+  .welcome-v2 .gallery-copy p {
+    margin: 0;
+    color: #94a3b8;
+    line-height: 1.65;
+    font-size: 0.93rem;
+  }
+
   .welcome-v2 .cta {
     margin-top: 4rem;
     padding: 2.25rem;
     border-radius: 28px;
     background: linear-gradient(135deg, rgba(30, 64, 175, 0.24), rgba(15, 23, 42, 0.72));
-    border: 1px solid rgba(59, 130, 246, 0.25);
     text-align: center;
-    box-shadow: 0 22px 50px rgba(2, 6, 23, 0.26);
-  }
-
-  .welcome-v2 .cta h2 {
-    margin: 0 0 0.7rem;
-    color: #fff;
-    font-family: var(--font-heading);
   }
 
   .welcome-v2 .cta p {
     max-width: 720px;
     margin: 0 auto 1.4rem;
-    color: #bfdbfe;
-    line-height: 1.7;
   }
 
   .welcome-v2 .cta .btn {
@@ -172,13 +479,54 @@
     font-weight: 800;
   }
 
+  @media (max-width: 1080px) {
+    .welcome-v2 .hero,
+    .welcome-v2 .project-story,
+    .welcome-v2 .feature-grid,
+    .welcome-v2 .flow-grid,
+    .welcome-v2 .gallery-grid,
+    .welcome-v2 .fact-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .welcome-v2 .hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 760px) {
+    .welcome-v2 .hero,
+    .welcome-v2 .project-story,
     .welcome-v2 .feature-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .welcome-v2 .flow-grid,
+    .welcome-v2 .gallery-grid,
+    .welcome-v2 .fact-strip,
+    .welcome-v2 .hero-points {
       grid-template-columns: 1fr;
     }
 
     .welcome-v2 {
       padding-top: 2rem;
+    }
+
+    .welcome-v2 .hero {
+      gap: 1.4rem;
+    }
+
+    .welcome-v2 .hero-media-card {
+      min-height: 440px;
+    }
+
+    .welcome-v2 .hero-actions {
+      justify-content: stretch;
+    }
+
+    .welcome-v2 .hero-actions .btn {
+      width: 100%;
+      min-width: 0;
     }
   }
 </style>
@@ -186,59 +534,249 @@
 <section class="welcome-v2">
   <div class="shell">
     <div class="hero">
-      <h1>
-        {{ 'Bienvenido al' if is_es else 'Welcome to the' }}
-        <span class="accent">{{ 'sistema de soporte' if is_es else 'support system' }}</span>
-      </h1>
-      <p>{{ _('Use navigation to sign in or create tickets.') }} {{ 'Diseñado para equipos que necesitan una operación clara, moderna y lista para trabajar en serio.' if is_es else 'Designed for teams that need a clear, modern operation ready for real work.' }}</p>
+      <div class="hero-copy">
+        <div class="eyebrow">
+          <i class="bi bi-shield-check"></i>
+          <span>{{ 'Plataforma corporativa de soporte técnico' if is_es else 'Corporate technical support platform' }}</span>
+        </div>
+        <h1>
+          {{ 'Centraliza tickets, soporte y seguimiento en un solo' if is_es else 'Centralize tickets, support, and follow-up in one' }}
+          <span class="accent">{{ 'sistema operativo real' if is_es else 'real operational system' }}</span>
+        </h1>
+        <p class="hero-lead">
+          {{ 'SMART SUPPORT PLATFORM es una solución construida en Flask para administrar tickets, atención técnica, clasificación inteligente, reportes ejecutivos y operación diaria de soporte con una experiencia clara para usuarios, técnicos y administradores.' if is_es else 'SMART SUPPORT PLATFORM is a Flask-based solution built to manage tickets, technical assistance, intelligent classification, executive reporting, and the day-to-day support operation with a clear experience for users, technicians, and administrators.' }}
+        </p>
+        <p>
+          {{ 'El proyecto ya integra creación guiada de tickets, panel administrativo, roles corporativos, notificaciones por correo y webhook, catálogo administrable de categorías y prioridades, soporte bilingüe y un módulo de IA/ML para sugerir clasificación y asignación de casos.' if is_es else 'The project already includes guided ticket creation, an administrative dashboard, corporate roles, email and webhook notifications, an administrable catalog for categories and priorities, bilingual support, and an AI/ML module to suggest case classification and assignment.' }}
+        </p>
 
-      <div class="hero-actions">
-        {% if current_user.is_authenticated %}
-          <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-light">{{ _('View Tickets') }}</a>
-          <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary text-white">{{ _('Create Ticket') }}</a>
-        {% else %}
-          <a href="#loginModal" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
-          <a href="#loginModal" class="btn btn-primary text-white" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>
-        {% endif %}
+        <div class="hero-points">
+          <div class="hero-point">
+            <i class="bi bi-people"></i>
+            <div>
+              <strong>{{ 'Roles operativos definidos' if is_es else 'Defined operational roles' }}</strong>
+              <span>{{ 'Usuarios, técnicos y administradores trabajan en el mismo flujo con permisos diferenciados.' if is_es else 'Users, technicians, and administrators work in the same flow with differentiated permissions.' }}</span>
+            </div>
+          </div>
+          <div class="hero-point">
+            <i class="bi bi-cpu"></i>
+            <div>
+              <strong>{{ 'IA y ML integrados' if is_es else 'Built-in AI and ML' }}</strong>
+              <span>{{ 'El sistema puede sugerir categorías, ayudar al usuario y preasignar casos según contexto e historial.' if is_es else 'The system can suggest categories, help the user, and pre-assign cases based on context and historical patterns.' }}</span>
+            </div>
+          </div>
+          <div class="hero-point">
+            <i class="bi bi-envelope-check"></i>
+            <div>
+              <strong>{{ 'Seguimiento y alertas' if is_es else 'Tracking and alerts' }}</strong>
+              <span>{{ 'Notificaciones por correo y webhook para mantener visible cada cambio importante del ticket.' if is_es else 'Email and webhook notifications keep every important ticket change visible.' }}</span>
+            </div>
+          </div>
+          <div class="hero-point">
+            <i class="bi bi-graph-up-arrow"></i>
+            <div>
+              <strong>{{ 'Visibilidad operativa' if is_es else 'Operational visibility' }}</strong>
+              <span>{{ 'Dashboard, reportes ejecutivos y filtros avanzados para supervisar volumen, estados y rendimiento.' if is_es else 'Dashboard, executive reporting, and advanced filters to supervise volume, status, and performance.' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-light">{{ _('View Tickets') }}</a>
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary text-white">{{ _('Create Ticket') }}</a>
+          {% else %}
+            <a href="#loginModal" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
+            <a href="#loginModal" class="btn btn-primary text-white" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-media-card">
+          <img src="{{ url_for('static', filename='img/soporte1.png') }}" alt="{{ 'Equipo de soporte técnico atendiendo incidencias desde una mesa de trabajo' if is_es else 'Technical support team handling incidents from a shared workspace' }}" loading="eager">
+          <div class="hero-media-copy">
+            <h3>{{ 'Soporte coordinado para operación real' if is_es else 'Coordinated support for real operations' }}</h3>
+            <p>{{ 'La plataforma está pensada para entornos empresariales donde incidentes, seguimiento, comunicación y trazabilidad deben estar conectados en un solo lugar.' if is_es else 'The platform is designed for business environments where incidents, follow-up, communication, and traceability must stay connected in one place.' }}</p>
+          </div>
+        </div>
+        <div class="fact-strip">
+          <div class="fact-pill">
+            <strong>3</strong>
+            <span>{{ 'roles nativos: usuario, técnico y administrador' if is_es else 'native roles: user, technician, and admin' }}</span>
+          </div>
+          <div class="fact-pill">
+            <strong>2</strong>
+            <span>{{ 'idiomas disponibles para la interfaz principal' if is_es else 'languages available in the main interface' }}</span>
+          </div>
+          <div class="fact-pill">
+            <strong>AI + ML</strong>
+            <span>{{ 'asistente, clasificación y sugerencia de asignación' if is_es else 'assistant, classification, and assignment suggestion' }}</span>
+          </div>
+          <div class="fact-pill">
+            <strong>Web + Email</strong>
+            <span>{{ 'canales de notificación y seguimiento integrados' if is_es else 'integrated notification and tracking channels' }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="feature-block">
       <div class="feature-head">
-        <h2>{{ _('Key Features') }}</h2>
-        <p>{{ _('Everything you need for efficient support management') }}</p>
+        <h2>{{ 'Módulos reales del proyecto' if is_es else 'Real project modules' }}</h2>
+        <p>{{ 'Funciones que ya existen dentro de la plataforma y forman parte de la operación diaria.' if is_es else 'Capabilities that already exist inside the platform and are part of the daily operation.' }}</p>
       </div>
 
       <div class="feature-grid">
         <article class="feature-card">
           <div class="icon-box"><i class="bi bi-robot"></i></div>
-          <h3>{{ _('AI Support Assistant') }}</h3>
-          <p>{{ _('Floating assistant with AI to help resolve technical issues and guide users with actionable steps.') }}</p>
+          <h3>{{ 'Asistente de soporte con IA' if is_es else 'AI support assistant' }}</h3>
+          <p>{{ 'Asistente flotante que orienta al usuario, ayuda a describir incidencias y propone acciones útiles antes de escalar el caso.' if is_es else 'Floating assistant that guides the user, helps describe incidents, and proposes useful actions before the case is escalated.' }}</p>
         </article>
 
         <article class="feature-card">
           <div class="icon-box"><i class="bi bi-ticket-detailed"></i></div>
-          <h3>{{ _('Guided Ticket Creation') }}</h3>
-          <p>{{ _('Turn conversations into prefilled tickets with context, category suggestions, and faster triage.') }}</p>
+          <h3>{{ 'Creación guiada de tickets' if is_es else 'Guided ticket creation' }}</h3>
+          <p>{{ 'Los tickets se crean con contexto, nombre del reportante, categoría, prioridad y datos que facilitan el triage desde el primer momento.' if is_es else 'Tickets are created with context, reporter name, category, priority, and data that make triage easier from the first step.' }}</p>
         </article>
 
         <article class="feature-card">
           <div class="icon-box"><i class="bi bi-diagram-3"></i></div>
-          <h3>{{ _('Automatic Classification') }}</h3>
-          <p>{{ _('Detects categories like VPN, printers, email, accounts, and software to route requests correctly.') }}</p>
+          <h3>{{ 'Clasificación y sugerencia automática' if is_es else 'Automatic classification and suggestion' }}</h3>
+          <p>{{ 'El módulo de ML analiza el contenido del ticket y puede sugerir categoría, técnico adecuado y nivel de confianza para la asignación.' if is_es else 'The ML module analyzes ticket content and can suggest category, the best technician, and a confidence level for assignment.' }}</p>
         </article>
 
         <article class="feature-card">
-          <div class="icon-box"><i class="bi bi-graph-up-arrow"></i></div>
-          <h3>{{ _('Operational Dashboard') }}</h3>
-          <p>{{ _('Track SLAs, ticket states, and support performance with real-time operational visibility.') }}</p>
+          <div class="icon-box"><i class="bi bi-speedometer2"></i></div>
+          <h3>{{ 'Dashboard y panel ejecutivo' if is_es else 'Dashboard and executive panel' }}</h3>
+          <p>{{ 'Administradores y técnicos disponen de métricas de tickets, estados, carga operativa y reportes para seguimiento gerencial.' if is_es else 'Administrators and technicians get ticket metrics, status views, operational load, and reports for management follow-up.' }}</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="icon-box"><i class="bi bi-bell"></i></div>
+          <h3>{{ 'Notificaciones y trazabilidad' if is_es else 'Notifications and traceability' }}</h3>
+          <p>{{ 'Cada cambio relevante del ticket puede notificarse por correo o webhook para mantener al equipo alineado sin salir de su canal habitual.' if is_es else 'Every relevant ticket change can notify by email or webhook to keep the team aligned without leaving their usual channel.' }}</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="icon-box"><i class="bi bi-shield-lock"></i></div>
+          <h3>{{ 'Acceso corporativo y control de roles' if is_es else 'Corporate access and role control' }}</h3>
+          <p>{{ 'El sistema trabaja con usuarios creados por administración, control de permisos, dominios autorizados y cambio seguro de contraseña.' if is_es else 'The system works with admin-created users, permission control, authorized domains, and secure password change.' }}</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="project-story">
+      <article class="story-panel">
+        <h2>{{ 'Qué resuelve esta plataforma' if is_es else 'What this platform solves' }}</h2>
+        <p>{{ 'No es una simple página de tickets. El proyecto está construido para ordenar el trabajo de soporte, reducir tiempos muertos, mejorar la calidad del reporte inicial y dar visibilidad a la operación técnica en empresas que necesitan seguimiento serio.' if is_es else 'This is not just a ticket page. The project is built to organize support work, reduce dead time, improve the quality of the initial report, and provide visibility into the technical operation for companies that need serious follow-up.' }}</p>
+
+        <div class="story-list">
+          <div class="story-list-item">
+            <i class="bi bi-check2-circle"></i>
+            <div>
+              <strong>{{ 'Unifica la entrada de incidentes' if is_es else 'Unifies incident intake' }}</strong>
+              <span>{{ 'Los usuarios crean solicitudes desde una misma plataforma, con formularios y asistencia pensados para describir mejor el problema.' if is_es else 'Users create requests from a single platform, with forms and assistance designed to describe the problem better.' }}</span>
+            </div>
+          </div>
+          <div class="story-list-item">
+            <i class="bi bi-check2-circle"></i>
+            <div>
+              <strong>{{ 'Mejora la asignación del trabajo' if is_es else 'Improves work assignment' }}</strong>
+              <span>{{ 'El componente de machine learning aprende de tickets resueltos para sugerir el técnico más adecuado según historial, categoría y contenido.' if is_es else 'The machine learning component learns from resolved tickets to suggest the most suitable technician based on history, category, and content.' }}</span>
+            </div>
+          </div>
+          <div class="story-list-item">
+            <i class="bi bi-check2-circle"></i>
+            <div>
+              <strong>{{ 'Da seguimiento visible a cada caso' if is_es else 'Makes every case visible' }}</strong>
+              <span>{{ 'Filtros, estados, prioridades y reportes ayudan a supervisar el avance sin perder contexto entre usuarios, técnicos y administración.' if is_es else 'Filters, status, priorities, and reports help supervise progress without losing context between users, technicians, and administration.' }}</span>
+            </div>
+          </div>
+          <div class="story-list-item">
+            <i class="bi bi-check2-circle"></i>
+            <div>
+              <strong>{{ 'Escala con operación comercial y soporte' if is_es else 'Scales with business and support operations' }}</strong>
+              <span>{{ 'El proyecto incorpora pricing y suscripciones para un modelo de plataforma listo para operación en Render y despliegue productivo.' if is_es else 'The project includes pricing and subscriptions for a platform model ready for Render-based productive deployment.' }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="story-image-card">
+        <img src="{{ url_for('static', filename='img/Soporte 2.png') }}" alt="{{ 'Profesionales de soporte revisando métricas y casos en una reunión operativa' if is_es else 'Support professionals reviewing metrics and cases in an operational meeting' }}" loading="lazy">
+        <div class="story-image-caption">
+          {{ 'La plataforma conecta atención, clasificación, seguimiento y toma de decisiones en el mismo flujo de trabajo.' if is_es else 'The platform connects service, classification, follow-up, and decision-making in the same workflow.' }}
+        </div>
+      </article>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-heading">
+        <h2>{{ 'Cómo funciona en la práctica' if is_es else 'How it works in practice' }}</h2>
+        <p>{{ 'Un flujo pensado para que el usuario reporte mejor, el equipo técnico responda más rápido y la administración tenga trazabilidad del servicio.' if is_es else 'A workflow designed so the user reports better, the technical team responds faster, and administration gets full service traceability.' }}</p>
+      </div>
+
+      <div class="flow-grid">
+        <article class="flow-card">
+          <div class="step">1</div>
+          <h3>{{ 'El usuario reporta' if is_es else 'The user reports' }}</h3>
+          <p>{{ 'Puede iniciar sesión, describir el problema y crear un ticket con información estructurada para acelerar la atención.' if is_es else 'They can sign in, describe the issue, and create a ticket with structured information to speed up support.' }}</p>
+        </article>
+        <article class="flow-card">
+          <div class="step">2</div>
+          <h3>{{ 'La plataforma clasifica' if is_es else 'The platform classifies' }}</h3>
+          <p>{{ 'El sistema utiliza reglas, catálogos y modelos ML para apoyar la categorización y la sugerencia de asignación.' if is_es else 'The system uses rules, catalogs, and ML models to support categorization and assignment suggestion.' }}</p>
+        </article>
+        <article class="flow-card">
+          <div class="step">3</div>
+          <h3>{{ 'El equipo da soporte' if is_es else 'The team provides support' }}</h3>
+          <p>{{ 'Técnicos y administradores visualizan tickets, prioridades, estados y datos históricos para intervenir con criterio.' if is_es else 'Technicians and administrators view tickets, priorities, status, and historical data to act with context.' }}</p>
+        </article>
+        <article class="flow-card">
+          <div class="step">4</div>
+          <h3>{{ 'La operación se mide' if is_es else 'The operation gets measured' }}</h3>
+          <p>{{ 'Dashboard, executive report y exportaciones permiten revisar rendimiento, volumen y decisiones de mejora continua.' if is_es else 'Dashboard, executive report, and exports allow teams to review performance, volume, and continuous improvement decisions.' }}</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="gallery-section">
+      <div class="gallery-heading">
+        <h2>{{ 'Atención técnica con rostro humano' if is_es else 'Technical support with a human face' }}</h2>
+        <p>{{ 'La bienvenida ahora muestra mejor el tipo de equipo y de trabajo que representa la plataforma: acompañamiento, seguimiento y resolución organizada de incidencias.' if is_es else 'The welcome page now reflects the kind of team and work the platform represents: guidance, follow-up, and organized incident resolution.' }}</p>
+      </div>
+
+      <div class="gallery-grid">
+        <article class="gallery-card">
+          <img src="{{ url_for('static', filename='img/Soporte 3.png') }}" alt="{{ 'Agente de soporte técnico atendiendo a un usuario desde su estación de trabajo' if is_es else 'Support agent assisting a user from a workstation' }}" loading="lazy">
+          <div class="gallery-copy">
+            <h3>{{ 'Atención inicial clara' if is_es else 'Clear first response' }}</h3>
+            <p>{{ 'La experiencia está diseñada para mejorar la primera interacción del usuario y registrar incidencias con mejor contexto.' if is_es else 'The experience is designed to improve the user’s first interaction and capture incidents with better context.' }}</p>
+          </div>
+        </article>
+
+        <article class="gallery-card">
+          <img src="{{ url_for('static', filename='img/Soporte 4.png') }}" alt="{{ 'Equipo de soporte colaborando en la resolución de tickets y tareas técnicas' if is_es else 'Support team collaborating on ticket resolution and technical tasks' }}" loading="lazy">
+          <div class="gallery-copy">
+            <h3>{{ 'Colaboración de equipo' if is_es else 'Team collaboration' }}</h3>
+            <p>{{ 'El sistema sirve para compartir visibilidad entre varias personas sin romper el seguimiento del caso.' if is_es else 'The system helps multiple people share visibility without breaking case continuity.' }}</p>
+          </div>
+        </article>
+
+        <article class="gallery-card">
+          <img src="{{ url_for('static', filename='img/Soporte 5.png') }}" alt="{{ 'Especialista de soporte dando asistencia remota y seguimiento al cliente' if is_es else 'Support specialist providing remote assistance and customer follow-up' }}" loading="lazy">
+          <div class="gallery-copy">
+            <h3>{{ 'Seguimiento y resolución' if is_es else 'Follow-up and resolution' }}</h3>
+            <p>{{ 'La propuesta del proyecto es acompañar el ticket hasta su cierre con trazabilidad y datos útiles para futuras decisiones.' if is_es else 'The project’s goal is to accompany each ticket until closure with traceability and useful data for future decisions.' }}</p>
+          </div>
         </article>
       </div>
     </div>
 
     <div class="cta">
-      <h2>{{ _('Ready to get started?') }}</h2>
-      <p>{{ _('Join the support system and manage tickets efficiently') }}</p>
+      <h2>{{ 'Empieza con una plataforma de soporte mejor explicada y mejor preparada' if is_es else 'Start with a support platform that is better explained and better prepared' }}</h2>
+      <p>{{ 'La página de bienvenida ahora presenta el proyecto como lo que realmente es: una solución corporativa para soporte técnico, seguimiento operativo, clasificación inteligente y atención organizada.' if is_es else 'The welcome page now presents the project for what it really is: a corporate solution for technical support, operational follow-up, intelligent classification, and organized service.' }}</p>
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-light">{{ _('Go to Tickets') }}</a>
       {% else %}
