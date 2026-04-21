@@ -385,7 +385,7 @@ class ChatBot:
 
         return None
     
-    def find_answer(self, question: str, lang: str = 'en') -> Optional[Dict]:
+    def find_answer(self, question: str, lang: str = 'es') -> Optional[Dict]:
         """Find best matching answer for user question.
         
         Args:
@@ -452,7 +452,7 @@ def get_chatbot() -> ChatBot:
     return _chatbot
 
 
-def _call_llm_api(messages: List[Dict], lang: str = 'en') -> Optional[str]:
+def _call_llm_api(messages: List[Dict], lang: str = 'es') -> Optional[str]:
     """Call an LLM API (Groq or OpenAI) for intelligent responses."""
     import os
     import requests
@@ -522,7 +522,7 @@ def _call_llm_api(messages: List[Dict], lang: str = 'en') -> Optional[str]:
     return None
 
 
-def converse_with_assistant(user_id: int, user_message: str, lang: str = 'en') -> Dict:
+def converse_with_assistant(user_id: int, user_message: str, lang: str = 'es') -> Dict:
     """Have an intelligent conversation with the assistant using LLM if available.
     
     Falls back to knowledge base if no LLM is configured.
@@ -589,7 +589,7 @@ def converse_with_assistant(user_id: int, user_message: str, lang: str = 'en') -
     }
 
 
-def answer_question(question: str, lang: str = 'en') -> Optional[Dict]:
+def answer_question(question: str, lang: str = 'es') -> Optional[Dict]:
     """Find automatic answer for a question.
     
     Args:

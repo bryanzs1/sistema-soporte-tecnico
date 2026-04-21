@@ -23,7 +23,7 @@ def index():
 
 @bp.route('/pricing')
 def pricing():
-    lang = session.get('lang', 'en')
+    lang = session.get('lang', 'es')
     return render_template(
         'pricing.html',
         monthly_price_display=os.environ.get(
@@ -60,7 +60,7 @@ def presence_ping():
 @login_required
 def assistant_chat():
     """User-facing support assistant endpoint for the floating chatbot."""
-    lang = session.get('lang', 'en')
+    lang = session.get('lang', 'es')
     data = request.get_json(silent=True) or {}
     message = ' '.join((data.get('message') or '').split())
 
@@ -102,7 +102,7 @@ def assistant_chat():
 @bp.route('/lang/<lang>')
 def set_language(lang):
     if lang not in ('en', 'es'):
-        lang = 'en'
+        lang = 'es'
     session['lang'] = lang
     return redirect(request.referrer or url_for('main.index'))
 

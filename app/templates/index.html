@@ -71,6 +71,24 @@
     font-size: 1.02rem;
   }
 
+  .welcome-v2 .hero-lang-switch {
+    display: inline-flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin: 0 0 1.15rem;
+  }
+
+  .welcome-v2 .hero-lang-switch .btn {
+    min-width: 0;
+    padding: 0.7rem 1rem;
+    border-radius: 14px;
+    font-weight: 700;
+  }
+
+  .welcome-v2 .hero-lang-switch .btn-primary {
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.22);
+  }
+
   .welcome-v2 .hero-points {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -543,6 +561,14 @@
           {{ 'Centraliza tickets, soporte y seguimiento en un solo' if is_es else 'Centralize tickets, support, and follow-up in one' }}
           <span class="accent">{{ 'sistema operativo real' if is_es else 'real operational system' }}</span>
         </h1>
+        <div class="hero-lang-switch" aria-label="{{ 'Selector de idioma' if is_es else 'Language selector' }}">
+          <a href="{{ url_for('main.set_language', lang='es') }}" class="btn {{ 'btn-primary text-white' if is_es else 'btn-outline-light' }}">
+            <i class="bi bi-translate me-2"></i>{{ 'Español primero' if is_es else 'Spanish first' }}
+          </a>
+          <a href="{{ url_for('main.set_language', lang='en') }}" class="btn {{ 'btn-outline-light' if is_es else 'btn-primary text-white' }}">
+            <i class="bi bi-globe-americas me-2"></i>{{ 'English' if is_es else 'English active' }}
+          </a>
+        </div>
         <p class="hero-lead">
           {{ 'SMART SUPPORT PLATFORM es una solución construida en Flask para administrar tickets, atención técnica, clasificación inteligente, reportes ejecutivos y operación diaria de soporte con una experiencia clara para usuarios, técnicos y administradores.' if is_es else 'SMART SUPPORT PLATFORM is a Flask-based solution built to manage tickets, technical assistance, intelligent classification, executive reporting, and the day-to-day support operation with a clear experience for users, technicians, and administrators.' }}
         </p>

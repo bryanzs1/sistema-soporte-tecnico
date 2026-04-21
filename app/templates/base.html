@@ -99,18 +99,31 @@
               <!-- Language Dropdown -->
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle app-nav-link app-lang-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'en')|upper }}</span>
+                  <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'es')|upper }}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end app-surface-dropdown">
-                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
-                    <i class="bi bi-translate me-2"></i>EN
-                  </a></li>
                   <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
                     <i class="bi bi-translate me-2"></i>ES
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
+                    <i class="bi bi-translate me-2"></i>EN
                   </a></li>
                 </ul>
               </li>
             {% else %}
+              <li class="nav-item dropdown d-flex align-items-center">
+                <a class="nav-link dropdown-toggle app-nav-link app-lang-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'es')|upper }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end app-surface-dropdown">
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
+                    <i class="bi bi-translate me-2"></i>{{ _('Spanish') }}
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
+                    <i class="bi bi-translate me-2"></i>{{ _('English') }}
+                  </a></li>
+                </ul>
+              </li>
               <li class="nav-item d-flex align-items-center nav-guest-actions">
                 <a class="btn btn-sm app-secondary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
                 <a class="btn btn-sm app-primary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>

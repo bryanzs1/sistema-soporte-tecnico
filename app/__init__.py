@@ -407,7 +407,7 @@ TRANSLATIONS = {
 }
 
 
-def translate(text: str, lang: str = 'en') -> str:
+def translate(text: str, lang: str = 'es') -> str:
     return TRANSLATIONS.get(lang, {}).get(text, text)
 
 
@@ -586,10 +586,14 @@ def create_app(config_class=None):
     from app.routes import bp as main_bp
     app.register_blueprint(main_bp)
 
+    @app.before_request
+    def ensure_default_language():
+        session.setdefault('lang', 'es')
+
     # make current year available in templates for footer
     @app.context_processor
     def inject_current_year():
-        lang = session.get('lang', 'en')
+        lang = session.get('lang', 'es')
 
         def _translate(text):
             return translate(text, lang)

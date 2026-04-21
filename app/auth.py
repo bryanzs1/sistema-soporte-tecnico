@@ -20,7 +20,7 @@ bp = Blueprint('auth', __name__)
 
 
 def _t(text):
-    return translate(text, session.get('lang', 'en'))
+    return translate(text, session.get('lang', 'es'))
 
 
 def must_change_default_admin_password(user):

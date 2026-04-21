@@ -27,7 +27,7 @@ def utcnow():
 
 
 def _t(text):
-    return translate(text, session.get('lang', 'en'))
+    return translate(text, session.get('lang', 'es'))
 
 
 def _company_ticket_query():
@@ -258,7 +258,7 @@ def _serialize_comment(ticket, comment):
     elif ticket.technician_id and comment.user_id == ticket.technician_id:
         message_role = 'technician'
 
-    target_lang = session.get('lang', 'en')
+    target_lang = session.get('lang', 'es')
     translated_message = _t(comment.message)
     if translated_message == comment.message:
         translated_message = _translate_chat_free_text(comment.message, target_lang)

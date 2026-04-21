@@ -19,7 +19,7 @@ class CompanyForm(FlaskForm):
 
 
 def tr(en_text, es_text):
-    return es_text if session.get('lang', 'en') == 'es' else en_text
+    return es_text if session.get('lang', 'es') == 'es' else en_text
 
 
 class LoginForm(FlaskForm):
@@ -67,7 +67,7 @@ class TicketForm(FlaskForm):
         self.submit.label.text = tr('Create Ticket', 'Crear ticket')
         self.category.choices = [(c, c) for c in Ticket.categories()]
         self.priority.choices = [(p, p) for p in Ticket.priorities()]
-        if session.get('lang', 'en') == 'en':
+        if session.get('lang', 'es') == 'en':
             self.category.choices = [
                 (c, translate(c, 'en')) for c in Ticket.categories()
             ]
@@ -87,7 +87,7 @@ class TicketUpdateForm(FlaskForm):
         self.status.label.text = tr('Status', 'Estado')
         self.technician.label.text = tr('Assign to', 'Asignar a')
         self.submit.label.text = tr('Update Ticket', 'Actualizar ticket')
-        if session.get('lang', 'en') == 'en':
+        if session.get('lang', 'es') == 'en':
             self.status.choices = [
                 ('Abierto', 'Open'),
                 ('En proceso', 'In progress'),
@@ -178,7 +178,7 @@ class TicketOptionForm(FlaskForm):
         self.option_type.label.text = tr('Type', 'Tipo')
         self.value.label.text = tr('Value', 'Valor')
         self.submit.label.text = tr('Add', 'Agregar')
-        if session.get('lang', 'en') == 'es':
+        if session.get('lang', 'es') == 'es':
             self.option_type.choices = [('category', 'Categoría'), ('priority', 'Prioridad')]
 
     def validate_value(self, field):

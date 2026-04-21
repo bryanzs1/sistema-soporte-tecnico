@@ -130,7 +130,7 @@ def utcnow():
 
 
 def _t(text):
-    return translate(text, session.get('lang', 'en'))
+    return translate(text, session.get('lang', 'es'))
 
 
 def admin_required(func):
