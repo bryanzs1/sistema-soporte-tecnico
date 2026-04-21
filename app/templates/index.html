@@ -558,19 +558,13 @@
           <span>{{ 'Plataforma corporativa de soporte técnico' if is_es else 'Corporate technical support platform' }}</span>
         </div>
         <h1>
-          {{ 'Centraliza tickets, soporte y seguimiento en un solo' if is_es else 'Centralize tickets, support, and follow-up in one' }}
-          <span class="accent">{{ 'sistema operativo real' if is_es else 'real operational system' }}</span>
+          {{ 'Optimiza y centraliza tu soporte técnico corporativo' if is_es else 'Optimize and centralize your corporate technical support' }}
         </h1>
-        <div class="hero-lang-switch" aria-label="{{ 'Selector de idioma' if is_es else 'Language selector' }}">
-          <a href="{{ url_for('main.set_language', lang='es') }}" class="btn {{ 'btn-primary text-white' if is_es else 'btn-outline-light' }}">
-            <i class="bi bi-translate me-2"></i>{{ 'Español primero' if is_es else 'Spanish first' }}
-          </a>
-          <a href="{{ url_for('main.set_language', lang='en') }}" class="btn {{ 'btn-outline-light' if is_es else 'btn-primary text-white' }}">
-            <i class="bi bi-globe-americas me-2"></i>{{ 'English' if is_es else 'English active' }}
-          </a>
-        </div>
         <p class="hero-lead">
-          {{ 'SMART SUPPORT PLATFORM es una solución construida en Flask para administrar tickets, atención técnica, clasificación inteligente, reportes ejecutivos y operación diaria de soporte con una experiencia clara para usuarios, técnicos y administradores.' if is_es else 'SMART SUPPORT PLATFORM is a Flask-based solution built to manage tickets, technical assistance, intelligent classification, executive reporting, and the day-to-day support operation with a clear experience for users, technicians, and administrators.' }}
+          {{ 'ES SOPORTE IT PRO es una plataforma avanzada desarrollada en Flask que centraliza la gestión de tickets, soporte técnico, clasificación inteligente, reportes ejecutivos y la operación diaria, brindando una experiencia eficiente y transparente para usuarios, técnicos y administradores.' if is_es else 'ES SOPORTE IT PRO is an advanced platform developed in Flask that centralizes ticket management, technical support, intelligent classification, executive reporting, and daily operations, providing an efficient and transparent experience for users, technicians, and administrators.' }}
+        </p>
+        <p class="hero-lead">
+          {{ 'La plataforma impulsa la colaboración efectiva, el seguimiento puntual y la resolución estructurada de incidencias, fortaleciendo el trabajo en equipo y la excelencia operativa en soporte técnico.' if is_es else 'The platform drives effective collaboration, timely follow-up, and structured incident resolution, strengthening teamwork and operational excellence in technical support.' }}
         </p>
         <p>
           {{ 'El proyecto ya integra creación guiada de tickets, panel administrativo, roles corporativos, notificaciones por correo y webhook, catálogo administrable de categorías y prioridades, soporte bilingüe y un módulo de IA/ML para sugerir clasificación y asignación de casos.' if is_es else 'The project already includes guided ticket creation, an administrative dashboard, corporate roles, email and webhook notifications, an administrable catalog for categories and priorities, bilingual support, and an AI/ML module to suggest case classification and assignment.' }}
@@ -624,6 +618,7 @@
           <div class="hero-media-copy">
             <h3>{{ 'Operación de soporte centralizada' if is_es else 'Centralized support operations' }}</h3>
             <p>{{ 'La imagen principal ahora refleja mejor la propuesta del sistema: un equipo técnico trabajando de forma unificada con monitoreo, trazabilidad y atención coordinada.' if is_es else 'The main image now better reflects the system proposition: a technical team working in a unified way with monitoring, traceability, and coordinated support.' }}</p>
+                    <p>{{ 'La plataforma se presenta como una solución integral para la gestión corporativa de soporte técnico, seguimiento eficiente, clasificación avanzada y atención estructurada.' if is_es else 'The platform is presented as a comprehensive solution for corporate technical support management, efficient tracking, advanced classification, and structured attention.' }}</p>
           </div>
         </div>
         <div class="fact-strip">
