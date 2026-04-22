@@ -33,6 +33,9 @@
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.about_us' %}is-active{% endif %}" href="{{ url_for('main.about_us') }}" {% if endpoint == 'main.about_us' %}aria-current="page"{% endif %}>
               <i class="bi bi-people"></i> {{ _('Who We Are') }}
             </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.contact' %}is-active{% endif %}" href="{{ url_for('main.contact') }}" {% if endpoint == 'main.contact' %}aria-current="page"{% endif %}>
+              <i class="bi bi-envelope"></i> {{ 'Contáctanos' if current_lang == 'es' else 'Contact Us' }}
+            </a></li>
             {% if current_user.is_authenticated %}
               <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'tickets.list_tickets' %}is-active{% endif %}" href="{{ url_for('tickets.list_tickets') }}" {% if endpoint == 'tickets.list_tickets' %}aria-current="page"{% endif %}>
                 <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}

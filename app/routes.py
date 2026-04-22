@@ -112,6 +112,11 @@ def about_us():
     return render_template('about.html')
 
 
+@bp.route('/contactanos')
+def contact():
+    return render_template('contact.html')
+
+
 @bp.route('/terminos-y-condiciones')
 def terms_and_conditions():
     return render_template('terms.html')
