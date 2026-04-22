@@ -598,15 +598,6 @@
           </div>
         </div>
 
-        <div class="hero-actions">
-          {% if current_user.is_authenticated %}
-            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-light">{{ _('View Tickets') }}</a>
-            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary text-white">{{ _('Create Ticket') }}</a>
-          {% else %}
-            <a href="#loginModal" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
-            <a href="#loginModal" class="btn btn-primary text-white" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>
-          {% endif %}
-        </div>
       </div>
 
       <div class="hero-visual">
