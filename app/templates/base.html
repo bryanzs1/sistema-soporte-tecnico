@@ -49,11 +49,6 @@
           </ul>
           <ul class="navbar-nav ms-auto app-nav-actions app-shell-actions">
             {% if current_user.is_authenticated %}
-              <li class="nav-item d-flex align-items-center me-2 mb-2 mb-lg-0">
-                <a class="btn btn-sm app-primary-action" href="{{ url_for('tickets.create_ticket') }}">
-                  {{ _('Create Ticket') }}
-                </a>
-              </li>
               <!-- User Dropdown Menu -->
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center app-nav-link app-user-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -133,7 +128,6 @@
               </li>
               <li class="nav-item d-flex align-items-center nav-guest-actions">
                 <a class="btn btn-sm app-secondary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
-                <a class="btn btn-sm app-primary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Create Ticket') }}</a>
               </li>
             {% endif %}
           </ul>
