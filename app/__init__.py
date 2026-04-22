@@ -492,6 +492,136 @@ TRANSLATIONS = {
         'Prediction accuracy:': 'Precisión del modelo:',
         'Retrain Model': 'Reentrenar modelo',
         'Model not trained yet': 'Modelo no entrenado aún',
+        # ============================================================
+        # MENSAJES FLASH — autenticación
+        # ============================================================
+        'Account is locked due to multiple failed login attempts. Try again later.': 'Cuenta bloqueada por múltiples intentos fallidos. Intenta más tarde.',
+        'Account locked. Too many failed attempts.': 'Cuenta bloqueada. Demasiados intentos fallidos.',
+        'Invalid username or password': 'Usuario o contraseña incorrectos',
+        'Please change the default admin password before continuing': 'Cambia la contraseña de administrador por defecto antes de continuar',
+        'Welcome back, {username}!': '¡Bienvenido de nuevo, {username}!',
+        'If the email exists in our system, you will receive password reset instructions shortly.': 'Si el correo existe en nuestro sistema, recibirás instrucciones para restablecer tu contraseña en breve.',
+        'Invalid or expired password reset link. Request a new one.': 'El enlace de restablecimiento es inválido o ha expirado. Solicita uno nuevo.',
+        'Password does not meet security requirements: ': 'La contraseña no cumple los requisitos de seguridad: ',
+        'This password was recently used. Please choose a different one.': 'Esta contraseña fue usada recientemente. Por favor elige una diferente.',
+        'New password must be different from current password': 'La nueva contraseña debe ser diferente a la actual',
+        'Your password has been reset successfully. Please sign in.': 'Tu contraseña fue restablecida correctamente. Por favor inicia sesión.',
+        'Password updated successfully': 'Contraseña actualizada correctamente',
+        'Current password is incorrect': 'La contraseña actual es incorrecta',
+        'Password changed successfully': 'Contraseña cambiada correctamente',
+        'Login successful': 'Inicio de sesión exitoso',
+        'Invalid backup code': 'Código de respaldo inválido',
+        'Invalid 2FA code': 'Código 2FA inválido',
+        'You have been logged out successfully': 'Has cerrado sesión correctamente',
+        # ============================================================
+        # MENSAJES FLASH — administración de empresas
+        # ============================================================
+        'Company created successfully': 'Empresa creada correctamente',
+        'Company name already exists': 'El nombre de empresa ya existe',
+        'Error creating company. Please try again.': 'Error al crear la empresa. Por favor inténtalo de nuevo.',
+        'Company updated successfully': 'Empresa actualizada correctamente',
+        'Error updating company. Please try again.': 'Error al actualizar la empresa. Por favor inténtalo de nuevo.',
+        # ============================================================
+        # MENSAJES FLASH — permisos y acceso
+        # ============================================================
+        'Administrator access required': 'Se requiere acceso de administrador',
+        'Technician or admin access required': 'Se requiere acceso de técnico o administrador',
+        'An unexpected error occurred': 'Ocurrió un error inesperado',
+        # ============================================================
+        # MENSAJES FLASH — administración de usuarios
+        # ============================================================
+        'Username or email already exists': 'El usuario o correo ya existe',
+        'Error creating user. Please try again.': 'Error al crear el usuario. Por favor inténtalo de nuevo.',
+        'User created successfully': 'Usuario creado correctamente',
+        'User "{username}" updated - Role: {role}, Status: {status}': 'Usuario "{username}" actualizado — Rol: {role}, Estado: {status}',
+        'Password for user "{username}" was reset successfully': 'Contraseña del usuario "{username}" restablecida correctamente',
+        'Error resetting password. Please try again.': 'Error al restablecer la contraseña. Por favor inténtalo de nuevo.',
+        'You cannot delete your own account.': 'No puedes eliminar tu propia cuenta.',
+        'Cannot delete the last administrator account.': 'No se puede eliminar la última cuenta de administrador.',
+        'User "{username}" has been permanently deleted.': 'El usuario "{username}" fue eliminado permanentemente.',
+        'Error deleting user. Please try again.': 'Error al eliminar el usuario. Por favor inténtalo de nuevo.',
+        # ============================================================
+        # MENSAJES FLASH — opciones de tickets
+        # ============================================================
+        'Recommended options restored: {count}': 'Opciones recomendadas restauradas: {count}',
+        'Ticket options are already up to date': 'Las opciones de tickets ya están actualizadas',
+        'Option already existed and was reactivated': 'La opción ya existía y fue reactivada',
+        'Option "{value}" added to {type}': 'Opción "{value}" añadida a {type}',
+        'Option "{value}" removed': 'Opción "{value}" eliminada',
+        'Value is required': 'El valor es requerido',
+        'Option already exists': 'La opción ya existe',
+        'Option updated to "{value}"': 'Opción actualizada a "{value}"',
+        'Option added': 'Opción añadida',
+        'Error adding option: {error}': 'Error al añadir la opción: {error}',
+        # ============================================================
+        # MENSAJES FLASH — ML / IA
+        # ============================================================
+        'Machine Learning dependencies not installed. Please run: pip install scikit-learn numpy': 'Dependencias de Machine Learning no instaladas. Ejecuta: pip install scikit-learn numpy',
+        'An error occurred loading the ML system': 'Ocurrió un error al cargar el sistema ML',
+        'ML model trained successfully! Accuracy: {accuracy:.1%}': '¡Modelo ML entrenado correctamente! Precisión: {accuracy:.1%}',
+        'Error training model: {error}': 'Error al entrenar el modelo: {error}',
+        'Technicians can now reassign tickets': 'Los técnicos ahora pueden reasignar tickets',
+        'Only administrators can reassign tickets': 'Solo los administradores pueden reasignar tickets',
+        # ============================================================
+        # MENSAJES FLASH — tokens API e integraciones
+        # ============================================================
+        'Token name is required': 'El nombre del token es requerido',
+        "API token created successfully. Save it now, it won't be shown again: {token}": 'Token API creado correctamente. Guárdalo ahora, no se mostrará de nuevo: {token}',
+        'API token revoked': 'Token API revocado',
+        'Platform and name are required': 'La plataforma y el nombre son requeridos',
+        'Integration created successfully': 'Integración creada correctamente',
+        'Integration {status}': 'Integración {status}',
+        'Integration deleted': 'Integración eliminada',
+        'AI System Settings updated': 'Configuración del sistema IA actualizada',
+        'Error loading chat monitoring': 'Error al cargar el monitoreo de chat',
+        # ============================================================
+        # MENSAJES FLASH — Office 365 / configuración
+        # ============================================================
+        'Office 365 email intake settings saved': 'Configuración de recepción de correo Office 365 guardada',
+        # ============================================================
+        # MENSAJES FLASH — base de conocimiento (KB)
+        # ============================================================
+        'Ticket must be closed before creating a KB article': 'El ticket debe estar cerrado antes de crear un artículo de KB',
+        'Title and content are required': 'El título y el contenido son requeridos',
+        'Article created successfully': 'Artículo creado correctamente',
+        'Article submitted for admin approval': 'Artículo enviado para aprobación del administrador',
+        'You can only edit your own pending KB proposals': 'Solo puedes editar tus propias propuestas de KB pendientes',
+        'Article updated successfully': 'Artículo actualizado correctamente',
+        'Article removed from knowledge base': 'Artículo eliminado de la base de conocimiento',
+        'Article approved and published': 'Artículo aprobado y publicado',
+        'Please provide a rejection reason': 'Por favor proporciona un motivo de rechazo',
+        'Article rejected with feedback': 'Artículo rechazado con comentarios',
+        # ============================================================
+        # MENSAJES FLASH — tickets (operaciones)
+        # ============================================================
+        'Some historical ticket records could not be rendered and were skipped.': 'Algunos registros históricos de tickets no pudieron mostrarse y fueron omitidos.',
+        'There was a problem loading the ticket list. Review historical records or contact admin.': 'Hubo un problema al cargar la lista de tickets. Revisa los registros históricos o contacta al administrador.',
+        'Ticket created successfully': 'Ticket creado correctamente',
+        'This option is only for normal users': 'Esta opción es solo para usuarios normales',
+        'Password reset ticket created successfully': 'Ticket de restablecimiento de contraseña creado correctamente',
+        'You do not have access to this ticket': 'No tienes acceso a este ticket',
+        'Only the requester, assigned technician, or admin can chat on this ticket': 'Solo el solicitante, el técnico asignado o un administrador puede chatear en este ticket',
+        'Comment added': 'Comentario añadido',
+        'Ticket updated': 'Ticket actualizado',
+        'Ticket #{id} updated successfully - Status: {status}': 'Ticket #{id} actualizado correctamente — Estado: {status}',
+        'Only administrators can assign or reassign technicians': 'Solo los administradores pueden asignar o reasignar técnicos',
+        'Closed tickets cannot be taken': 'Los tickets cerrados no pueden tomarse',
+        'This ticket is already assigned to another technician': 'Este ticket ya está asignado a otro técnico',
+        'This ticket is already assigned to you': 'Este ticket ya está asignado a ti',
+        'You have taken ticket #{id} successfully': 'Tomaste el ticket #{id} correctamente',
+        'Closed tickets cannot be released': 'Los tickets cerrados no pueden liberarse',
+        'This ticket is already unassigned': 'Este ticket ya está sin asignar',
+        'You can only release tickets assigned to you': 'Solo puedes liberar tickets asignados a ti',
+        'Ticket #{id} was released successfully': 'El ticket #{id} fue liberado correctamente',
+        'Only closed tickets can be reopened': 'Solo los tickets cerrados pueden reabrirse',
+        'Reopen window expired. Closed tickets can only be reopened within 7 days.': 'Ventana de reapertura expirada. Los tickets cerrados solo pueden reabrirse dentro de los 7 días.',
+        'Please provide a short reason to reopen the ticket': 'Por favor proporciona un motivo breve para reabrir el ticket',
+        'Ticket reopened successfully': 'Ticket reabierto correctamente',
+        'You can only rate closed tickets': 'Solo puedes calificar tickets cerrados',
+        'You have already submitted a rating for this ticket': 'Ya enviaste una calificación para este ticket',
+        'Please select a valid rating': 'Por favor selecciona una calificación válida',
+        'Thank you for your feedback!': '¡Gracias por tu comentario!',
+        'Ticket deletion is disabled by security policy': 'La eliminación de tickets está deshabilitada por política de seguridad',
     }
 }
 

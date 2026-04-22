@@ -324,7 +324,7 @@ def create_user():
             flash(_t('Error creating user. Please try again.'), 'danger')
             return render_template('admin/edit_user.html', user=None, form=form)
 
-        flash('User created successfully', 'success')
+        flash(_t('User created successfully'), 'success')
         return redirect(url_for('admin.list_users'))
     return render_template('admin/edit_user.html', user=None, form=form)
 
