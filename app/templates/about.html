@@ -1,79 +1,360 @@
 {% extends 'base.html' %}
 {% block title %}{{ _('Who We Are') }}{% endblock %}
-{% block body_class %}home-page{% endblock %}
+{% block body_class %}about-refresh-page{% endblock %}
 {% block content %}
-  <div class="hero-section">
-    <div class="hero-content">
-      <div class="floating-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-      </div>
+{% set is_es = current_lang == 'es' %}
 
-      <div class="hero-text">
-        <div class="about-logo-wrap">
-          <img
-            src="{{ url_for('static', filename='img/logo-proyecto.svg') }}"
-            alt="Logo del proyecto"
-            class="about-logo"
-            onerror="this.style.display='none'; this.parentElement.style.display='none';">
+<style>
+  .about-refresh-page {
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 24%),
+      linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  }
+
+  .about-v2 {
+    color: #e2e8f0;
+    padding: 3rem 0 5rem;
+  }
+
+  .about-v2 .shell {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .about-v2 .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+    gap: 2rem;
+    align-items: center;
+    padding-top: 1.5rem;
+  }
+
+  .about-v2 .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.8rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.26);
+    color: #bfdbfe;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .about-v2 h1,
+  .about-v2 h2,
+  .about-v2 h3 {
+    color: #fff;
+    font-family: var(--font-heading);
+  }
+
+  .about-v2 .hero h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(2.4rem, 5vw, 4.6rem);
+    line-height: 1.04;
+  }
+
+  .about-v2 .hero p {
+    max-width: 760px;
+    margin: 0 0 1.4rem;
+    color: #94a3b8;
+    font-size: 1.04rem;
+    line-height: 1.8;
+  }
+
+  .about-v2 .hero-actions {
+    display: flex;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+  }
+
+  .about-v2 .hero-actions .btn {
+    min-width: 190px;
+    padding: 0.95rem 1.25rem;
+    border-radius: 16px;
+    font-weight: 800;
+  }
+
+  .about-v2 .hero-actions .btn-primary {
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.28);
+  }
+
+  .about-v2 .hero-actions .btn-outline-light {
+    border-color: rgba(148, 163, 184, 0.5);
+    color: #e2e8f0;
+  }
+
+  .about-v2 .hero-visual {
+    position: relative;
+  }
+
+  .about-v2 .hero-card,
+  .about-v2 .identity-card,
+  .about-v2 .principle-card,
+  .about-v2 .cta {
+    border-radius: 28px;
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    background: rgba(15, 23, 42, 0.6);
+    box-shadow: 0 22px 50px rgba(2, 6, 23, 0.26);
+  }
+
+  .about-v2 .hero-card {
+    overflow: hidden;
+    min-height: 520px;
+    position: relative;
+  }
+
+  .about-v2 .hero-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .about-v2 .hero-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.84));
+  }
+
+  .about-v2 .hero-card-copy {
+    position: absolute;
+    left: 1.4rem;
+    right: 1.4rem;
+    bottom: 1.4rem;
+    z-index: 1;
+    padding: 1.25rem;
+    border-radius: 22px;
+    background: rgba(15, 23, 42, 0.74);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    backdrop-filter: blur(12px);
+  }
+
+  .about-v2 .hero-card-copy p {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+
+  .about-v2 .identity-section,
+  .about-v2 .principles-section {
+    margin-top: 4rem;
+  }
+
+  .about-v2 .section-head {
+    max-width: 840px;
+    margin-bottom: 1.8rem;
+  }
+
+  .about-v2 .section-head h2 {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+  }
+
+  .about-v2 .section-head p {
+    margin: 0;
+    color: #94a3b8;
+    line-height: 1.75;
+  }
+
+  .about-v2 .identity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .about-v2 .identity-card {
+    padding: 2rem;
+  }
+
+  .about-v2 .icon-box {
+    width: 3.2rem;
+    height: 3.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    margin-bottom: 1.2rem;
+    background: rgba(37, 99, 235, 0.12);
+    color: #60a5fa;
+    font-size: 1.2rem;
+  }
+
+  .about-v2 .identity-card p,
+  .about-v2 .principle-card p,
+  .about-v2 .cta p {
+    margin: 0;
+    color: #94a3b8;
+    line-height: 1.75;
+  }
+
+  .about-v2 .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .about-v2 .principle-card {
+    padding: 1.6rem;
+  }
+
+  .about-v2 .principle-card strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #fff;
+  }
+
+  .about-v2 .cta {
+    margin-top: 4rem;
+    padding: 2.25rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.24), rgba(15, 23, 42, 0.72));
+  }
+
+  .about-v2 .cta p {
+    max-width: 760px;
+    margin: 0 auto 1.4rem;
+  }
+
+  .about-v2 .cta .btn {
+    min-width: 220px;
+    border-radius: 16px;
+    padding: 0.95rem 1.25rem;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1080px) {
+    .about-v2 .hero,
+    .about-v2 .identity-grid,
+    .about-v2 .principles-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .about-v2 .hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .about-v2 .identity-grid,
+    .about-v2 .principles-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .about-v2 {
+      padding-top: 2rem;
+    }
+
+    .about-v2 .hero-card {
+      min-height: 420px;
+    }
+
+    .about-v2 .hero-actions .btn {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+</style>
+
+<section class="about-v2">
+  <div class="shell">
+    <div class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">
+          <i class="bi bi-people"></i>
+          <span>{{ 'Quiénes somos' if is_es else 'Who we are' }}</span>
         </div>
-        <h1 class="hero-title">{{ _('Who We Are') }}</h1>
-        <p class="hero-subtitle">{{ _('We are a team focused on delivering agile, reliable corporate technical support with clear processes and people-centered service.') }}</p>
-        <div class="hero-buttons">
+        <h1>{{ 'Un equipo centrado en soporte técnico corporativo confiable' if is_es else 'A team focused on reliable corporate technical support' }}</h1>
+        <p>{{ 'Somos un equipo orientado a ofrecer soporte técnico ágil, trazable y profesional, con procesos claros y una atención cercana para usuarios, técnicos y administradores.' if is_es else 'We are a team focused on delivering agile, traceable, and professional technical support, with clear processes and approachable service for users, technicians, and administrators.' }}</p>
+        <p>{{ 'Combinamos operación, tecnología y mejora continua para que cada incidencia tenga seguimiento real, tiempos de respuesta consistentes y una experiencia más clara para toda la organización.' if is_es else 'We combine operations, technology, and continuous improvement so every incident has real follow-up, consistent response times, and a clearer experience for the entire organization.' }}</p>
+        <div class="hero-actions">
           {% if current_user.is_authenticated %}
-            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary btn-lg btn-animated">{{ _('Create Ticket') }}</a>
-            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-primary btn-lg btn-animated">{{ _('View Tickets') }}</a>
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary text-white">{{ _('Create Ticket') }}</a>
+            <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-outline-light">{{ _('View Tickets') }}</a>
           {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-animated">{{ _('Sign In') }}</a>
+            <a href="#loginModal" class="btn btn-primary text-white" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
+            <a href="{{ url_for('main.pricing') }}" class="btn btn-outline-light">{{ 'Ver planes' if is_es else 'View plans' }}</a>
           {% endif %}
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="features-section">
-    <div class="container py-5">
-      <h2 class="section-title">{{ _('Our Identity') }}</h2>
-      <p class="section-subtitle">{{ _('We combine technology, methodology, and service to keep your company operating without interruptions.') }}</p>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-primary">
-            <i class="bi bi-bullseye"></i>
+      <div class="hero-visual">
+        <article class="hero-card">
+          <img src="{{ url_for('static', filename='img/Soporte 2.png') }}" alt="{{ 'Equipo de soporte técnico colaborando en una sesión operativa' if is_es else 'Technical support team collaborating in an operational session' }}" loading="lazy">
+          <div class="hero-card-copy">
+            <h3>{{ 'Soporte con visión operativa' if is_es else 'Support with an operational mindset' }}</h3>
+            <p>{{ 'Nuestra propuesta une atención, seguimiento, clasificación y toma de decisiones en un flujo coordinado que mejora la continuidad del servicio.' if is_es else 'Our approach brings service, follow-up, classification, and decision-making together in a coordinated flow that improves service continuity.' }}</p>
           </div>
-          <h3>{{ _('Mission') }}</h3>
-          <p>{{ _('Resolve incidents and requests with speed, quality, and traceability, ensuring operational continuity for every business area.') }}</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-danger">
-            <i class="bi bi-binoculars"></i>
-          </div>
-          <h3>{{ _('Vision') }}</h3>
-          <p>{{ _('Be a benchmark help desk in efficiency and user experience, driving decisions through metrics and continuous improvement.') }}</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon feature-icon-info">
-            <i class="bi bi-gem"></i>
-          </div>
-          <h3>{{ _('Values') }}</h3>
-          <p>{{ _('Commitment, transparency, collaboration, and customer focus in every interaction, from ticket creation to closure.') }}</p>
-        </div>
+        </article>
       </div>
     </div>
-  </div>
 
-  <div class="cta-section">
-    <div class="container py-5 text-center">
-      <h2>{{ _('Ready to support you') }}</h2>
-      <p>{{ _('Our goal is for every team to work without interruptions, with professional and approachable technical support.') }}</p>
+    <div class="identity-section">
+      <div class="section-head">
+        <h2>{{ 'Nuestra identidad' if is_es else 'Our identity' }}</h2>
+        <p>{{ 'La plataforma y el equipo comparten una misma visión: soporte técnico estructurado, medible y pensado para operaciones empresariales reales.' if is_es else 'The platform and the team share the same vision: structured, measurable technical support designed for real business operations.' }}</p>
+      </div>
+
+      <div class="identity-grid">
+        <article class="identity-card">
+          <div class="icon-box"><i class="bi bi-bullseye"></i></div>
+          <h3>{{ 'Misión' if is_es else 'Mission' }}</h3>
+          <p>{{ 'Resolver incidencias y solicitudes con rapidez, calidad y trazabilidad, asegurando continuidad operativa para cada área del negocio.' if is_es else 'Resolve incidents and requests with speed, quality, and traceability, ensuring operational continuity for every business area.' }}</p>
+        </article>
+
+        <article class="identity-card">
+          <div class="icon-box"><i class="bi bi-binoculars"></i></div>
+          <h3>{{ 'Visión' if is_es else 'Vision' }}</h3>
+          <p>{{ 'Ser una referencia en mesas de ayuda corporativas por eficiencia, experiencia del usuario y decisiones impulsadas por métricas y mejora continua.' if is_es else 'Be a benchmark in corporate help desks through efficiency, user experience, and decisions driven by metrics and continuous improvement.' }}</p>
+        </article>
+
+        <article class="identity-card">
+          <div class="icon-box"><i class="bi bi-gem"></i></div>
+          <h3>{{ 'Valores' if is_es else 'Values' }}</h3>
+          <p>{{ 'Compromiso, transparencia, colaboración y enfoque en el usuario en cada etapa, desde la creación del ticket hasta su resolución.' if is_es else 'Commitment, transparency, collaboration, and user focus at every stage, from ticket creation to resolution.' }}</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="principles-section">
+      <div class="section-head">
+        <h2>{{ 'Cómo trabajamos' if is_es else 'How we work' }}</h2>
+        <p>{{ 'Nuestro enfoque combina servicio humano, procesos claros y apoyo tecnológico para mantener la operación visible y ordenada.' if is_es else 'Our approach combines human service, clear processes, and technology support to keep operations visible and organized.' }}</p>
+      </div>
+
+      <div class="principles-grid">
+        <article class="principle-card">
+          <strong>{{ 'Respuesta ágil' if is_es else 'Agile response' }}</strong>
+          <p>{{ 'Priorizamos tiempos de atención consistentes y una gestión clara de cada caso desde el primer contacto.' if is_es else 'We prioritize consistent response times and clear case management from the first contact.' }}</p>
+        </article>
+        <article class="principle-card">
+          <strong>{{ 'Seguimiento continuo' if is_es else 'Continuous follow-up' }}</strong>
+          <p>{{ 'Cada ticket mantiene trazabilidad, contexto y visibilidad para usuarios, técnicos y responsables operativos.' if is_es else 'Every ticket maintains traceability, context, and visibility for users, technicians, and operations leads.' }}</p>
+        </article>
+        <article class="principle-card">
+          <strong>{{ 'Mejora basada en datos' if is_es else 'Data-driven improvement' }}</strong>
+          <p>{{ 'Usamos métricas, reportes y análisis para optimizar procesos y elevar la calidad del soporte.' if is_es else 'We use metrics, reports, and analysis to optimize processes and raise support quality.' }}</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="cta">
+      <h2>{{ 'Listos para acompañar la operación de tu equipo' if is_es else 'Ready to support your team operations' }}</h2>
+      <p>{{ 'Nuestro objetivo es que cada área trabaje con menos interrupciones y con un soporte técnico profesional, cercano y mejor organizado.' if is_es else 'Our goal is for every department to work with fewer interruptions and with professional, approachable, and better organized technical support.' }}</p>
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Create ticket now') }}</a>
+        <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-light">{{ 'Crear ticket ahora' if is_es else 'Create ticket now' }}</a>
       {% else %}
-        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-animated mt-3">{{ _('Sign in to the system') }}</a>
+        <a href="#loginModal" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Ingresar al sistema' if is_es else 'Sign in to the system' }}</a>
       {% endif %}
     </div>
   </div>
+</section>
 {% endblock %}
