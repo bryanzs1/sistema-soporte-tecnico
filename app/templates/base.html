@@ -33,6 +33,9 @@
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.about_us' %}is-active{% endif %}" href="{{ url_for('main.about_us') }}" {% if endpoint == 'main.about_us' %}aria-current="page"{% endif %}>
               <i class="bi bi-people"></i> {{ _('Who We Are') }}
             </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.services' %}is-active{% endif %}" href="{{ url_for('main.services') }}" {% if endpoint == 'main.services' %}aria-current="page"{% endif %}>
+              <i class="bi bi-grid"></i> {{ 'Servicios' if current_lang == 'es' else 'Services' }}
+            </a></li>
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.contact' %}is-active{% endif %}" href="{{ url_for('main.contact') }}" {% if endpoint == 'main.contact' %}aria-current="page"{% endif %}>
               <i class="bi bi-envelope"></i> {{ 'Contáctanos' if current_lang == 'es' else 'Contact Us' }}
             </a></li>

@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Servicios' if current_lang == 'es' else 'Services' }}{% endblock %}
+{% block body_class %}services-page{% endblock %}
+{% block content %}
+{% set is_es = current_lang == 'es' %}
+
+<style>
+  .services-page {
+    background:
+      radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 26%),
+      linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  }
+
+  .services-v1 {
+    color: #e2e8f0;
+    padding: 3rem 0 5rem;
+  }
+
+  .services-v1 .shell {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .services-v1 .hero {
+    padding-top: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .services-v1 .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.8rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.13);
+    border: 1px solid rgba(125, 211, 252, 0.26);
+    color: #bae6fd;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .services-v1 h1,
+  .services-v1 h2,
+  .services-v1 h3 {
+    color: #fff;
+    font-family: var(--font-heading);
+  }
+
+  .services-v1 h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 1.05;
+  }
+
+  .services-v1 .hero p {
+    margin: 0;
+    max-width: 900px;
+    color: #94a3b8;
+    font-size: 1.04rem;
+    line-height: 1.8;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .service-card {
+    grid-column: span 6;
+    border-radius: 22px;
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    background: rgba(15, 23, 42, 0.64);
+    box-shadow: 0 18px 40px rgba(2, 6, 23, 0.22);
+    padding: 1.2rem 1.2rem 1.3rem;
+    transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+    animation: serviceReveal 0.6s ease both;
+  }
+
+  .service-card:nth-child(2) { animation-delay: 0.05s; }
+  .service-card:nth-child(3) { animation-delay: 0.1s; }
+  .service-card:nth-child(4) { animation-delay: 0.15s; }
+  .service-card:nth-child(5) { animation-delay: 0.2s; }
+  .service-card:nth-child(6) { animation-delay: 0.25s; }
+  .service-card:nth-child(7) { animation-delay: 0.3s; }
+  .service-card:nth-child(8) { animation-delay: 0.35s; }
+
+  .service-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.48);
+    box-shadow: 0 24px 48px rgba(2, 6, 23, 0.3);
+  }
+
+  .service-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .service-card .icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(16, 185, 129, 0.2));
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    color: #67e8f9;
+    font-size: 1.1rem;
+  }
+
+  .service-card h3 {
+    margin: 0;
+    font-size: 1.08rem;
+  }
+
+  .service-card p {
+    margin: 0;
+    color: #9fb0c5;
+    line-height: 1.62;
+  }
+
+  .services-cta {
+    margin-top: 1.4rem;
+    border-radius: 22px;
+    border: 1px solid rgba(56, 189, 248, 0.34);
+    background: linear-gradient(135deg, rgba(8, 47, 73, 0.72), rgba(15, 23, 42, 0.78));
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .services-cta p {
+    margin: 0;
+    color: #bae6fd;
+  }
+
+  .services-cta .btn {
+    white-space: nowrap;
+  }
+
+  @keyframes serviceReveal {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 992px) {
+    .service-card {
+      grid-column: span 12;
+    }
+
+    .services-cta {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<section class="services-v1">
+  <div class="shell">
+    <div class="hero">
+      <span class="eyebrow">
+        <i class="bi bi-diagram-3"></i>
+        {{ 'Catálogo de servicios' if is_es else 'Service catalog' }}
+      </span>
+      <h1>{{ 'Servicios profesionales para tu operación IT' if is_es else 'Professional services for your IT operations' }}</h1>
+      <p>
+        {{ 'Integramos soporte técnico, infraestructura y continuidad operativa con un enfoque práctico. Puedes combinar planes por servicio según tu empresa.' if is_es else 'We combine technical support, infrastructure, and operational continuity with a practical approach. You can mix service plans based on your company needs.' }}
+      </p>
+    </div>
+
+    <div class="services-grid">
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-tools"></i></span>
+          <h3>{{ 'Soporte técnico' if is_es else 'Technical support' }}</h3>
+        </div>
+        <p>{{ 'Atención a incidencias, diagnóstico, solución remota y escalamiento para mantener la operación estable.' if is_es else 'Incident support, diagnosis, remote resolution, and escalation to keep operations stable.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-diagram-2"></i></span>
+          <h3>{{ 'Redes empresariales' if is_es else 'Enterprise networks' }}</h3>
+        </div>
+        <p>{{ 'Diseño, segmentación y mantenimiento de redes LAN/WAN con enfoque en rendimiento y disponibilidad.' if is_es else 'LAN/WAN network design, segmentation, and maintenance focused on performance and availability.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-lightning-charge"></i></span>
+          <h3>{{ 'Fibra óptica' if is_es else 'Fiber optics' }}</h3>
+        </div>
+        <p>{{ 'Tendido, pruebas, certificación y mantenimiento de enlaces de fibra para sedes y troncales internas.' if is_es else 'Fiber link deployment, testing, certification, and maintenance for offices and internal backbone lines.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-hdd-network"></i></span>
+          <h3>{{ 'Instalación y configuración de switches' if is_es else 'Switch installation and configuration' }}</h3>
+        </div>
+        <p>{{ 'Configuración de VLAN, troncales, puertos seguros y políticas para un control de red ordenado.' if is_es else 'VLAN, trunk, secure port, and policy configuration for an organized network setup.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-router"></i></span>
+          <h3>{{ 'Implementación de Wi-Fi corporativo' if is_es else 'Corporate Wi-Fi deployment' }}</h3>
+        </div>
+        <p>{{ 'Site survey, planificación de cobertura, roaming y seguridad para redes inalámbricas confiables.' if is_es else 'Site survey, coverage planning, roaming, and security for reliable wireless networks.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-shield-lock"></i></span>
+          <h3>{{ 'Seguridad y hardening' if is_es else 'Security and hardening' }}</h3>
+        </div>
+        <p>{{ 'Endurecimiento de sistemas, control de accesos y revisión de vulnerabilidades en entornos críticos.' if is_es else 'System hardening, access control, and vulnerability review for critical environments.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-cloud-arrow-up"></i></span>
+          <h3>{{ 'Respaldos y recuperación' if is_es else 'Backup and recovery' }}</h3>
+        </div>
+        <p>{{ 'Estrategias de backup, restauración validada y planes de contingencia para continuidad del negocio.' if is_es else 'Backup strategy, validated recovery, and contingency plans for business continuity.' }}</p>
+      </article>
+
+      <article class="service-card">
+        <div class="service-card-head">
+          <span class="icon"><i class="bi bi-graph-up-arrow"></i></span>
+          <h3>{{ 'Monitoreo y optimización' if is_es else 'Monitoring and optimization' }}</h3>
+        </div>
+        <p>{{ 'Supervisión proactiva de infraestructura y ajustes preventivos para reducir caídas e incidentes.' if is_es else 'Proactive infrastructure monitoring and preventive tuning to reduce outages and incidents.' }}</p>
+      </article>
+    </div>
+
+    <div class="services-cta">
+      <p>{{ '¿Necesitas una propuesta adaptada por sede o por área? Te ayudamos a armar un plan de servicios a medida.' if is_es else 'Need a proposal by office or department? We can help you build a tailored service plan.' }}</p>
+      <a class="btn btn-primary" href="{{ url_for('main.contact') }}">{{ 'Solicitar propuesta' if is_es else 'Request proposal' }}</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

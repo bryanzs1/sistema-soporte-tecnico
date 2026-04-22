@@ -117,6 +117,11 @@ def contact():
     return render_template('contact.html')
 
 
+@bp.route('/servicios')
+def services():
+    return render_template('services.html')
+
+
 @bp.route('/terminos-y-condiciones')
 def terms_and_conditions():
     return render_template('terms.html')
