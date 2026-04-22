@@ -342,7 +342,7 @@
         <span class="accent">{{ 'operaciones reales.' if is_es else 'real operations.' }}</span>
       </h1>
       <p>
-        {{ 'Tomé tu referencia y rehice la página con una estructura mucho más cercana a ese diseño: más limpia, más directa y sin reciclar el mockup tecnológico anterior.' if is_es else 'I took your reference and rebuilt the page with a structure much closer to that design: cleaner, more direct, and without recycling the previous tech mockup.' }}
+        {{ 'Elige el plan que mejor se adapte al volumen y ritmo de tu equipo de soporte técnico.' if is_es else 'Choose the plan that best fits the volume and pace of your technical support team.' }}
       </p>
 
       <div class="kpis">
@@ -395,7 +395,6 @@
           <div class="note">{{ 'El checkout directo requiere una cuenta administradora autenticada.' if is_es else 'Direct checkout requires an authenticated administrator account.' }}</div>
           {% else %}
           <button type="button" class="disabled-btn" disabled>{{ 'Próximamente' if is_es else 'Coming soon' }}</button>
-          <div class="note">{{ 'Este plan aún no tiene ID de PayPal configurado.' if is_es else 'This plan does not have a configured PayPal plan ID yet.' }}</div>
           {% endif %}
         </article>
 
@@ -420,13 +419,13 @@
           <div class="note">{{ 'Ingresa como administrador para abrir el checkout en PayPal.' if is_es else 'Sign in as an administrator to open the PayPal checkout.' }}</div>
           {% else %}
           <button type="button" class="disabled-btn" disabled>{{ 'Próximamente' if is_es else 'Coming soon' }}</button>
-          <div class="note">{{ 'Este plan aún no tiene ID de PayPal configurado.' if is_es else 'This plan does not have a configured PayPal plan ID yet.' }}</div>
+          <div class="note">{{ 'Este plan estará disponible pronto.' if is_es else 'This plan will be available soon.' }}</div>
           {% endif %}
         </article>
       </div>
 
       <div class="footer-note">
-        {{ 'Aviso de administrador: si falta un Plan ID de PayPal, el botón queda deshabilitado hasta terminar la integración.' if is_es else 'Admin notice: if a PayPal Plan ID is missing, the button stays disabled until integration is completed.' }}
+        {{ 'Los precios están en dólares americanos. Puedes cancelar tu plan mensual en cualquier momento.' if is_es else 'Prices are in US dollars. You can cancel your monthly plan at any time.' }}
       </div>
     </div>
   </div>
