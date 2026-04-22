@@ -12,6 +12,18 @@
         </div>
         {% endif %}
 
+        {% if is_superadmin and company_options %}
+        <div class="mb-4">
+            <label for="company_selector" class="form-label fw-semibold">{{ _('Empresa a facturar') }}</label>
+            <select id="company_selector" class="form-select" onchange="window.location='{{ url_for('admin.settings_billing') }}?company_id=' + this.value;">
+                {% for option in company_options %}
+                <option value="{{ option.id }}" {% if company and option.id == company.id %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">{{ _('Selecciona la empresa para ver o gestionar su facturación.') }}</div>
+        </div>
+        {% endif %}
+
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light-subtle">
@@ -74,6 +86,7 @@
                 <h5 class="h6 mb-3">{{ _('Configuración del Plan ID') }}</h5>
                 <form method="post" action="{{ url_for('admin.settings_billing_price_update') }}" class="row g-3 align-items-end">
                     {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                    {% if is_superadmin %}<input type="hidden" name="company_id" value="{{ company.id }}">{% endif %}
                     <div class="col-md-9">
                         <label for="paypal_plan_id" class="form-label">{{ _('Plan ID de PayPal para esta empresa') }}</label>
                         <input
@@ -130,8 +143,14 @@
     </div>
 </div>
 <script>
+const selectedCompanyId = {{ company.id|tojson }};
+
 document.getElementById('btn-pay').onclick = async function() {
-    const res = await fetch("/billing/create-checkout-session", {method: "POST"});
+    const res = await fetch("/billing/create-checkout-session", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({company_id: selectedCompanyId})
+    });
     const data = await res.json();
     if (data.checkout_url) {
         window.location = data.checkout_url;
@@ -140,7 +159,11 @@ document.getElementById('btn-pay').onclick = async function() {
     }
 };
 document.getElementById('btn-portal').onclick = async function() {
-    const res = await fetch("/billing/create-portal-session", {method: "POST"});
+    const res = await fetch("/billing/create-portal-session", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({company_id: selectedCompanyId})
+    });
     const data = await res.json();
     if (data.portal_url) {
         window.location = data.portal_url;

@@ -1289,7 +1289,22 @@ def settings_audit_export():
 @login_required
 @admin_required
 def settings_billing():
+    requested_company_id = request.args.get('company_id', '').strip()
+    company_options = []
+
+    if hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
+        company_options = Company.query.order_by(Company.name.asc()).all()
+
     company = current_user.company
+    if company is None and hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
+        if requested_company_id:
+            try:
+                company = db.session.get(Company, int(requested_company_id))
+            except (TypeError, ValueError):
+                company = None
+        if company is None and company_options:
+            company = company_options[0]
+
     if company is None:
         flash(_t('Tu usuario no tiene una empresa asignada.'), 'warning')
         return redirect(url_for('admin.settings_companies'))
@@ -1304,6 +1319,8 @@ def settings_billing():
     return render_template(
         'admin/settings/billing.html',
         company=company,
+        company_options=company_options,
+        is_superadmin=(hasattr(current_user, 'is_superadmin') and current_user.is_superadmin()),
         billing_events=billing_events,
         paypal_configured=bool(os.environ.get('PAYPAL_CLIENT_ID', '').strip() and os.environ.get('PAYPAL_CLIENT_SECRET', '').strip()),
         default_plan_id=(os.environ.get('PAYPAL_DEFAULT_PLAN_ID', '') or '').strip(),
@@ -1314,7 +1331,18 @@ def settings_billing():
 @login_required
 @admin_required
 def settings_billing_price_update():
+    requested_company_id = (request.form.get('company_id') or '').strip()
+
     company = current_user.company
+    if company is None and hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
+        if requested_company_id:
+            try:
+                company = db.session.get(Company, int(requested_company_id))
+            except (TypeError, ValueError):
+                company = None
+        if company is None:
+            company = Company.query.order_by(Company.name.asc()).first()
+
     if company is None:
         flash(_t('Tu usuario no tiene una empresa asignada.'), 'warning')
         return redirect(url_for('admin.settings_companies'))
@@ -1328,6 +1356,8 @@ def settings_billing_price_update():
     else:
         flash(_t('Plan ID de PayPal eliminado. Se usará PAYPAL_DEFAULT_PLAN_ID si está configurado.'), 'info')
 
+    if hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
+        return redirect(url_for('admin.settings_billing', company_id=company.id))
     return redirect(url_for('admin.settings_billing'))
 
 
