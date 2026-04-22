@@ -614,8 +614,7 @@
           <img src="{{ url_for('static', filename='img/Soporte 5.png') }}" alt="{{ 'Centro de soporte técnico operando de forma coordinada en tiempo real' if is_es else 'Technical support center operating in a coordinated real-time environment' }}" loading="eager">
           <div class="hero-media-copy">
             <h3>{{ 'Operación de soporte centralizada' if is_es else 'Centralized support operations' }}</h3>
-            <p>{{ 'La imagen principal ahora refleja mejor la propuesta del sistema: un equipo técnico trabajando de forma unificada con monitoreo, trazabilidad y atención coordinada.' if is_es else 'The main image now better reflects the system proposition: a technical team working in a unified way with monitoring, traceability, and coordinated support.' }}</p>
-                    <p>{{ 'La plataforma integra a los equipos técnicos en una operación unificada, con monitoreo, trazabilidad y atención coordinada, consolidándose como una solución integral para la gestión corporativa de soporte técnico.' if is_es else 'The platform brings technical teams together in a unified operation with monitoring, traceability, and coordinated support, establishing itself as a comprehensive solution for corporate technical support management.' }}</p>
+            <p>{{ 'La plataforma integra a los equipos técnicos en una operación unificada, con monitoreo, trazabilidad y atención coordinada.' if is_es else 'The platform brings technical teams together in a unified operation with monitoring, traceability, and coordinated support.' }}</p>
           </div>
         </div>
         <div class="fact-strip">
@@ -762,7 +761,7 @@
     <div class="gallery-section">
       <div class="gallery-heading">
         <h2>{{ 'Atención técnica con rostro humano' if is_es else 'Technical support with a human face' }}</h2>
-        <p>{{ 'La bienvenida ahora muestra mejor el tipo de equipo y de trabajo que representa la plataforma: acompañamiento, seguimiento y resolución organizada de incidencias.' if is_es else 'The welcome page now reflects the kind of team and work the platform represents: guidance, follow-up, and organized incident resolution.' }}</p>
+        <p>{{ 'Acompañamiento, seguimiento y resolución organizada de incidencias para equipos técnicos reales.' if is_es else 'Guidance, follow-up, and organized resolution for real technical support teams.' }}</p>
       </div>
 
       <div class="gallery-grid">
@@ -770,7 +769,7 @@
           <img src="{{ url_for('static', filename='img/soporte1.png') }}" alt="{{ 'Agente de soporte técnico atendiendo a un usuario desde su estación de trabajo' if is_es else 'Support agent assisting a user from a workstation' }}" loading="lazy">
           <div class="gallery-copy">
             <h3>{{ 'Atención inicial clara' if is_es else 'Clear first response' }}</h3>
-            <p>{{ 'La experiencia está diseñada para mejorar la primera interacción del usuario y registrar incidencias con mejor contexto.' if is_es else 'The experience is designed to improve the user’s first interaction and capture incidents with better context.' }}</p>
+            <p>{{ 'La experiencia está diseñada para mejorar la primera interacción del usuario y registrar incidencias con mejor contexto.' if is_es else 'The experience is designed to improve the user\'s first interaction and capture incidents with better context.' }}</p>
           </div>
         </article>
 
@@ -786,7 +785,7 @@
           <img src="{{ url_for('static', filename='img/Soporte 4.png') }}" alt="{{ 'Resultado exitoso de la atención y resolución del soporte técnico' if is_es else 'Successful outcome from technical support and resolution' }}" loading="lazy">
           <div class="gallery-copy">
             <h3>{{ 'Seguimiento y resolución' if is_es else 'Follow-up and resolution' }}</h3>
-            <p>{{ 'La propuesta del proyecto es acompañar el ticket hasta su cierre con visibilidad del avance, resolución efectiva y evidencia del resultado.' if is_es else 'The project’s goal is to accompany each ticket until closure with progress visibility, effective resolution, and clear evidence of the outcome.' }}</p>
+            <p>{{ 'La propuesta del proyecto es acompañar el ticket hasta su cierre con visibilidad del avance, resolución efectiva y evidencia del resultado.' if is_es else 'The project\'s goal is to accompany each ticket until closure with progress visibility, effective resolution, and clear evidence of the outcome.' }}</p>
           </div>
         </article>
       </div>
@@ -794,7 +793,7 @@
 
     <div class="cta">
       <h2>{{ 'Empieza con una plataforma de soporte mejor explicada y mejor preparada' if is_es else 'Start with a support platform that is better explained and better prepared' }}</h2>
-      <p>{{ 'La página de bienvenida ahora presenta el proyecto como lo que realmente es: una solución corporativa para soporte técnico, seguimiento operativo, clasificación inteligente y atención organizada.' if is_es else 'The welcome page now presents the project for what it really is: a corporate solution for technical support, operational follow-up, intelligent classification, and organized service.' }}</p>
+      <p>{{ 'Una solución corporativa para soporte técnico, seguimiento operativo, clasificación inteligente y atención organizada.' if is_es else 'A corporate solution for technical support, operational follow-up, intelligent classification, and organized service.' }}</p>
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-light">{{ _('Go to Tickets') }}</a>
       {% else %}
