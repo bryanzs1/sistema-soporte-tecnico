@@ -72,7 +72,7 @@
                                     <span><strong>{{ item.value }}</strong></span>
                                     <form method="post" action="{{ url_for('admin.delete_ticket_option', option_id=item.id) }}" class="d-inline">
                                         <button class="btn btn-sm btn-outline-danger" type="submit" 
-                                                onclick="return confirm('Are you sure?')">
+                                                onclick="return confirm('¿Estás seguro de eliminar esta opción?')">
                                             <i class="bi bi-trash me-1"></i>{{ _('Delete') }}
                                         </button>
                                     </form>
@@ -113,7 +113,7 @@
                                     </span>
                                     <form method="post" action="{{ url_for('admin.delete_ticket_option', option_id=item.id) }}" class="d-inline">
                                         <button class="btn btn-sm btn-outline-danger" type="submit"
-                                                onclick="return confirm('Are you sure?')">
+                                                onclick="return confirm('¿Estás seguro de eliminar esta opción?')">
                                             <i class="bi bi-trash me-1"></i>{{ _('Delete') }}
                                         </button>
                                     </form>
