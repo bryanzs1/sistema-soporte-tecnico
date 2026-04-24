@@ -37,6 +37,11 @@
     <form method="POST">
       {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
       <div class="mb-3">
+        <label class="form-label">{{ 'Vigencia de certificación hasta' if current_lang == 'es' else 'Certification valid until' }}</label>
+        <input class="form-control" type="date" name="certified_until" value="{{ application.approved_user.certified_until.strftime('%Y-%m-%d') if application.approved_user and application.approved_user.certified_until else '' }}">
+        <small class="text-muted">{{ 'Si no defines fecha, se aplicará 1 año desde la aprobación.' if current_lang == 'es' else 'If empty, a 1-year validity period will be applied from approval date.' }}</small>
+      </div>
+      <div class="mb-3">
         <label class="form-label">{{ 'Notas de revisión' if current_lang == 'es' else 'Review notes' }}</label>
         <textarea class="form-control" name="review_notes" rows="4" placeholder="{{ 'Observaciones de validación' if current_lang == 'es' else 'Validation notes' }}">{{ application.review_notes or '' }}</textarea>
       </div>

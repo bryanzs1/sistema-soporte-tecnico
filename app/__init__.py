@@ -622,11 +622,19 @@ TRANSLATIONS = {
         'Please select a valid rating': 'Por favor selecciona una calificación válida',
         'Thank you for your feedback!': '¡Gracias por tu comentario!',
         'Ticket deletion is disabled by security policy': 'La eliminación de tickets está deshabilitada por política de seguridad',
+        'Your technician certification has expired. Please request recertification.': 'Tu certificación de técnico ha vencido. Solicita recertificación.',
+        'This ticket category is outside your certified specialties.': 'La categoría de este ticket está fuera de tus especialidades certificadas.',
         # ============================================================
         # MENSAJES FLASH — solicitudes de técnicos
         # ============================================================
         'Technician application submitted successfully. Our team will review your profile.': 'Solicitud de técnico enviada correctamente. Nuestro equipo revisará tu perfil.',
         'Cannot approve application without a valid company assignment': 'No se puede aprobar la solicitud sin una empresa válida asignada.',
+        'Invalid certification end date format. Use YYYY-MM-DD': 'Formato de fecha de fin de certificación inválido. Usa YYYY-MM-DD.',
+        'Your profile was approved as certified technician. Username: {username}': 'Tu perfil fue aprobado como técnico certificado. Usuario: {username}',
+        'Temporary password: {password}': 'Contraseña temporal: {password}',
+        'Certification valid until: {date}': 'Certificación vigente hasta: {date}',
+        'Certified technician application approved': 'Solicitud de técnico certificado aprobada',
+        'Technician created, but approval email could not be sent': 'El técnico fue creado, pero no se pudo enviar el correo de aprobación',
         'Application approved and technician enabled in the ticket system': 'Solicitud aprobada y técnico habilitado en el sistema de tickets.',
         'Application rejected': 'Solicitud rechazada',
         'Application status updated': 'Estado de la solicitud actualizado',
@@ -1001,6 +1009,12 @@ def create_app(config_class=None):
                     conn.execute(db.text('ALTER TABLE "user" ADD COLUMN certified_technician BOOLEAN DEFAULT TRUE'))
                     conn.commit()
                 app.logger.warning('Added certified_technician column to user table')
+
+            if 'certified_until' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN certified_until TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added certified_until column to user table')
 
             if 'technician_specialties' not in user_columns:
                 with db.engine.connect() as conn:

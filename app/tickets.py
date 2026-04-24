@@ -118,6 +118,29 @@ def _technician_reassign_enabled():
     return bool(policy and policy.active)
 
 
+def _is_technician_certification_active(technician):
+    if not technician or not technician.certified_technician:
+        return False
+    if technician.certified_until and technician.certified_until < utcnow():
+        technician.certified_technician = False
+        return False
+    return True
+
+
+def _technician_matches_category(technician, category):
+    category_norm = _strip_accents(category).lower()
+    if not category_norm:
+        return True
+    specialties_norm = _strip_accents(technician.technician_specialties or '').lower()
+    # Backward compatibility: legacy technicians without specialties remain eligible.
+    if not specialties_norm:
+        return True
+    if category_norm in specialties_norm:
+        return True
+    keywords = [part for part in category_norm.split() if len(part) > 3]
+    return any(keyword in specialties_norm for keyword in keywords)
+
+
 def _normalize_filter_value(raw_value, allowed_values):
     """Normalize filter values so ES/EN inputs match stored canonical DB values."""
     value = (raw_value or '').strip()
@@ -778,7 +801,7 @@ def create_ticket():
                     User.certified_technician == True,
                     User.company_id == ticket.company_id,
                 ).first()
-                if suggested_technician:
+                if suggested_technician and _is_technician_certification_active(suggested_technician) and _technician_matches_category(suggested_technician, ticket.category):
                     ticket.ml_suggested_technician_id = suggested_technician.id
                     ticket.ml_confidence_score = confidence
 
@@ -1021,8 +1044,11 @@ def ticket_detail(ticket_id):
             User.last_activity >= thirty_min_ago,
             User.company_id == ticket.company_id,
         ).order_by(User.username).all()
+        valid_techs = [t for t in techs if _is_technician_certification_active(t) and _technician_matches_category(t, ticket.category)]
+        if len(valid_techs) != len(techs):
+            db.session.commit()
         # Add "Unassigned" option first
-        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, f"{t.username} (online)") for t in techs]
+        form.technician.choices = [(0, _t('-- Unassigned --'))] + [(t.id, f"{t.username} (online)") for t in valid_techs]
     else:
         form.technician.choices = []
 
@@ -1106,6 +1132,15 @@ def take_ticket(ticket_id):
 
     if not current_user.is_technician() and not current_user.is_admin():
         abort(403)
+
+    if current_user.is_technician() and not _is_technician_certification_active(current_user):
+        db.session.commit()
+        flash(_t('Your technician certification has expired. Please request recertification.'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
+
+    if current_user.is_technician() and not _technician_matches_category(current_user, ticket.category):
+        flash(_t('This ticket category is outside your certified specialties.'), 'warning')
+        return redirect(url_for('tickets.ticket_detail', ticket_id=ticket.id))
 
     if ticket.status == 'Cerrado':
         flash(_t('Closed tickets cannot be taken'), 'warning')

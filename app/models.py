@@ -66,6 +66,7 @@ class User(UserMixin, db.Model):
     # Multiempresa: relación con Company
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
     certified_technician = db.Column(db.Boolean, default=True, nullable=False)
+    certified_until = db.Column(db.DateTime)
     technician_specialties = db.Column(db.Text)
 
     # Security: 2FA (TOTP)

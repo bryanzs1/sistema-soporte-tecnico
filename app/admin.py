@@ -2,7 +2,7 @@ import os
 import csv
 import json
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from io import StringIO
 
 
@@ -1082,6 +1082,19 @@ def settings_technician_application_detail(application_id):
                 flash(_t('Cannot approve application without a valid company assignment'), 'danger')
                 return redirect(url_for('admin.settings_technician_application_detail', application_id=application.id))
 
+            raw_until = (request.form.get('certified_until') or '').strip()
+            certified_until = None
+            if raw_until:
+                try:
+                    certified_until = datetime.strptime(raw_until, '%Y-%m-%d')
+                except ValueError:
+                    flash(_t('Invalid certification end date format. Use YYYY-MM-DD'), 'warning')
+                    return redirect(url_for('admin.settings_technician_application_detail', application_id=application.id))
+            if certified_until is None:
+                certified_until = utcnow() + timedelta(days=365)
+
+            temp_password_for_email = None
+
             existing_user = User.query.filter_by(email=application.email.lower()).first()
             if existing_user is None:
                 username_seed = application.email.split('@')[0] if '@' in application.email else application.full_name
@@ -1092,10 +1105,12 @@ def settings_technician_application_detail(application_id):
                     is_active=True,
                     company_id=target_company_id,
                     certified_technician=True,
+                    certified_until=certified_until,
                     technician_specialties=application.specialties,
                 )
                 temporary_password = secrets.token_urlsafe(10)
                 user.set_password(temporary_password)
+                temp_password_for_email = temporary_password
                 db.session.add(user)
                 db.session.flush()
                 application.approved_user_id = user.id
@@ -1105,11 +1120,31 @@ def settings_technician_application_detail(application_id):
                 if not existing_user.company_id:
                     existing_user.company_id = target_company_id
                 existing_user.certified_technician = True
+                existing_user.certified_until = certified_until
                 existing_user.technician_specialties = application.specialties
                 application.approved_user_id = existing_user.id
 
             application.status = 'approved'
             db.session.commit()
+
+            try:
+                from app import send_email
+                approved_user = User.query.get(application.approved_user_id)
+                email_body = _t('Your profile was approved as certified technician. Username: {username}').format(
+                    username=approved_user.username if approved_user else application.email,
+                )
+                if temp_password_for_email:
+                    email_body += '\n' + _t('Temporary password: {password}').format(password=temp_password_for_email)
+                email_body += '\n' + _t('Certification valid until: {date}').format(date=certified_until.strftime('%Y-%m-%d'))
+                send_email(
+                    _t('Certified technician application approved'),
+                    [application.email],
+                    email_body,
+                )
+            except Exception as e:
+                current_app.logger.warning('Failed to send approval email for technician application %s: %s', application.id, e)
+                flash(_t('Technician created, but approval email could not be sent'), 'warning')
+
             flash(_t('Application approved and technician enabled in the ticket system'), 'success')
             return redirect(url_for('admin.settings_technician_applications'))
 
