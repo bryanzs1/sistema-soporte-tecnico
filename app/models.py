@@ -65,6 +65,8 @@ class User(UserMixin, db.Model):
 
     # Multiempresa: relación con Company
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
+    certified_technician = db.Column(db.Boolean, default=True, nullable=False)
+    technician_specialties = db.Column(db.Text)
 
     # Security: 2FA (TOTP)
     totp_secret = db.Column(db.String(32))  # Encrypted TOTP secret
@@ -461,4 +463,27 @@ class PasswordHistory(db.Model):
         if commit:
             db.session.commit()
         return True
+
+
+class TechnicianApplication(db.Model):
+    """Solicitud pública para alta de técnico certificado."""
+    id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    phone = db.Column(db.String(40))
+    location = db.Column(db.String(120))
+    specialties = db.Column(db.Text, nullable=False)
+    certifications = db.Column(db.Text, nullable=False)
+    years_experience = db.Column(db.Integer, default=0, nullable=False)
+    professional_summary = db.Column(db.Text)
+    status = db.Column(db.String(32), default='pending', nullable=False, index=True)
+    review_notes = db.Column(db.Text)
+    reviewed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    approved_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False, index=True)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+    reviewed_at = db.Column(db.DateTime)
+
+    reviewed_by = db.relationship('User', foreign_keys=[reviewed_by_id], backref=db.backref('technician_applications_reviewed', lazy='dynamic'))
+    approved_user = db.relationship('User', foreign_keys=[approved_user_id], backref=db.backref('technician_application_record', uselist=False))
 

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, HiddenField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, HiddenField, IntegerField
 from wtforms.validators import DataRequired, EqualTo, Length, NumberRange
 from wtforms import ValidationError
 from flask_wtf.file import FileField, FileAllowed
@@ -245,3 +245,27 @@ class ResetPasswordForm(FlaskForm):
         self.new_password.label.text = tr('New Password', 'Nueva contraseña')
         self.confirm_password.label.text = tr('Confirm Password', 'Confirmar contraseña')
         self.submit.label.text = tr('Update Password', 'Actualizar contraseña')
+
+
+class TechnicianApplicationForm(FlaskForm):
+    full_name = StringField('Full name', validators=[DataRequired(), Length(max=120)])
+    email = StringField('Email', validators=[DataRequired(), Length(max=120)])
+    phone = StringField('Phone', validators=[Length(max=40)])
+    location = StringField('Location', validators=[Length(max=120)])
+    specialties = TextAreaField('Specialties', validators=[DataRequired(), Length(min=10, max=1500)])
+    certifications = TextAreaField('Certifications', validators=[DataRequired(), Length(min=10, max=2000)])
+    years_experience = IntegerField('Years of experience', validators=[DataRequired(), NumberRange(min=0, max=60)])
+    professional_summary = TextAreaField('Professional summary', validators=[Length(max=2000)])
+    submit = SubmitField('Submit application')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.full_name.label.text = tr('Full name', 'Nombre completo')
+        self.email.label.text = tr('Email', 'Correo')
+        self.phone.label.text = tr('Phone', 'Teléfono')
+        self.location.label.text = tr('Location', 'Ubicación')
+        self.specialties.label.text = tr('Specialties', 'Especialidades')
+        self.certifications.label.text = tr('Certifications', 'Certificaciones')
+        self.years_experience.label.text = tr('Years of experience', 'Años de experiencia')
+        self.professional_summary.label.text = tr('Professional summary', 'Resumen profesional')
+        self.submit.label.text = tr('Submit application', 'Enviar solicitud')

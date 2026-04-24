@@ -775,6 +775,7 @@ def create_ticket():
                 suggested_technician = User.query.filter(
                     User.id == suggested_tech_id,
                     User.role == 'technician',
+                    User.certified_technician == True,
                     User.company_id == ticket.company_id,
                 ).first()
                 if suggested_technician:
@@ -1016,6 +1017,7 @@ def ticket_detail(ticket_id):
         techs = User.query.filter(
             User.role == 'technician',
             User.is_active == True,
+            User.certified_technician == True,
             User.last_activity >= thirty_min_ago,
             User.company_id == ticket.company_id,
         ).order_by(User.username).all()

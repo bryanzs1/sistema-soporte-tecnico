@@ -5,6 +5,8 @@ from app import db
 
 USER_COLUMNS = {
     'company_id': 'ALTER TABLE "user" ADD COLUMN company_id INTEGER',
+    'certified_technician': 'ALTER TABLE "user" ADD COLUMN certified_technician BOOLEAN NOT NULL DEFAULT TRUE',
+    'technician_specialties': 'ALTER TABLE "user" ADD COLUMN technician_specialties TEXT',
     'totp_secret': 'ALTER TABLE "user" ADD COLUMN totp_secret VARCHAR(32)',
     'totp_enabled': 'ALTER TABLE "user" ADD COLUMN totp_enabled BOOLEAN NOT NULL DEFAULT FALSE',
     'totp_backup_codes': 'ALTER TABLE "user" ADD COLUMN totp_backup_codes TEXT',

@@ -252,7 +252,10 @@
 
     <div class="services-cta">
       <p>{{ '¿Necesitas una propuesta adaptada por sede o por área? Te ayudamos a armar un plan de servicios a medida.' if is_es else 'Need a proposal by office or department? We can help you build a tailored service plan.' }}</p>
-      <a class="btn btn-primary" href="{{ url_for('main.contact') }}">{{ 'Solicitar propuesta' if is_es else 'Request proposal' }}</a>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" href="{{ url_for('main.contact') }}">{{ 'Solicitar propuesta' if is_es else 'Request proposal' }}</a>
+        <a class="btn btn-outline-light" href="{{ url_for('main.technician_applications') }}">{{ 'Postular como técnico' if is_es else 'Apply as technician' }}</a>
+      </div>
     </div>
   </div>
 </section>

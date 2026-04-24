@@ -1,12 +1,18 @@
 import os
 
-from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify
+from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify, flash
 from flask_login import login_required, current_user
 
-from app import translate
+from app import db, translate
 from app.ai_chatbot import answer_question, converse_with_assistant
+from app.forms import TechnicianApplicationForm
+from app.models import TechnicianApplication
 
 bp = Blueprint('main', __name__)
+
+
+def _t(text):
+    return translate(text, session.get('lang', 'es'))
 
 
 def _assistant_title_from_message(message, lang):
@@ -120,6 +126,30 @@ def contact():
 @bp.route('/servicios')
 def services():
     return render_template('services.html')
+
+
+@bp.route('/solicitudes-tecnico', methods=['GET', 'POST'])
+def technician_applications():
+    form = TechnicianApplicationForm()
+
+    if form.validate_on_submit():
+        application = TechnicianApplication(
+            full_name=form.full_name.data.strip(),
+            email=form.email.data.strip().lower(),
+            phone=(form.phone.data or '').strip(),
+            location=(form.location.data or '').strip(),
+            specialties=form.specialties.data.strip(),
+            certifications=form.certifications.data.strip(),
+            years_experience=int(form.years_experience.data or 0),
+            professional_summary=(form.professional_summary.data or '').strip(),
+            status='pending',
+        )
+        db.session.add(application)
+        db.session.commit()
+        flash(_t('Technician application submitted successfully. Our team will review your profile.'), 'success')
+        return redirect(url_for('main.technician_applications'))
+
+    return render_template('technician_application.html', form=form)
 
 
 @bp.route('/terminos-y-condiciones')

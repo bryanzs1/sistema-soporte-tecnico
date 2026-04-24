@@ -622,6 +622,14 @@ TRANSLATIONS = {
         'Please select a valid rating': 'Por favor selecciona una calificación válida',
         'Thank you for your feedback!': '¡Gracias por tu comentario!',
         'Ticket deletion is disabled by security policy': 'La eliminación de tickets está deshabilitada por política de seguridad',
+        # ============================================================
+        # MENSAJES FLASH — solicitudes de técnicos
+        # ============================================================
+        'Technician application submitted successfully. Our team will review your profile.': 'Solicitud de técnico enviada correctamente. Nuestro equipo revisará tu perfil.',
+        'Cannot approve application without a valid company assignment': 'No se puede aprobar la solicitud sin una empresa válida asignada.',
+        'Application approved and technician enabled in the ticket system': 'Solicitud aprobada y técnico habilitado en el sistema de tickets.',
+        'Application rejected': 'Solicitud rechazada',
+        'Application status updated': 'Estado de la solicitud actualizado',
     }
 }
 
@@ -987,6 +995,18 @@ def create_app(config_class=None):
                     conn.execute(db.text('ALTER TABLE "user" ADD COLUMN locked_until TIMESTAMP'))
                     conn.commit()
                 app.logger.warning('Added locked_until column to user table')
+
+            if 'certified_technician' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN certified_technician BOOLEAN DEFAULT TRUE'))
+                    conn.commit()
+                app.logger.warning('Added certified_technician column to user table')
+
+            if 'technician_specialties' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN technician_specialties TEXT'))
+                    conn.commit()
+                app.logger.warning('Added technician_specialties column to user table')
 
             # Add ML-related columns to ticket table
             ticket_columns = [col['name'] for col in inspector.get_columns('ticket')]

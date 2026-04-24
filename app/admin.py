@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+import secrets
 from datetime import datetime, timezone
 from io import StringIO
 
@@ -14,7 +15,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats, BillingEvent
+from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats, BillingEvent, TechnicianApplication
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
 from app.models import Company
 
@@ -171,6 +172,23 @@ def _ticket_in_scope(ticket):
 
 def _company_user_query():
     return User.query.filter(User.company_id == current_user.company_id)
+
+
+def _next_available_username(base_value):
+    base = ''.join(ch for ch in (base_value or '').lower() if ch.isalnum())[:24] or 'tecnico'
+    candidate = base
+    suffix = 1
+    while User.query.filter_by(username=candidate).first() is not None:
+        suffix += 1
+        candidate = f'{base}{suffix}'
+    return candidate
+
+
+def _resolve_target_company_id():
+    if current_user.company_id:
+        return current_user.company_id
+    first_company = Company.query.filter_by(is_active=True).order_by(Company.id.asc()).first()
+    return first_company.id if first_company else None
 
 
 def _company_user_or_404(user_id):
@@ -1031,6 +1049,83 @@ def settings_users():
         flash(_t('An unexpected error occurred'), 'danger')
         companies = [current_user.company] if current_user.company else []
         return render_template('admin/users.html', users=users, companies=companies, selected_company_id=current_user.company_id)
+
+
+@bp.route('/settings/technician-applications')
+@login_required
+@admin_required
+def settings_technician_applications():
+    status = (request.args.get('status') or 'all').strip().lower()
+    query = TechnicianApplication.query
+    if status in ('pending', 'in_review', 'approved', 'rejected'):
+        query = query.filter(TechnicianApplication.status == status)
+    applications = query.order_by(TechnicianApplication.created_at.desc()).all()
+    return render_template('admin/settings/technician_applications.html', applications=applications, active_status=status)
+
+
+@bp.route('/settings/technician-applications/<int:application_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def settings_technician_application_detail(application_id):
+    application = TechnicianApplication.query.get_or_404(application_id)
+
+    if request.method == 'POST':
+        action = (request.form.get('action') or '').strip().lower()
+        notes = (request.form.get('review_notes') or '').strip()
+        application.review_notes = notes
+        application.reviewed_by_id = current_user.id
+        application.reviewed_at = utcnow()
+
+        if action == 'approve':
+            target_company_id = _resolve_target_company_id()
+            if not target_company_id:
+                flash(_t('Cannot approve application without a valid company assignment'), 'danger')
+                return redirect(url_for('admin.settings_technician_application_detail', application_id=application.id))
+
+            existing_user = User.query.filter_by(email=application.email.lower()).first()
+            if existing_user is None:
+                username_seed = application.email.split('@')[0] if '@' in application.email else application.full_name
+                user = User(
+                    username=_next_available_username(username_seed),
+                    email=application.email.lower(),
+                    role='technician',
+                    is_active=True,
+                    company_id=target_company_id,
+                    certified_technician=True,
+                    technician_specialties=application.specialties,
+                )
+                temporary_password = secrets.token_urlsafe(10)
+                user.set_password(temporary_password)
+                db.session.add(user)
+                db.session.flush()
+                application.approved_user_id = user.id
+            else:
+                existing_user.role = 'technician'
+                existing_user.is_active = True
+                if not existing_user.company_id:
+                    existing_user.company_id = target_company_id
+                existing_user.certified_technician = True
+                existing_user.technician_specialties = application.specialties
+                application.approved_user_id = existing_user.id
+
+            application.status = 'approved'
+            db.session.commit()
+            flash(_t('Application approved and technician enabled in the ticket system'), 'success')
+            return redirect(url_for('admin.settings_technician_applications'))
+
+        if action == 'reject':
+            application.status = 'rejected'
+            db.session.commit()
+            flash(_t('Application rejected'), 'warning')
+            return redirect(url_for('admin.settings_technician_applications'))
+
+        if action == 'mark_review':
+            application.status = 'in_review'
+            db.session.commit()
+            flash(_t('Application status updated'), 'info')
+            return redirect(url_for('admin.settings_technician_application_detail', application_id=application.id))
+
+    return render_template('admin/settings/technician_application_detail.html', application=application)
 
 
 @bp.route('/settings/companies')
