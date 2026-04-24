@@ -27,6 +27,16 @@
         </button>
         <div class="collapse navbar-collapse app-menu-panel app-shell-menu" id="navbarContent">
           <ul class="navbar-nav me-auto app-nav-group app-shell-links">
+            {% if current_user.is_authenticated %}
+              <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'tickets.list_tickets' %}is-active{% endif %}" href="{{ url_for('tickets.list_tickets') }}" {% if endpoint == 'tickets.list_tickets' %}aria-current="page"{% endif %}>
+                <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}
+              </a></li>
+              {% if current_user.is_admin() or current_user.is_technician() %}
+              <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}" {% if endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>
+                <i class="bi bi-speedometer2"></i> {{ 'Panel' if current_lang == 'es' else 'Dashboard' }}
+              </a></li>
+              {% endif %}
+            {% else %}
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.pricing' %}is-active{% endif %}" href="{{ url_for('main.pricing') }}" {% if endpoint == 'main.pricing' %}aria-current="page"{% endif %}>
               <i class="bi bi-tags"></i> {{ 'Precios' if current_lang == 'es' else 'Pricing' }}
             </a></li>
@@ -42,15 +52,6 @@
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.contact' %}is-active{% endif %}" href="{{ url_for('main.contact') }}" {% if endpoint == 'main.contact' %}aria-current="page"{% endif %}>
               <i class="bi bi-envelope"></i> {{ 'Contáctanos' if current_lang == 'es' else 'Contact Us' }}
             </a></li>
-            {% if current_user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'tickets.list_tickets' %}is-active{% endif %}" href="{{ url_for('tickets.list_tickets') }}" {% if endpoint == 'tickets.list_tickets' %}aria-current="page"{% endif %}>
-                <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}
-              </a></li>
-              {% if current_user.is_admin() or current_user.is_technician() %}
-              <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}" {% if endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>
-                <i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}
-              </a></li>
-              {% endif %}
             {% endif %}
           </ul>
           <ul class="navbar-nav ms-auto app-nav-actions app-shell-actions">
