@@ -67,6 +67,19 @@
     line-height: 1.8;
   }
 
+  .welcome-v2 .hero-actions {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin: 0 0 1.15rem;
+  }
+
+  .welcome-v2 .hero-actions .btn {
+    border-radius: 14px;
+    padding: 0.72rem 1rem;
+    font-weight: 700;
+  }
+
   .welcome-v2 .hero-lead {
     font-size: 1.02rem;
   }
@@ -535,6 +548,11 @@
         <p>
           {{ 'Integra creación guiada de tickets, roles corporativos, panel administrativo, notificaciones y capacidades de IA para agilizar la atención y mejorar el control operativo.' if is_es else 'It includes guided ticket creation, corporate roles, an administrative dashboard, notifications, and AI capabilities to speed up support and improve operational control.' }}
         </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="{{ url_for('main.technician_applications') }}">{{ 'Postularme como técnico' if is_es else 'Apply as Technician' }}</a>
+          <a class="btn btn-outline-light" href="{{ url_for('main.services') }}">{{ 'Ver servicios' if is_es else 'View Services' }}</a>
+        </div>
 
         <div class="hero-points">
           <div class="hero-point">

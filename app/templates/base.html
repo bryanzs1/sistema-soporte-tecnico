@@ -36,6 +36,9 @@
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.services' %}is-active{% endif %}" href="{{ url_for('main.services') }}" {% if endpoint == 'main.services' %}aria-current="page"{% endif %}>
               <i class="bi bi-grid"></i> {{ 'Servicios' if current_lang == 'es' else 'Services' }}
             </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.technician_applications' %}is-active{% endif %}" href="{{ url_for('main.technician_applications') }}" {% if endpoint == 'main.technician_applications' %}aria-current="page"{% endif %}>
+              <i class="bi bi-person-plus"></i> {{ 'Solicitar alta técnico' if current_lang == 'es' else 'Apply as Technician' }}
+            </a></li>
             <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.contact' %}is-active{% endif %}" href="{{ url_for('main.contact') }}" {% if endpoint == 'main.contact' %}aria-current="page"{% endif %}>
               <i class="bi bi-envelope"></i> {{ 'Contáctanos' if current_lang == 'es' else 'Contact Us' }}
             </a></li>
