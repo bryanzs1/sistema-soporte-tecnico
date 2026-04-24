@@ -1542,7 +1542,7 @@ h1, h2, h3, h4 {
 }
 
 .app-shell-nav {
-    min-height: 74px;
+    min-height: 70px;
 }
 
 .app-shell-nav .app-shell-nav-inner {
@@ -1598,8 +1598,22 @@ h1, h2, h3, h4 {
     color: rgba(226, 232, 240, 0.82) !important;
     font-weight: 600;
     border-radius: 12px;
-    padding: 0.6rem 0.85rem !important;
+    padding: 0.52rem 0.75rem !important;
+    white-space: nowrap;
     transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 992px) {
+    .app-shell-nav .app-shell-links,
+    .app-shell-nav .app-shell-actions {
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+    }
+
+    .app-nav-group,
+    .app-nav-actions {
+        gap: 0.15rem;
+    }
 }
 
 .app-nav-link:hover,
