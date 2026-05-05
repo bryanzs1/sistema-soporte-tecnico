@@ -134,7 +134,48 @@
                 </ul>
               </li>
               <li class="nav-item d-flex align-items-center nav-guest-actions">
+                <a class="btn btn-sm app-secondary-action me-2" href="#accessModal" data-bs-toggle="modal" data-bs-target="#accessModal">{{ _('Solicitar acceso') }}</a>
                 <a class="btn btn-sm app-secondary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
+                  <!-- Modal Solicitar Acceso y Demo -->
+                  <div class="modal fade" id="accessModal" tabindex="-1" aria-labelledby="accessModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content border-0 shadow">
+                        <div class="modal-header border-0 pb-0">
+                          <h5 class="modal-title fw-bold fs-5" id="accessModalLabel">Solicitar acceso y demo</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body pt-2 px-4 pb-4">
+                          <form method="post" action="{{ url_for('main.solicitar_acceso') }}" id="accessRequestForm">
+                            <div class="mb-3">
+                              <label for="nombre" class="form-label">Nombre completo</label>
+                              <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100">
+                            </div>
+                            <div class="mb-3">
+                              <label for="empresa" class="form-label">Empresa</label>
+                              <input type="text" class="form-control" id="empresa" name="empresa" maxlength="100">
+                            </div>
+                            <div class="mb-3">
+                              <label for="correo" class="form-label">Correo electrónico</label>
+                              <input type="email" class="form-control" id="correo" name="correo" required maxlength="120">
+                            </div>
+                            <div class="mb-3">
+                              <label for="telefono" class="form-label">Teléfono</label>
+                              <input type="tel" class="form-control" id="telefono" name="telefono" maxlength="30">
+                            </div>
+                            <div class="mb-3">
+                              <label for="mensaje" class="form-label">Mensaje</label>
+                              <textarea class="form-control" id="mensaje" name="mensaje" rows="3" maxlength="500" placeholder="¿Qué necesitas? ¿En qué podemos ayudarte?"></textarea>
+                            </div>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-primary w-100">Solicitar acceso y demo</button>
+                            <div class="text-center mt-3">
+                              <a href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal" style="font-size:0.95em;">¿Ya tienes acceso? Inicia sesión aquí</a>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
               </li>
             {% endif %}
           </ul>
