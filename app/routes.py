@@ -1,10 +1,8 @@
 
 import os
-
-from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify, flash
+from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from flask_mail import Message
-
 from app import db, translate
 from app.ai_chatbot import answer_question, converse_with_assistant
 from app.forms import TechnicianApplicationForm
@@ -12,12 +10,9 @@ from app.models import TechnicianApplication
 
 bp = Blueprint('main', __name__)
 
-# ...existing code...
-
-# Endpoint para solicitar acceso y demo
+# Endpoint para solicitar acceso y demo (debe estar antes de registrar el blueprint)
 @bp.route('/solicitar-acceso', methods=['POST'])
 def solicitar_acceso():
-    from flask import current_app
     nombre = request.form.get('nombre', '').strip()
     empresa = request.form.get('empresa', '').strip()
     correo = request.form.get('correo', '').strip()
