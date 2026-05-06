@@ -40,8 +40,12 @@ def solicitar_acceso():
     correo = request.form.get('correo', '').strip()
     telefono = request.form.get('telefono', '').strip()
     mensaje = request.form.get('mensaje', '').strip()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if not nombre or not correo:
-        flash('Por favor completa los campos obligatorios.', 'danger')
+        msg = 'Por favor completa los campos obligatorios.'
+        if is_ajax:
+            return jsonify({'success': False, 'message': msg}), 400
+        flash(msg, 'danger')
         return redirect(url_for('main.index'))
 
     # Construir cuerpo del correo
@@ -55,18 +59,23 @@ def solicitar_acceso():
     """
     subject = 'Nueva solicitud de acceso y demo'
     recipients = [current_app.config.get('MAIL_DEFAULT_SENDER')]
-    # Permitir override por config
     demo_recipient = current_app.config.get('ACCESS_REQUEST_RECIPIENT')
     if demo_recipient:
         recipients = [demo_recipient]
 
+    msg_ok = '¡Solicitud enviada correctamente! Nuestro equipo te contactará pronto.'
+    msg_error = 'Ocurrió un error al enviar la solicitud. Intenta nuevamente.'
     msg = Message(subject, recipients=recipients, body=body)
     try:
         current_app.extensions['mail'].send(msg)
-        flash('¡Solicitud enviada correctamente! Nuestro equipo te contactará pronto.', 'success')
+        if is_ajax:
+            return jsonify({'success': True, 'message': msg_ok})
+        flash(msg_ok, 'success')
     except Exception as e:
         current_app.logger.error(f'Error enviando solicitud de acceso: {e}')
-        flash('Ocurrió un error al enviar la solicitud. Intenta nuevamente.', 'danger')
+        if is_ajax:
+            return jsonify({'success': False, 'message': msg_error}), 500
+        flash(msg_error, 'danger')
     return redirect(url_for('main.index'))
 
 

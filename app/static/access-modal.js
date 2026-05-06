@@ -5,26 +5,47 @@ document.addEventListener('DOMContentLoaded', function () {
   const accessForm = document.getElementById('accessRequestForm');
   const accessModal = document.getElementById('accessModal');
 
-  if (accessForm) {
-    accessForm.addEventListener('submit', function (e) {
-      // Permite el submit normal para que Flask procese y redirija
-      // Pero al volver, si hay un mensaje flash, cierra el modal
-      setTimeout(() => {
-        // Si hay un mensaje flash visible, cierra el modal
-        const flash = document.querySelector('.alert');
-        if (flash && accessModal.classList.contains('show')) {
-          const modal = bootstrap.Modal.getOrCreateInstance(accessModal);
-          modal.hide();
-        }
-      }, 500);
-    });
+  function showAlert(message, type = 'success') {
+    // Busca o crea el contenedor de alertas
+    let alertContainer = document.querySelector('.alert-container');
+    if (!alertContainer) {
+      alertContainer = document.createElement('div');
+      alertContainer.className = 'alert-container';
+      document.body.prepend(alertContainer);
+    }
+    // Crea la alerta
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.role = 'alert';
+    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+    alertContainer.appendChild(alert);
+    setTimeout(() => { alert.classList.remove('show'); alert.remove(); }, 6000);
   }
 
-  // Opcional: Cierra el modal si se navega a otra página
-  window.addEventListener('pageshow', function () {
-    if (accessModal.classList.contains('show')) {
-      const modal = bootstrap.Modal.getOrCreateInstance(accessModal);
-      modal.hide();
-    }
-  });
+  if (accessForm) {
+    accessForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(accessForm);
+      fetch(accessForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(async response => {
+        let data;
+        try { data = await response.json(); } catch { data = {}; }
+        if (response.ok && data.success) {
+          showAlert(data.message || '¡Solicitud enviada correctamente!', 'success');
+          accessForm.reset();
+          const modal = bootstrap.Modal.getOrCreateInstance(accessModal);
+          modal.hide();
+        } else {
+          showAlert(data.message || 'Ocurrió un error al enviar la solicitud.', 'danger');
+        }
+      })
+      .catch(() => {
+        showAlert('Ocurrió un error de red. Intenta nuevamente.', 'danger');
+      });
+    });
+  }
 });
