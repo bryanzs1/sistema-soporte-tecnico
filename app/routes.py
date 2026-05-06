@@ -1,8 +1,3 @@
-@bp.route('/set-language/<lang>')
-def set_language(lang):
-    session['lang'] = lang
-    return redirect(request.referrer or url_for('main.index'))
-
 
 import os
 from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify, flash, current_app
@@ -14,6 +9,11 @@ from app.forms import TechnicianApplicationForm
 from app.models import TechnicianApplication
 
 bp = Blueprint('main', __name__)
+
+@bp.route('/set-language/<lang>')
+def set_language(lang):
+    session['lang'] = lang
+    return redirect(request.referrer or url_for('main.index'))
 
 
 def _t(text):
