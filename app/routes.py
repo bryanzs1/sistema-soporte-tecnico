@@ -94,19 +94,7 @@ def health_check():
     return jsonify({'status': 'healthy', 'service': 'soporte-tecnico'}), 200
 
 
-@bp.route('/presence-ping', methods=['GET'])
-@login_required
 
-import os
-from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify, flash, current_app
-from flask_login import login_required, current_user
-from flask_mail import Message
-from app import db, translate
-from app.ai_chatbot import answer_question, converse_with_assistant
-from app.forms import TechnicianApplicationForm
-from app.models import TechnicianApplication
-
-bp = Blueprint('main', __name__)
 
 # Endpoint para solicitar acceso y demo (debe estar antes de registrar el blueprint)
 @bp.route('/solicitar-acceso', methods=['POST'])
