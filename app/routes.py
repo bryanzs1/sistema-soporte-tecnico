@@ -88,12 +88,15 @@ def pricing():
     )
 
 
+
+@bp.route('/about-us')
+def about_us():
+    return render_template('about.html')
+
 @bp.route('/health')
 def health_check():
     """Health check endpoint for Render"""
     return jsonify({'status': 'healthy', 'service': 'soporte-tecnico'}), 200
-
-    return render_template('about.html')
 
 
 @bp.route('/contactanos')
