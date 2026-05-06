@@ -93,45 +93,6 @@ def health_check():
     """Health check endpoint for Render"""
     return jsonify({'status': 'healthy', 'service': 'soporte-tecnico'}), 200
 
-
-
-
-# Endpoint para solicitar acceso y demo (debe estar antes de registrar el blueprint)
-@bp.route('/solicitar-acceso', methods=['POST'])
-def solicitar_acceso():
-    nombre = request.form.get('nombre', '').strip()
-    empresa = request.form.get('empresa', '').strip()
-    correo = request.form.get('correo', '').strip()
-    telefono = request.form.get('telefono', '').strip()
-    mensaje = request.form.get('mensaje', '').strip()
-    if not nombre or not correo:
-        flash('Por favor completa los campos obligatorios.', 'danger')
-        return redirect(url_for('main.index'))
-
-    # Construir cuerpo del correo
-    body = f"""
-    Nueva solicitud de acceso/demo:
-    Nombre: {nombre}
-    Empresa: {empresa}
-    Correo: {correo}
-    Teléfono: {telefono}
-    Mensaje: {mensaje}
-    """
-    subject = 'Nueva solicitud de acceso y demo'
-    recipients = [current_app.config.get('MAIL_DEFAULT_SENDER')]
-    # Permitir override por config
-    demo_recipient = current_app.config.get('ACCESS_REQUEST_RECIPIENT')
-    if demo_recipient:
-        recipients = [demo_recipient]
-
-    msg = Message(subject, recipients=recipients, body=body)
-    try:
-        current_app.extensions['mail'].send(msg)
-        flash('¡Solicitud enviada correctamente! Nuestro equipo te contactará pronto.', 'success')
-    except Exception as e:
-        current_app.logger.error(f'Error enviando solicitud de acceso: {e}')
-        flash('Ocurrió un error al enviar la solicitud. Intenta nuevamente.', 'danger')
-    return redirect(url_for('main.index'))
     return render_template('about.html')
 
 
