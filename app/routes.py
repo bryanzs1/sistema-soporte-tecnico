@@ -1,3 +1,7 @@
+@bp.route('/set-language/<lang>')
+def set_language(lang):
+    session['lang'] = lang
+    return redirect(request.referrer or url_for('main.index'))
 
 
 import os
