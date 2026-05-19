@@ -8,8 +8,10 @@ import sys
 # Add project root to path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from app import create_app, db
-from app.models import User, Ticket, TicketOption
+
+# Importar desde el paquete correcto
+from soporte_empresa.app import create_app, db
+from soporte_empresa.app.models import User, Ticket, TicketOption
 
 # Create the Flask application instance
 app = create_app()
