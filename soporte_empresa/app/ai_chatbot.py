@@ -13,6 +13,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+from soporte_empresa.app import db
 # Conversation memory: {user_id: [{'role': 'user'|'assistant', 'content': str, 'timestamp': datetime}, ...]}
 _conversation_history = {}
 _MAX_HISTORY_LENGTH = 20

@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import Blueprint, request, jsonify, current_app
-from app import db
-from app.models import Ticket, User, ApiToken, Integration
-from app.ai_sentiment import analyze_ticket as analyze_sentiment
-from app.ai_chatbot import answer_question
+from soporte_empresa.app import db
+from soporte_empresa.app.models import Ticket, User, ApiToken, Integration
+from soporte_empresa.app.ai_sentiment import analyze_ticket as analyze_sentiment
+from soporte_empresa.app.ai_chatbot import answer_question
 
 
 bp = Blueprint('api', __name__)

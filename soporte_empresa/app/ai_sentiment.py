@@ -7,6 +7,7 @@ import os
 import logging
 from typing import Dict, Tuple
 
+from soporte_empresa.app import db
 # Try to import sentiment analysis tools
 try:
     from textblob import TextBlob

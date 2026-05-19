@@ -1,5 +1,6 @@
 """Security utilities for password validation, 2FA, and auditing"""
 
+from soporte_empresa.app import db
 import re
 import secrets
 import qrcode

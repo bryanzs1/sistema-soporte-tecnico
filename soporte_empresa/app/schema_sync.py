@@ -1,6 +1,6 @@
 from sqlalchemy import inspect, text
 
-from app import db
+from soporte_empresa.app import db
 
 
 USER_COLUMNS = {

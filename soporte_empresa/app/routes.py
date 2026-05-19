@@ -3,10 +3,10 @@ import os
 from flask import Blueprint, render_template, session, redirect, request, url_for, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from flask_mail import Message
-from app import db, translate
-from app.ai_chatbot import answer_question, converse_with_assistant
-from app.forms import TechnicianApplicationForm
-from app.models import TechnicianApplication
+from soporte_empresa.app import db, translate
+from soporte_empresa.app.ai_chatbot import answer_question, converse_with_assistant
+from soporte_empresa.app.forms import TechnicianApplicationForm
+from soporte_empresa.app.models import TechnicianApplication
 
 bp = Blueprint('main', __name__)
 

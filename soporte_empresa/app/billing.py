@@ -6,8 +6,8 @@ import requests
 from flask import Blueprint, current_app, jsonify, request, url_for
 from flask_login import current_user, login_required
 
-from app import db
-from app.models import BillingEvent, Company
+from soporte_empresa.app import db
+from soporte_empresa.app.models import BillingEvent, Company
 
 bp = Blueprint('billing', __name__)
 

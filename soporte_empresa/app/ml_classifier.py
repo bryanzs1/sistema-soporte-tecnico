@@ -25,8 +25,8 @@ except ImportError as e:
     ML_AVAILABLE = False
     ML_IMPORT_ERROR = str(e)
 
-from app import db
-from app.models import Ticket, User, TechnicianStats
+from soporte_empresa.app import db
+from soporte_empresa.app.models import Ticket, User, TechnicianStats
 
 
 class TicketClassifier:

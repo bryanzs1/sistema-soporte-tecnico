@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from app import db
+from soporte_empresa.app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError

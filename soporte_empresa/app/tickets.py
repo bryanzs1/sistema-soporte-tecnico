@@ -10,10 +10,10 @@ from flask_socketio import emit, join_room, leave_room
 from sqlalchemy import and_, case, or_, func
 from werkzeug.utils import secure_filename
 
-from app import db, translate, socketio
-from app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog, KBArticle, TicketOption
-from app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
-from app.security import AuditHelper
+from soporte_empresa.app import db, translate, socketio
+from soporte_empresa.app.models import Ticket, User, TicketComment, TicketAttachment, AuditLog, KBArticle, TicketOption
+from soporte_empresa.app.forms import TicketForm, TicketUpdateForm, TicketCommentForm, CSATForm
+from soporte_empresa.app.security import AuditHelper
 
 bp = Blueprint('tickets', __name__)
 

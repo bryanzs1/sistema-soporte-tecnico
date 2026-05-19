@@ -14,7 +14,7 @@ from flask_login import login_required, current_user
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from app import db, translate
+from soporte_empresa.app import db, translate
 from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats, BillingEvent, TechnicianApplication
 from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
 from app.models import Company

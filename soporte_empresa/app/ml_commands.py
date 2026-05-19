@@ -4,7 +4,7 @@ Comandos CLI para el sistema de Machine Learning
 
 import click
 from flask import Flask
-from app import db
+from soporte_empresa.app import db
 
 
 def register_ml_commands(app: Flask):

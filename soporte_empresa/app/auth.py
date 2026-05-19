@@ -5,10 +5,10 @@ import os
 import hashlib
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from app import db, login, translate, limiter, send_email
-from app.models import User
-from app.forms import LoginForm, ForcePasswordChangeForm, ChangePasswordForm, RequestPasswordResetForm, ResetPasswordForm
-from app.security import AuditHelper
+from soporte_empresa.app import db, login, translate, limiter, send_email
+from soporte_empresa.app.models import User
+from soporte_empresa.app.forms import LoginForm, ForcePasswordChangeForm, ChangePasswordForm, RequestPasswordResetForm, ResetPasswordForm
+from soporte_empresa.app.security import AuditHelper
 
 
 # flask-login expects a user loader callback
@@ -191,8 +191,8 @@ def reset_password_with_token(token):
 
     form = ResetPasswordForm()
     if form.validate_on_submit():
-        from app.security import PasswordValidator
-        from app.models import PasswordHistory
+        from soporte_empresa.app.security import PasswordValidator
+        from soporte_empresa.app.models import PasswordHistory
 
         is_valid, message = PasswordValidator.validate(form.new_password.data)
         if not is_valid:
@@ -232,8 +232,8 @@ def force_password_change():
     form = ForcePasswordChangeForm()
     if form.validate_on_submit():
         # Validate password strength
-        from app.security import PasswordValidator, AuditHelper
-        from app.models import PasswordHistory
+        from soporte_empresa.app.security import PasswordValidator, AuditHelper
+        from soporte_empresa.app.models import PasswordHistory
         
         is_valid, message = PasswordValidator.validate(form.new_password.data)
         if not is_valid:
