@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Chat Monitoring') }} - Admin{% endblock %}
+{% block content %}
+<div class="app-page-shell chat-monitoring-page mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 chat-monitoring-header">
+    <h2 class="admin-section-header"><i class="bi bi-eye me-2"></i>{{ _('Chat Monitoring') }}</h2>
+    <div>
+      <span class="badge bg-success me-2">
+        <i class="bi bi-arrow-repeat"></i> {{ _('Live') }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Filter Options -->
+  <div class="app-surface-card mb-4 monitor-filter-card">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label">{{ _('Filter by Status') }}</label>
+        <select class="form-select" id="status-filter">
+          <option value="">{{ _('All Statuses') }}</option>
+          {% for status in ['Abierto', 'En proceso', 'Esperando usuario', 'Cerrado'] %}
+            <option value="{{ status }}">{{ _(status) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">{{ _('Filter by Activity') }}</label>
+        <select class="form-select" id="activity-filter">
+          <option value="">{{ _('All Chats') }}</option>
+          <option value="recent">{{ _('Last Hour') }}</option>
+          <option value="active">{{ _('With Messages') }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">{{ _('Sort By') }}</label>
+        <select class="form-select" id="sort-select">
+          <option value="recent">{{ _('Most Recent') }}</option>
+          <option value="messages">{{ _('Most Messages') }}</option>
+          <option value="priority">{{ _('Priority') }}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat List -->
+  <div class="row">
+    {% if chat_data %}
+      {% for item in chat_data %}
+        <div class="col-12 col-xl-6 mb-4 chat-item" 
+             data-status="{{ item.ticket.status }}" 
+             data-recent="{{ 'true' if item.is_recent else 'false' }}"
+             data-messages="{{ item.message_count }}"
+             data-priority="{{ item.ticket.priority }}">
+          <div class="app-surface-card h-100 shadow-sm {% if item.is_recent %}chat-active{% else %}chat-inactive{% endif %}">
+            <div class="card-body">
+              <!-- Header -->
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h5 class="card-title mb-1">
+                    <a href="{{ url_for('tickets.ticket_detail', ticket_id=item.ticket.id) }}" 
+                       class="text-decoration-none">
+                      #{{ item.ticket.id }} - {{ item.ticket.title[:50] }}{% if item.ticket.title|length > 50 %}...{% endif %}
+                    </a>
+                  </h5>
+                  <p class="card-text text-muted mb-2 monitor-meta-text">
+                    {{ item.ticket.creator_name }}
+                  </p>
+                </div>
+                <div class="text-end">
+                  <span class="badge 
+                    {% if item.is_recent %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if item.is_recent %}
+                      <i class="bi bi-circle-fill me-1 monitor-active-dot"></i>{{ _('Active') }}
+                    {% else %}
+                      {{ _('Inactive') }}
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Status & Priority -->
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge ticket-badge-{% if item.ticket.status == 'Cerrado' %}success{% elif item.ticket.status == 'Abierto' %}danger{% elif item.ticket.status == 'En proceso' %}info{% else %}warning{% endif %}">
+                  {{ _(item.ticket.status) }}
+                </span>
+                <span class="badge priority-badge-{% if item.ticket.priority == 'Crítica' %}danger{% elif item.ticket.priority == 'Alta' %}warning{% elif item.ticket.priority == 'Media' %}info{% else %}light{% endif %}">
+                  {{ _(item.ticket.priority) }}
+                </span>
+              </div>
+
+              <!-- Chat Activity -->
+              <div class="alert alert-light mb-3 monitor-activity-alert">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong class="d-block text-primary">
+                      <i class="bi bi-chat-dots"></i> {{ item.message_count }} {{ _('message(s)') }}
+                    </strong>
+                    <small class="text-muted">
+                      {% if item.last_activity %}
+                        {{ _('Last activity: ') }} {{ item.last_activity.strftime('%Y-%m-%d %H:%M') }}
+                      {% else %}
+                        {{ _('No messages yet') }}
+                      {% endif %}
+                    </small>
+                  </div>
+                  <div class="badge bg-primary monitor-message-count">
+                    {{ item.message_count }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Participants -->
+              <div class="mb-3">
+                <strong class="d-block mb-2">{{ _('Participants') }}:</strong>
+                <div class="d-flex flex-wrap gap-2">
+                  <!-- Client -->
+                  {% if item.ticket.user %}
+                    <span class="badge bg-secondary">
+                      <i class="bi bi-person-circle me-1"></i>{{ item.ticket.user.username }} ({{ _('Client') }})
+                    </span>
+                  {% endif %}
+                  
+                  <!-- Technician -->
+                  {% if item.ticket.technician %}
+                    <span class="badge bg-info">
+                      <i class="bi bi-wrench me-1"></i>{{ item.ticket.technician.username }} ({{ _('Tech') }})
+                    </span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ _('Unassigned') }}
+                    </span>
+                  {% endif %}
+
+                  <!-- Other commenters -->
+                  {% if item.participant_names.others %}
+                    {% for participant in item.participant_names.others[:2] %}
+                      <span class="badge bg-dark">
+                        <i class="bi bi-person me-1"></i>{{ participant }}
+                      </span>
+                    {% endfor %}
+                    {% if item.participant_names.others|length > 2 %}
+                      <span class="badge bg-secondary">
+                        +{{ item.participant_names.others|length - 2 }} {{ _('more') }}
+                      </span>
+                    {% endif %}
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Action Button -->
+              <div class="d-grid">
+                <a href="{{ url_for('tickets.ticket_detail', ticket_id=item.ticket.id) }}" 
+                   class="btn btn-sm btn-primary btn-animated">
+                  <i class="bi bi-chat-left-dots me-2"></i>{{ _('View Chat') }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12">
+        <div class="alert alert-info text-center">
+          {{ _('No tickets available') }}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const statusFilter = document.getElementById('status-filter');
+    const activityFilter = document.getElementById('activity-filter');
+    const sortSelect = document.getElementById('sort-select');
+
+    function filterAndSort() {
+      const items = Array.from(document.querySelectorAll('.chat-item'));
+      
+      // Filter
+      items.forEach(item => {
+        let show = true;
+        
+        if (statusFilter.value && item.dataset.status !== statusFilter.value) show = false;
+        if (activityFilter.value === 'recent' && item.dataset.recent !== 'true') show = false;
+        if (activityFilter.value === 'active' && parseInt(item.dataset.messages) === 0) show = false;
+        
+        item.style.display = show ? '' : 'none';
+      });
+
+      // Sort
+      const visibleItems = items.filter(item => item.style.display !== 'none');
+      const container = document.querySelector('.row');
+      
+      if (sortSelect.value === 'messages') {
+        visibleItems.sort((a, b) => parseInt(b.dataset.messages) - parseInt(a.dataset.messages));
+      } else if (sortSelect.value === 'priority') {
+        const priorityOrder = { 'Crítica': 0, 'Alta': 1, 'Media': 2, 'Baja': 3 };
+        visibleItems.sort((a, b) => {
+          const pA = priorityOrder[a.dataset.priority] || 999;
+          const pB = priorityOrder[b.dataset.priority] || 999;
+          return pA - pB;
+        });
+      }
+
+      visibleItems.forEach(item => container.appendChild(item));
+    }
+
+    statusFilter.addEventListener('change', filterAndSort);
+    activityFilter.addEventListener('change', filterAndSort);
+    sortSelect.addEventListener('change', filterAndSort);
+  });
+</script>
+
+{% endblock %}

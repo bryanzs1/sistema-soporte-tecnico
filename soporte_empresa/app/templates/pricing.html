@@ -1,0 +1,489 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Precios' if current_lang == 'es' else 'Pricing' }}{% endblock %}
+{% block body_class %}pricing-refresh-page{% endblock %}
+{% block content %}
+{% set is_es = current_lang == 'es' %}
+{% set can_checkout = current_user.is_authenticated and current_user.is_admin() %}
+{% set monthly_parts = monthly_price_display.split('/', 1) %}
+{% set annual_parts = annual_price_display.split('/', 1) %}
+
+<style>
+  .pricing-refresh-page {
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 24%),
+      linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  }
+
+  .pricing-v3 {
+    color: #e2e8f0;
+    padding: 4rem 0 5rem;
+  }
+
+  .pricing-v3 .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .pricing-v3 .hero {
+    padding-top: 2rem;
+    text-align: center;
+  }
+
+  .pricing-v3 .hero h1 {
+    margin: 0 auto 1rem;
+    max-width: 940px;
+    color: #fff;
+    font-size: clamp(2.7rem, 6vw, 5.2rem);
+    line-height: 1.02;
+    font-family: var(--font-heading);
+  }
+
+  .pricing-v3 .hero .accent {
+    background: linear-gradient(90deg, #60a5fa, #818cf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .pricing-v3 .hero p {
+    max-width: 760px;
+    margin: 0 auto;
+    color: #94a3b8;
+    font-size: 1.12rem;
+    line-height: 1.8;
+  }
+
+  .pricing-v3 .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    max-width: 1020px;
+    margin: 3rem auto 0;
+    padding: 1.4rem;
+    border-radius: 28px;
+    background: rgba(15, 23, 42, 0.58);
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    box-shadow: 0 25px 65px rgba(2, 6, 23, 0.34);
+    backdrop-filter: blur(14px);
+  }
+
+  .pricing-v3 .kpi {
+    padding: 0.65rem 1rem;
+    border-right: 1px solid rgba(51, 65, 85, 0.9);
+  }
+
+  .pricing-v3 .kpi:last-child {
+    border-right: 0;
+  }
+
+  .pricing-v3 .kpi strong {
+    display: block;
+    color: #fff;
+    font-size: 2rem;
+    font-family: var(--font-heading);
+  }
+
+  .pricing-v3 .kpi span {
+    display: block;
+    margin-top: 0.28rem;
+    color: #64748b;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .pricing-v3 .plans {
+    margin-top: 4rem;
+  }
+
+  .pricing-v3 .section-head {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .pricing-v3 .section-head h2 {
+    color: #fff;
+    font-size: clamp(1.9rem, 3vw, 2.7rem);
+    margin-bottom: 0.9rem;
+    font-family: var(--font-heading);
+  }
+
+  .pricing-v3 .billing {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem;
+    background: #1e293b;
+    border-radius: 16px;
+    border: 1px solid rgba(51, 65, 85, 1);
+  }
+
+  .pricing-v3 .billing button,
+  .pricing-v3 .billing span {
+    border: 0;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+  }
+
+  .pricing-v3 .billing button {
+    color: #94a3b8;
+    background: transparent;
+  }
+
+  .pricing-v3 .billing button.active {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.3);
+  }
+
+  .pricing-v3 .billing span {
+    color: #bfdbfe;
+    background: transparent;
+  }
+
+  .pricing-v3 .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.8rem;
+    max-width: 1040px;
+    margin: 2.4rem auto 0;
+  }
+
+  .pricing-v3 .card {
+    position: relative;
+    padding: 2.2rem;
+    border-radius: 28px;
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    background: rgba(15, 23, 42, 0.6);
+    box-shadow: 0 22px 54px rgba(2, 6, 23, 0.28);
+  }
+
+  .pricing-v3 .card h3 {
+    color: #fff;
+    font-size: 1.35rem;
+    margin-bottom: 0.45rem;
+    font-family: var(--font-heading);
+  }
+
+  .pricing-v3 .price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .pricing-v3 .price strong {
+    color: #fff;
+    font-size: clamp(2.9rem, 5vw, 4.2rem);
+    line-height: 1;
+    font-family: var(--font-heading);
+  }
+
+  .pricing-v3 .price span {
+    color: #94a3b8;
+    font-size: 1rem;
+  }
+
+  .pricing-v3 .card p {
+    color: #94a3b8;
+    line-height: 1.75;
+    margin-bottom: 1.5rem;
+  }
+
+  .pricing-v3 .features {
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
+  }
+
+  .pricing-v3 .features li {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: #e2e8f0;
+    padding: 0.55rem 0;
+  }
+
+  .pricing-v3 .features li i {
+    color: #10b981;
+  }
+
+  .pricing-v3 .card button,
+  .pricing-v3 .card a.btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .pricing-v3 .ghost-btn {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(71, 85, 105, 1);
+  }
+
+  .pricing-v3 .featured {
+    background: linear-gradient(180deg, #2563eb 0%, #4338ca 100%);
+    border: 2px solid #60a5fa;
+    box-shadow: 0 24px 60px rgba(37, 99, 235, 0.28);
+    transform: translateY(-0.5rem);
+  }
+
+  .pricing-v3 .featured .tag {
+    position: absolute;
+    top: -0.85rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #1d4ed8;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 0.45rem 0.8rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  }
+
+  .pricing-v3 .featured .price span,
+  .pricing-v3 .featured p,
+  .pricing-v3 .featured .offer,
+  .pricing-v3 .featured .features li {
+    color: #e0e7ff;
+  }
+
+  .pricing-v3 .featured .features li i {
+    color: #fff;
+  }
+
+  .pricing-v3 .offer {
+    font-weight: 800;
+    font-size: 0.92rem;
+    margin: -0.2rem 0 1rem;
+    text-decoration: underline;
+    text-underline-offset: 0.3rem;
+  }
+
+  .pricing-v3 .featured-btn {
+    background: #fff;
+    color: #2563eb;
+    border: 0;
+  }
+
+  .pricing-v3 .disabled-btn {
+    background: linear-gradient(180deg, #475569, #334155);
+    color: #f8fafc;
+    border: 1px solid #334155;
+    cursor: not-allowed;
+  }
+
+  .pricing-v3 .note {
+    margin-top: 0.8rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .pricing-v3 .footer-note {
+    margin-top: 3rem;
+    padding: 1rem 1.2rem;
+    border-top: 1px solid rgba(51, 65, 85, 0.9);
+    color: #64748b;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 900px) {
+    .pricing-v3 .kpis,
+    .pricing-v3 .cards {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .pricing-v3 {
+      padding-top: 2rem;
+    }
+
+    .pricing-v3 .kpis,
+    .pricing-v3 .cards {
+      grid-template-columns: 1fr;
+    }
+
+    .pricing-v3 .kpi {
+      border-right: 0;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+    }
+
+    .pricing-v3 .kpi:last-child {
+      border-bottom: 0;
+    }
+
+    .pricing-v3 .featured {
+      transform: none;
+    }
+  }
+</style>
+
+<section class="pricing-v3">
+  <div class="shell">
+    <div class="hero">
+      <h1>
+        {{ 'Planes hechos para' if is_es else 'Plans built for' }}
+        <span class="accent">{{ 'operaciones reales.' if is_es else 'real operations.' }}</span>
+      </h1>
+      <p>
+        {{ 'Elige el plan que mejor se adapte al volumen y ritmo de tu equipo de soporte técnico.' if is_es else 'Choose the plan that best fits the volume and pace of your technical support team.' }}
+      </p>
+
+      <div class="kpis">
+        <div class="kpi">
+          <strong>128</strong>
+          <span>{{ 'Tickets activos' if is_es else 'Active tickets' }}</span>
+        </div>
+        <div class="kpi">
+          <strong>99.2%</strong>
+          <span>{{ 'SLA estable' if is_es else 'SLA stable' }}</span>
+        </div>
+        <div class="kpi">
+          <strong>12m</strong>
+          <span>{{ 'Respuesta media' if is_es else 'Avg. response' }}</span>
+        </div>
+        <div class="kpi">
+          <strong>94%</strong>
+          <span>{{ 'Resolución' if is_es else 'Resolution' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="plans">
+      <div class="section-head">
+        <h2>{{ 'Elige tu ritmo de facturación' if is_es else 'Choose your billing rhythm' }}</h2>
+        <div class="billing" role="tablist" aria-label="{{ 'Periodo de facturación' if is_es else 'Billing period' }}">
+          <button type="button" class="active" data-plan="monthly">{{ 'Mensual' if is_es else 'Monthly' }}</button>
+          <button type="button" data-plan="annual">{{ 'Anual' if is_es else 'Annual' }}</button>
+          <span>{{ annual_offer_text }}</span>
+        </div>
+      </div>
+
+      <div class="cards">
+        <article class="card" data-plan-card="monthly">
+          <h3>{{ 'Plan mensual' if is_es else 'Monthly Plan' }}</h3>
+          <div class="price">
+            <strong>{{ monthly_parts[0] }}</strong>
+            <span>{% if monthly_parts|length > 1 %}/{{ monthly_parts[1] }}{% else %}{{ '/mes' if is_es else '/month' }}{% endif %}</span>
+          </div>
+          <p>{{ 'Entrada rápida para equipos que quieren comenzar ahora y mantener máxima flexibilidad.' if is_es else 'Fast entry point for teams that want to start now and keep maximum flexibility.' }}</p>
+          <ul class="features">
+            <li><i class="bi bi-check-lg"></i> {{ 'Gestión completa de tickets' if is_es else 'Full ticket management' }}</li>
+            <li><i class="bi bi-check-lg"></i> {{ 'Dashboard administrativo y reportes' if is_es else 'Admin dashboard and reporting' }}</li>
+            <li><i class="bi bi-check-lg"></i> {{ 'Asistente de soporte con IA' if is_es else 'AI-powered support assistant' }}</li>
+          </ul>
+          {% if can_checkout and has_monthly_price %}
+          <button type="button" class="ghost-btn pricing-checkout-btn" data-plan="monthly">{{ 'Comenzar ahora' if is_es else 'Start Now' }}</button>
+          {% elif has_monthly_price %}
+          <a class="btn ghost-btn" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Entrar para continuar' if is_es else 'Sign in to continue' }}</a>
+          <div class="note">{{ 'El checkout directo requiere una cuenta administradora autenticada.' if is_es else 'Direct checkout requires an authenticated administrator account.' }}</div>
+          {% else %}
+          <button type="button" class="disabled-btn" disabled>{{ 'Próximamente' if is_es else 'Coming soon' }}</button>
+          {% endif %}
+        </article>
+
+        <article class="card featured" data-plan-card="annual">
+          <div class="tag">{{ 'Oferta recomendada' if is_es else 'Recommended Offer' }}</div>
+          <h3>{{ 'Plan anual' if is_es else 'Annual Plan' }}</h3>
+          <div class="price">
+            <strong>{{ annual_parts[0] }}</strong>
+            <span>{% if annual_parts|length > 1 %}/{{ annual_parts[1] }}{% else %}{{ '/año' if is_es else '/year' }}{% endif %}</span>
+          </div>
+          <div class="offer">{{ annual_offer_text }}</div>
+          <p>{{ 'La mejor decisión para organizaciones que quieren menor costo total y continuidad sin fricción.' if is_es else 'The best decision for organizations that want lower total cost and frictionless continuity.' }}</p>
+          <ul class="features">
+            <li><i class="bi bi-shield-check"></i> {{ 'Checkout seguro con PayPal' if is_es else 'Secure PayPal checkout' }}</li>
+            <li><i class="bi bi-check-lg"></i> {{ 'Mejor previsibilidad presupuestaria' if is_es else 'Better budget predictability' }}</li>
+            <li><i class="bi bi-check-lg"></i> {{ 'Prioridad para planificación anual' if is_es else 'Priority for annual planning' }}</li>
+          </ul>
+          {% if can_checkout and has_annual_price %}
+          <button type="button" class="featured-btn pricing-checkout-btn" data-plan="annual">{{ 'Tomar oferta anual' if is_es else 'Claim Annual Offer' }}</button>
+          {% elif has_annual_price %}
+          <a class="btn featured-btn" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ 'Entrar para continuar' if is_es else 'Sign in to continue' }}</a>
+          <div class="note">{{ 'Ingresa como administrador para abrir el checkout en PayPal.' if is_es else 'Sign in as an administrator to open the PayPal checkout.' }}</div>
+          {% else %}
+          <button type="button" class="disabled-btn" disabled>{{ 'Próximamente' if is_es else 'Coming soon' }}</button>
+          <div class="note">{{ 'Este plan estará disponible pronto.' if is_es else 'This plan will be available soon.' }}</div>
+          {% endif %}
+        </article>
+      </div>
+
+      <div class="footer-note">
+        {{ 'Los precios están en dólares americanos. Puedes cancelar tu plan mensual en cualquier momento.' if is_es else 'Prices are in US dollars. You can cancel your monthly plan at any time.' }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const toggleButtons = Array.from(document.querySelectorAll('.pricing-v3 .billing button'));
+  const cards = Array.from(document.querySelectorAll('.pricing-v3 [data-plan-card]'));
+  const checkoutButtons = Array.from(document.querySelectorAll('.pricing-checkout-btn'));
+
+  function activatePlan(plan) {
+    toggleButtons.forEach(function (button) {
+      button.classList.toggle('active', button.dataset.plan === plan);
+    });
+    cards.forEach(function (card) {
+      card.style.outline = card.dataset.planCard === plan ? '2px solid rgba(96, 165, 250, 0.75)' : 'none';
+    });
+  }
+
+  toggleButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      activatePlan(button.dataset.plan);
+    });
+  });
+
+  activatePlan('monthly');
+
+  checkoutButtons.forEach(function (button) {
+    button.addEventListener('click', async function () {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = {{ '"Abriendo PayPal..."' if is_es else '"Opening PayPal..."' }};
+
+      try {
+        const response = await fetch('/billing/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ plan: button.dataset.plan })
+        });
+
+        const data = await response.json();
+        if (data.checkout_url) {
+          window.location = data.checkout_url;
+          return;
+        }
+
+        alert(data.error || {{ '"No se pudo iniciar el checkout."' if is_es else '"Could not start checkout."' }});
+      } catch (error) {
+        alert({{ '"Ocurrió un error al conectar con el checkout."' if is_es else '"An error occurred while connecting to checkout."' }});
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Control Panel') }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
+{% block content %}
+<section class="app-page-shell admin-dashboard-page">
+<div class="container">
+  <div class="mb-5">
+    <div class="app-page-hero">
+      <span class="app-page-kicker">{{ _('Operations Center') }}</span>
+      <h1 class="app-page-title">{{ _('Control Panel') }}</h1>
+      <p class="app-page-subtitle">{{ _('Monitor operational flow, inspect service health and move between critical admin actions from a unified workspace.') }}</p>
+    </div>
+
+    <div class="section-card app-surface-card operations-hub-card mb-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div>
+          <h3 class="mb-1">{{ _('Operations Hub') }}</h3>
+          <p class="text-muted mb-0">{{ _('Interactive shortcuts for daily operations') }}</p>
+        </div>
+        <div class="operations-hub-jump">
+          <label for="dashboardActionJump" class="form-label small text-muted mb-1">{{ _('Jump to') }}</label>
+          <select id="dashboardActionJump" class="form-select form-select-sm">
+            <option value="">{{ _('Select an action') }}</option>
+            <option value="{{ url_for('tickets.list_tickets') }}">{{ _('View tickets') }}</option>
+            <option value="{{ url_for('tickets.list_tickets', status='Abierto') }}">{{ _('Open tickets') }}</option>
+            <option value="{{ url_for('tickets.list_tickets', status='En proceso') }}">{{ _('In Progress') }}</option>
+            <option value="{{ url_for('admin.chat_monitoring') }}">{{ _('Chat Monitoring') }}</option>
+            <option value="{{ url_for('admin.online_users_list') }}">{{ _('Online Users') }}</option>
+            {% if current_user.is_admin() %}
+            <option value="{{ url_for('admin.settings_companies') }}">{{ _('Companies') }}</option>
+            {% endif %}
+            <option value="{{ url_for('admin.kb_list') }}">{{ _('Knowledge Base') }}</option>
+            <option value="{{ url_for('admin.executive_report') }}">{{ _('Executive Report') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-3 operations-hub-grid">
+        <div class="col-xl col-lg-4 col-md-6">
+          <a class="operations-hub-link operations-hub-primary" href="{{ url_for('tickets.list_tickets') }}">
+            <div class="operations-hub-icon"><i class="bi bi-kanban"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Ticket Queue') }}</strong>
+              <small>{{ _('Review all active tickets') }}</small>
+            </div>
+            <span class="operations-hub-badge">{{ stats.total }}</span>
+          </a>
+        </div>
+        <div class="col-xl col-lg-4 col-md-6">
+          <a class="operations-hub-link operations-hub-info" href="{{ url_for('admin.chat_monitoring') }}">
+            <div class="operations-hub-icon"><i class="bi bi-chat-dots"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Chat Monitoring') }}</strong>
+              <small>{{ _('Follow live conversations') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+        <div class="col-xl col-lg-4 col-md-6">
+          <a class="operations-hub-link operations-hub-success" href="{{ url_for('admin.online_users_list') }}">
+            <div class="operations-hub-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Online Users') }}</strong>
+              <small>{{ _('See connected users now') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+        <div class="col-xl col-lg-6 col-md-6">
+          <a class="operations-hub-link operations-hub-secondary" href="{{ url_for('admin.kb_list') }}">
+            <div class="operations-hub-icon"><i class="bi bi-journal-richtext"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Knowledge Base') }}</strong>
+              <small>{{ _('Review and approve content') }}</small>
+            </div>
+            <span class="operations-hub-badge {{ 'is-warning' if stats.pending_kb > 0 else '' }}">{{ stats.pending_kb }}</span>
+          </a>
+        </div>
+        {% if current_user.is_admin() %}
+        <div class="col-xl col-lg-6 col-md-6">
+          <a class="operations-hub-link operations-hub-secondary" href="{{ url_for('admin.settings_companies') }}">
+            <div class="operations-hub-icon"><i class="bi bi-buildings"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Companies') }}</strong>
+              <small>{{ _('Register and manage companies') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+        {% endif %}
+        <div class="col-xl col-lg-6 col-md-12">
+          <a class="operations-hub-link operations-hub-dark" href="{{ url_for('admin.executive_report') }}">
+            <div class="operations-hub-icon"><i class="bi bi-bar-chart-line"></i></div>
+            <div class="operations-hub-copy">
+              <strong>{{ _('Executive Report') }}</strong>
+              <small>{{ _('Open the management summary') }}</small>
+            </div>
+            <i class="bi bi-arrow-right-short operations-hub-arrow"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-metrics-group mb-4">
+      <div class="dashboard-metrics-header">
+        <h4 class="mb-1">{{ _('Operational Snapshot') }}</h4>
+        <p class="text-muted mb-0">{{ _('Current ticket workload and execution status') }}</p>
+      </div>
+      <div class="row g-4">
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets') }}" class="text-decoration-none">
+          <div class="metric-card">
+            <div class="metric-label">{{ _('Total tickets') }}</div>
+            <div class="metric-value">{{ stats.total }}</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets', status='Abierto') }}" class="text-decoration-none">
+          <div class="metric-card metric-danger">
+            <div class="metric-label">{{ _('Open') }}</div>
+            <div class="metric-value">{{ stats.open }}</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets', status='En proceso') }}" class="text-decoration-none">
+          <div class="metric-card metric-info">
+            <div class="metric-label">{{ _('In Progress') }}</div>
+            <div class="metric-value">{{ stats.in_progress }}</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('tickets.list_tickets', status='Esperando usuario') }}" class="text-decoration-none">
+          <div class="metric-card metric-warning">
+            <div class="metric-label">{{ _('Waiting') }}</div>
+            <div class="metric-value">{{ stats.waiting }}</div>
+          </div>
+        </a>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-metrics-group mb-4">
+    <div class="dashboard-metrics-header">
+      <h4 class="mb-1">{{ _('Productivity and Risk') }}</h4>
+      <p class="text-muted mb-0">{{ _('Resolution speed, reopened tickets and SLA breaches') }}</p>
+    </div>
+    <div class="row g-4">
+    <div class="col-lg-3 col-md-6">
+      <a href="{{ url_for('tickets.list_tickets', status='Cerrado') }}" class="text-decoration-none">
+        <div class="metric-card metric-success">
+          <div class="metric-label">{{ _('Closed') }}</div>
+          <div class="metric-value">{{ stats.closed }}</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="metric-card metric-danger">
+        <div class="metric-label">{{ _('Overdue SLA') }}</div>
+        <div class="metric-value">{{ stats.overdue }}</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="metric-card">
+        <div class="metric-label">{{ _('Avg resolution (h)') }}</div>
+        <div class="metric-value">{{ "%.1f" | format(stats.avg_resolution_hours) }}</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="metric-card metric-warning">
+        <div class="metric-label">{{ _('Reopened tickets') }}</div>
+        <div class="metric-value">{{ stats.reopened }}</div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="dashboard-metrics-group mb-5">
+    <div class="dashboard-metrics-header">
+      <h4 class="mb-1">{{ _('Service Quality') }}</h4>
+      <p class="text-muted mb-0">{{ _('SLA compliance and user satisfaction indicators') }}</p>
+    </div>
+    <div class="row g-4">
+    <div class="col-lg-4 col-md-6">
+      <div class="metric-card metric-warning">
+        <div class="metric-label">{{ _('Due soon') }}</div>
+        <div class="metric-value">{{ stats.due_soon }}</div>
+        <div class="mt-1"><small class="text-muted">{{ _('Tickets approaching SLA deadline') }}</small></div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+      <div class="metric-card metric-success kpi-focus kpi-sla">
+        <div class="metric-label">{{ _('SLA Compliance') }}</div>
+        <div class="metric-value">
+          {% if stats.sla_compliance_pct is not none %}{{ stats.sla_compliance_pct }}%{% else %}—{% endif %}
+        </div>
+        <div class="mt-1"><small class="text-muted">{{ _('Closed tickets resolved on time') }}</small></div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+      <div class="metric-card kpi-focus kpi-csat">
+        <div class="metric-label">{{ _('CSAT avg') }}</div>
+        <div class="metric-value d-flex align-items-center gap-2">
+          {% if stats.csat_avg is not none %}
+            {{ stats.csat_avg }}
+            <span class="fs-5">
+              {% for i in range(1, 6) %}
+                <i class="bi bi-star{% if i <= stats.csat_avg|round %}-fill text-warning{% else %} text-secondary{% endif %}"></i>
+              {% endfor %}
+            </span>
+          {% else %}—{% endif %}
+        </div>
+        <div class="mt-1"><small class="text-muted">{{ _('Average user satisfaction (1–5)') }}</small></div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+      <a href="{{ url_for('admin.kb_list') }}" class="text-decoration-none">
+        <div class="metric-card metric-info">
+          <div class="metric-label">{{ _('KB pending') }}</div>
+          <div class="metric-value">{{ stats.pending_kb }}</div>
+          <div class="mt-1"><small class="text-muted">{{ _('Articles waiting for approval') }}</small></div>
+        </div>
+      </a>
+    </div>
+    </div>
+  </div>
+
+  <!-- Categories Section -->
+  <div class="row">
+    <div class="col-12">
+      <div class="section-card app-surface-card">
+        <h3>{{ _('By category') }}</h3>
+        <ul class="list-group list-group-flush">
+          {% for cat, count in categories.items() %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ _(cat) }}</span>
+              <span class="badge rounded-pill category-count-badge">{{ count }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {% if current_user.is_admin() and pending_kb_articles %}
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="section-card app-surface-card">
+        <h3>{{ _('Pending KB Proposals') }}</h3>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>{{ _('Title') }}</th>
+                <th>{{ _('Category') }}</th>
+                <th>{{ _('Created by') }}</th>
+                <th>{{ _('Updated') }}</th>
+                <th class="text-end">{{ _('Actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for article in pending_kb_articles %}
+              <tr>
+                <td>{{ article.title }}</td>
+                <td>{{ article.category or '—' }}</td>
+                <td>{{ article.created_by.username if article.created_by else '—' }}</td>
+                <td>{{ article.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-1">
+                    <a href="{{ url_for('admin.kb_edit', article_id=article.id) }}" class="btn btn-sm btn-outline-primary" title="{{ _('Edit') }}"><i class="bi bi-pencil"></i></a>
+                    <form method="post" action="{{ url_for('admin.kb_approve', article_id=article.id) }}">
+                      {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                      <button type="submit" class="btn btn-sm btn-outline-success" title="{{ _('Approve') }}"><i class="bi bi-check2"></i></button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin.kb_reject', article_id=article.id) }}" onsubmit="return dashboardKbRejectWithReason(this)">
+                      {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                      <input type="hidden" name="reason" value="">
+                      <button type="submit" class="btn btn-sm btn-outline-warning" title="{{ _('Reject with feedback') }}"><i class="bi bi-x-lg"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+</section>
+<script>
+function dashboardKbRejectWithReason(form) {
+  const reason = window.prompt("{{ _('Enter rejection reason') }}");
+  if (!reason) return false;
+  form.querySelector('input[name="reason"]').value = reason.trim();
+  return form.querySelector('input[name="reason"]').value.length > 0;
+}
+
+(function () {
+  const actionJump = document.getElementById('dashboardActionJump');
+  if (!actionJump) return;
+  actionJump.addEventListener('change', function () {
+    if (this.value) {
+      window.location.href = this.value;
+    }
+  });
+})();
+</script>
+{% endblock %}

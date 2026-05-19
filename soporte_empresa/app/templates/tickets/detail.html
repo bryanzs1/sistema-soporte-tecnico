@@ -1,0 +1,670 @@
+{% extends 'base.html' %}
+{% block title %}Ticket {{ ticket.id }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
+{% block content %}
+<section class="app-page-shell ticket-detail-page">
+<div class="container">
+  <div class="mb-5">
+    {% if not ticket.is_closed() and (ticket.is_overdue() or (ticket.is_due_soon() and not ticket.technician)) %}
+    <div class="alert alert-{{ 'danger' if ticket.is_overdue() else 'warning' }} d-flex align-items-center gap-3 mb-4" role="alert">
+      <i class="bi bi-{{ 'exclamation-octagon-fill' if ticket.is_overdue() else 'exclamation-triangle-fill' }} fs-4 flex-shrink-0"></i>
+      <div>
+        <strong>{{ _('Escalation Alert') }}:</strong>
+        {% if ticket.is_overdue() %}
+          {{ _('This ticket has exceeded its SLA deadline.') }}
+          {% if not ticket.technician and (current_user.is_admin() or current_user.is_technician()) %}
+            {{ _('No technician is assigned — assign one immediately.') }}
+          {% endif %}
+        {% else %}
+          {{ _('SLA deadline is approaching and no technician is assigned.') }}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="app-page-hero app-page-hero-compact">
+      <span class="app-page-kicker">{{ _('Case Overview') }}</span>
+      <h1 class="app-page-title">Ticket #{{ ticket.id }} - {{ ticket.title }}</h1>
+      <p class="app-page-subtitle">{{ _('Review the case status, collaborate in real time and close the request from a unified premium workspace.') }}</p>
+    </div>
+
+    <!-- Timeline - Always visible below title -->
+    <div class="section-card app-surface-card mb-4">
+      <h3>{{ _('Timeline') }}</h3>
+      {% if timeline %}
+        <ul class="list-group list-group-flush">
+          {% for event in timeline %}
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <strong>{{ event.title }}</strong>
+                <div class="text-muted small">{{ event.detail }}</div>
+              </div>
+              <small class="text-muted ms-3">{{ event.at.strftime('%Y-%m-%d %H:%M') if event.at else '—' }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="ticket-detail-text mb-0">{{ _('No timeline data available yet') }}</p>
+      {% endif %}
+    </div>
+    
+    <!-- Main Details Card -->
+    <div class="section-card app-surface-card mb-4">
+      <h3>{{ _('Details') }}</h3>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Status') }}:</strong> 
+            <span class="badge ticket-badge-{% if ticket.status == 'Cerrado' %}success{% elif ticket.status == 'Abierto' %}danger{% elif ticket.status == 'En proceso' %}info{% else %}warning{% endif %} ms-2">{{ _(ticket.status) }}</span>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Priority') }}:</strong> 
+            <span class="badge priority-badge-{% if ticket.priority == 'Crítica' %}danger{% elif ticket.priority == 'Alta' %}warning{% elif ticket.priority == 'Media' %}info{% else %}light{% endif %} ms-2">{{ _(ticket.priority) }}</span>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Category') }}:</strong> {{ _(ticket.category) }}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Creator') }}:</strong> {{ ticket.creator_name }}
+          </div>
+        </div>
+        <div class="col-md-12 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Description') }}:</strong>
+            <p class="mt-2 ticket-detail-text">{{ ticket.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLA Information Card -->
+    <div class="section-card app-surface-card mb-4">
+      <h3>{{ _('SLA Information') }}</h3>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('SLA Due') }}:</strong>
+            {% if ticket.sla_due_at %}
+              {{ ticket.sla_due_at.strftime('%Y-%m-%d %H:%M') }}
+              {% if ticket.status == 'Cerrado' %}
+                <span class="badge bg-secondary ms-2">{{ _('Closed') }}</span>
+              {% elif ticket.is_overdue() %}
+                <span class="badge bg-danger ms-2">{{ _('Overdue') }}</span>
+              {% elif ticket.is_due_soon() %}
+                <span class="badge bg-warning text-dark ms-2">{{ _('Due soon') }}</span>
+              {% else %}
+                <span class="badge bg-success ms-2">{{ _('On time') }}</span>
+              {% endif %}
+            {% else %}
+              N/A
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Created by') }}:</strong> {{ ticket.user.username if ticket.user else 'N/A' }}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Requester email') }}:</strong> {{ ticket.user.email if ticket.user else 'N/A' }}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Reopened') }}:</strong> {{ ticket.reopened_count or 0 }} {{ _('time(s)') }}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="detail-item">
+            <strong>{{ _('Assigned technician') }}:</strong>
+            {% if ticket.technician %}
+              {{ ticket.technician.username }}
+            {% else %}
+              <span class="badge bg-warning text-dark ms-2">{{ _('Unassigned') }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if ticket.status == 'Cerrado' and (current_user.is_admin() or current_user.is_technician()) %}
+    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
+      <div>
+        <i class="bi bi-lightbulb me-2"></i>
+        <strong>{{ _('Capture this resolution in the Knowledge Base') }}</strong>
+        <div class="small text-muted">{{ _('Create a reusable article from this closed ticket with one click.') }}</div>
+      </div>
+      <a class="btn btn-primary btn-sm text-white" href="{{ url_for('admin.kb_from_ticket', ticket_id=ticket.id) }}">
+        <i class="bi bi-journal-plus me-1"></i>{{ _('Create KB Article') }}
+      </a>
+    </div>
+    {% endif %}
+
+    {% if ticket.status == 'Cerrado' and (current_user.is_admin() or current_user.is_technician() or ticket.user_id == current_user.id) %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
+      <div>
+        <i class="bi bi-arrow-counterclockwise me-2"></i>
+        <strong>{{ _('Need more help?') }}</strong>
+        <div class="small text-muted">{{ _('You can reopen this ticket with a reason so the team can continue support.') }}</div>
+        {% if reopen_deadline %}
+        <div class="small text-muted">{{ _('Reopen available until') }}: {{ reopen_deadline.strftime('%Y-%m-%d %H:%M') }}</div>
+        {% endif %}
+      </div>
+      {% if can_reopen_window %}
+        <form method="post" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}" data-unsaved-guard="false" onsubmit="return submitReopenReason(this)">
+          <input type="hidden" name="reopen_reason" value="">
+          <button type="submit" class="btn btn-outline-warning">
+            <i class="bi bi-arrow-repeat me-1"></i>{{ _('Reopen ticket') }}
+          </button>
+        </form>
+      {% else %}
+        <span class="badge bg-secondary">{{ _('Reopen period expired') }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if current_user.is_technician() and not ticket.technician_id and ticket.status != 'Cerrado' %}
+    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
+      <div>
+        <i class="bi bi-person-check me-2"></i>
+        <strong>{{ _('This ticket is waiting for a technician') }}</strong>
+        <div class="small text-muted">{{ _('You can take ownership of this ticket and start working on it immediately.') }}</div>
+      </div>
+      <form method="post" action="{{ url_for('tickets.take_ticket', ticket_id=ticket.id) }}">
+        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-hand-index-thumb me-1"></i>{{ _('Take ticket') }}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if ticket.technician_id and ticket.status != 'Cerrado' and (current_user.is_admin() or (current_user.is_technician() and ticket.technician_id == current_user.id)) %}
+    <div class="alert alert-secondary d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" role="alert">
+      <div>
+        <i class="bi bi-arrow-counterclockwise me-2"></i>
+        <strong>{{ _('Need to return this ticket to the queue?') }}</strong>
+        <div class="small text-muted">{{ _('Releasing it will remove the assigned technician and set the ticket back to open.') }}</div>
+      </div>
+      <form method="post" action="{{ url_for('tickets.release_ticket', ticket_id=ticket.id) }}">
+        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+        <button type="submit" class="btn btn-outline-secondary">
+          <i class="bi bi-unlock me-1"></i>{{ _('Release ticket') }}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- CSAT Card (only ticket creator, only when closed) -->
+    {% if ticket.status == 'Cerrado' and ticket.user and ticket.user_id == current_user.id %}
+    <div class="section-card app-surface-card mb-4">
+      <h3><i class="bi bi-star-half me-2"></i>{{ _('Rate your experience') }}</h3>
+      {% if ticket.satisfaction_rating %}
+        <div class="d-flex align-items-center gap-1 mb-1">
+          {% for i in range(1, 6) %}
+            <i class="bi bi-star{% if i <= ticket.satisfaction_rating %}-fill text-warning{% else %} text-secondary{% endif %} fs-4"></i>
+          {% endfor %}
+          <span class="ms-2 fw-bold fs-5">{{ ticket.satisfaction_rating }}/5</span>
+        </div>
+        <p class="text-muted mb-0"><small>{{ _('Thank you for your feedback!') }}</small></p>
+      {% else %}
+        <p class="text-muted mb-3">{{ _('How was the support experience? Your feedback helps us improve.') }}</p>
+        <form method="post" action="{{ url_for('tickets.submit_csat', ticket_id=ticket.id) }}" class="csat-form">
+          {{ csat_form.hidden_tag() }}
+          {{ csat_form.rating(id='csat-rating-value') }}
+          <div class="csat-stars mb-3" role="group" aria-label="{{ _('Rate your experience') }}">
+            {% for i in [1,2,3,4,5] %}
+              <button type="button" class="csat-star-btn" data-value="{{ i }}" aria-label="{{ i }} {{ _('stars') }}" title="{{ i }}/5">
+                <i class="bi bi-star-fill"></i>
+              </button>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary btn-animated" id="csat-submit-btn" disabled>{{ _('Submit rating') }}</button>
+        </form>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Attachments Card -->
+    <div class="section-card app-surface-card mb-4">
+      <h3>{{ _('Attachments') }}</h3>
+      {% if attachments %}
+        <ul class="list-group list-group-flush">
+          {% for a in attachments %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ a.original_filename }} <small class="text-muted">({{ (a.file_size / 1024)|round(1) }} KB)</small></span>
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}">{{ _('Download') }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="ticket-detail-text">{{ _('No attachments') }}.</p>
+      {% endif %}
+    </div>
+
+    <!-- Direct Chat Card -->
+    <div class="section-card app-surface-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h3 class="mb-0">{{ _('Direct chat') }}</h3>
+          <p class="text-muted mb-0">{{ _('Conversation between requester and assigned technician') }}</p>
+        </div>
+        <div id="chat-online-status" class="d-flex gap-2"></div>
+      </div>
+      
+      <!-- Message Form -->
+      {% if can_chat %}
+        <form method="post" class="mb-4">
+          {{ comment_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ comment_form.message.label }}
+            {% if current_user.role in ['admin','technician'] %}
+              <div class="d-flex flex-wrap gap-2 mb-2">
+                <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn" data-reply="{{ _('Hello, we are reviewing your case and will update you shortly.') }}">{{ _('Quick reply: Acknowledged') }}</button>
+                <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn" data-reply="{{ _('Please share a screenshot or exact error message so we can continue.') }}">{{ _('Quick reply: Ask for evidence') }}</button>
+                <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn" data-reply="{{ _('Issue resolved. Please confirm if everything is working correctly on your side.') }}">{{ _('Quick reply: Resolution') }}</button>
+              </div>
+            {% endif %}
+            {% if current_user.role in ['admin','technician'] %}
+              <div class="d-flex justify-content-end mb-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#kbModal">
+                  <i class="bi bi-journal-richtext me-1"></i>{{ _('Use from KB') }}
+                </button>
+              </div>
+            {% endif %}
+            {{ comment_form.message(class_='form-control input-enhanced', rows=3, placeholder=_('Write a message...'), id='comment-textarea') }}
+            <div id="kb-insert-feedback" class="alert alert-success mt-2 py-2 px-3 d-none" role="status" aria-live="polite">
+              <i class="bi bi-check-circle me-1"></i>{{ _('KB content inserted into message') }}
+            </div>
+          </div>
+          {{ comment_form.submit_comment(class_='btn btn-primary btn-animated') }}
+        </form>
+
+        <!-- KB Search Modal -->
+        {% if current_user.role in ['admin','technician'] %}
+        <div class="modal fade" id="kbModal" tabindex="-1" aria-labelledby="kbModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="kbModalLabel"><i class="bi bi-journal-richtext me-2"></i>{{ _('Knowledge Base') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input type="text" id="kb-search-input" class="form-control mb-3" placeholder="{{ _('Search articles...') }}" autocomplete="off">
+                <div id="kb-results">
+                  <p class="text-muted">{{ _('Type to search articles...') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+        (function(){
+          const kbModalEl = document.getElementById('kbModal');
+          const kbInput = document.getElementById('kb-search-input');
+          const kbResults = document.getElementById('kb-results');
+          const kbFeedback = document.getElementById('kb-insert-feedback');
+          let kbTimer;
+          let kbFeedbackTimer;
+
+          function showKbFeedback() {
+            if (!kbFeedback) return;
+            kbFeedback.classList.remove('d-none');
+            clearTimeout(kbFeedbackTimer);
+            kbFeedbackTimer = setTimeout(function () {
+              kbFeedback.classList.add('d-none');
+            }, 2200);
+          }
+
+          // Move modal to <body> to avoid stacking/transform issues that can leave only the gray backdrop.
+          if (kbModalEl && kbModalEl.parentElement !== document.body) {
+            document.body.appendChild(kbModalEl);
+          }
+
+          if (kbModalEl) {
+            kbModalEl.addEventListener('shown.bs.modal', function () {
+              if (kbInput) {
+                kbInput.focus();
+                kbInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
+              }
+            });
+
+            kbModalEl.addEventListener('hidden.bs.modal', function () {
+              // Defensive cleanup for mobile browsers that can leave a stale backdrop/scroll lock.
+              document.body.classList.remove('modal-open');
+              document.body.style.removeProperty('padding-right');
+              document.body.style.removeProperty('overflow');
+              document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+                el.remove();
+              });
+            });
+          }
+
+          if(kbInput){
+            kbInput.addEventListener('input', function(){
+              clearTimeout(kbTimer);
+              const q = this.value.trim();
+              if(q.length < 2){ kbResults.innerHTML = '<p class="text-muted">{{ _("Type to search articles...") }}</p>'; return; }
+              kbTimer = setTimeout(function(){
+                fetch('/admin/kb/search?q=' + encodeURIComponent(q))
+                  .then(r => r.json())
+                  .then(data => {
+                    if(!data.length){ kbResults.innerHTML = '<p class="text-muted">{{ _("No articles found") }}</p>'; return; }
+                    kbResults.innerHTML = data.map(a => `
+                      <div class="border rounded p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <strong>${a.title}</strong>
+                            <p class="text-muted small mb-0 mt-1">${a.preview}</p>
+                          </div>
+                          <button class="btn btn-sm btn-primary text-white ms-3 flex-shrink-0 kb-insert-btn" data-content="${a.content.replace(/"/g,'&quot;')}">{{ _('Insert') }}</button>
+                        </div>
+                      </div>`).join('');
+                    document.querySelectorAll('.kb-insert-btn').forEach(btn => {
+                      btn.addEventListener('click', function(){
+                        const ta = document.getElementById('comment-textarea');
+                        if (!ta) return;
+                        const cur = ta.value;
+                        ta.value = cur ? cur + '\n\n' + this.dataset.content : this.dataset.content;
+                        const modalInstance = bootstrap.Modal.getOrCreateInstance(kbModalEl);
+                        modalInstance.hide();
+                        showKbFeedback();
+                      });
+                    });
+                  });
+              }, 350);
+            });
+          }
+        })();
+        </script>
+        {% endif %}
+      {% else %}
+        <div class="alert alert-warning">
+          {{ _('Only requester, assigned technician, or admin can send messages in this chat') }}.
+        </div>
+      {% endif %}
+      
+      <hr>
+      
+      <!-- Messages List -->
+      {% if comments %}
+        <div class="comments-list" id="chat-messages-list">
+          {% for c in comments %}
+            {% set is_owner = c.user_id == ticket.user_id %}
+            {% set is_assigned_tech = ticket.technician_id and c.user_id == ticket.technician_id %}
+            <div class="content-card mb-3 chat-message {% if is_owner %}chat-client{% elif is_assigned_tech %}chat-tech{% else %}chat-admin{% endif %}" data-comment-id="{{ c.id }}">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong>
+                  {{ c.user.username if c.user else _('User') }}
+                  {% if is_owner %}
+                    <span class="badge bg-secondary ms-1">{{ _('Client') }}</span>
+                  {% elif is_assigned_tech %}
+                    <span class="badge bg-info ms-1">{{ _('Technician') }}</span>
+                  {% elif c.user and c.user.role == 'admin' %}
+                    <span class="badge bg-dark ms-1">{{ _('Admin') }}</span>
+                  {% endif %}
+                </strong>
+                <div class="d-flex align-items-center gap-2">
+                  {% if (current_user.is_admin() or current_user.is_technician()) and c.user and c.user.role in ['technician', 'admin'] %}
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.kb_from_comment', comment_id=c.id) }}">
+                      <i class="bi bi-journal-plus me-1"></i>{{ _('Save to KB') }}
+                    </a>
+                  {% endif %}
+                  <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+              </div>
+              <p class="mb-0 ticket-detail-text">{{ _(c.message) }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="comments-list" id="chat-messages-list"></div>
+        <p class="ticket-detail-text" id="chat-empty-state">{{ _('No messages yet') }}.</p>
+      {% endif %}
+    </div>
+
+    <!-- Admin Update Section -->
+    {% if current_user.is_admin() or current_user.is_technician() %}
+      <div class="section-card app-surface-card">
+        <h3>{{ _('Update ticket') }}</h3>
+        <form method="post" id="ticket-update-form">
+          {{ form.hidden_tag() }}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              {{ form.status.label }}
+              {{ form.status(class_='form-select input-enhanced') }}
+            </div>
+            {% if current_user.is_admin() or (current_user.is_technician() and technician_reassign_enabled) %}
+            <div class="col-md-6 mb-3">
+              {{ form.technician.label }}
+              {{ form.technician(class_='form-select input-enhanced') }}
+            </div>
+            {% else %}
+            <div class="col-md-6 mb-3">
+              <label class="form-label">{{ _('Assigned technician') }}</label>
+              <div class="form-control-plaintext">
+                {% if ticket.technician %}{{ ticket.technician.username }}{% else %}{{ _('Unassigned') }}{% endif %}
+              </div>
+              <small class="text-muted">{{ _('Only administrators can assign or reassign technicians') }}</small>
+            </div>
+            {% endif %}
+          </div>
+          {{ form.submit(class_='btn btn-primary btn-animated') }}
+        </form>
+        {% if current_user.is_admin() %}
+        <hr>
+        <div class="alert alert-secondary mb-0">
+          <i class="bi bi-shield-lock me-1"></i>{{ _('Ticket deletion is disabled by security policy') }}
+        </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+
+  <script>
+    (function () {
+      const chatList = document.getElementById('chat-messages-list');
+      if (!chatList) return;
+
+      const emptyState = document.getElementById('chat-empty-state');
+      const feedUrl = "{{ url_for('tickets.ticket_chat_feed', ticket_id=ticket.id) }}";
+      let lastRenderedId = 0;
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+      }
+
+      function roleBadgeHtml(comment) {
+        if (comment.message_role === 'client') {
+          return '<span class="badge bg-secondary ms-1">{{ _('Client') }}</span>';
+        }
+        if (comment.message_role === 'technician') {
+          return '<span class="badge bg-info ms-1">{{ _('Technician') }}</span>';
+        }
+        if (comment.user_role === 'admin') {
+          return '<span class="badge bg-dark ms-1">{{ _('Admin') }}</span>';
+        }
+        return '';
+      }
+
+      function messageClass(comment) {
+        if (comment.message_role === 'client') return 'chat-client';
+        if (comment.message_role === 'technician') return 'chat-tech';
+        return 'chat-admin';
+      }
+
+      function renderMessages(comments) {
+        if (!comments || comments.length === 0) {
+          chatList.innerHTML = '';
+          if (emptyState) emptyState.style.display = 'block';
+          lastRenderedId = 0;
+          return;
+        }
+
+        if (emptyState) emptyState.style.display = 'none';
+        const newLastId = comments[comments.length - 1].id;
+        if (newLastId === lastRenderedId) return;
+
+        let html = '';
+        comments.forEach(function (comment) {
+          html += '<div class="content-card mb-3 chat-message ' + messageClass(comment) + '" data-comment-id="' + comment.id + '">';
+          html += '<div class="d-flex justify-content-between align-items-start mb-2">';
+          html += '<strong>' + escapeHtml(comment.username) + roleBadgeHtml(comment) + '</strong>';
+          html += '<small class="text-muted">' + escapeHtml(comment.created_at) + '</small>';
+          html += '</div>';
+          html += '<p class="mb-0 ticket-detail-text">' + escapeHtml(comment.message) + '</p>';
+          html += '</div>';
+        });
+
+        chatList.innerHTML = html;
+        lastRenderedId = newLastId;
+      }
+
+      async function refreshChat() {
+        try {
+          const response = await fetch(feedUrl, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+          });
+          if (!response.ok) return;
+          const data = await response.json();
+          renderMessages(data.comments || []);
+        } catch (err) {
+          // Silent fail to avoid UI disruption if polling fails temporarily.
+        }
+      }
+
+      const onlineStatusContainer = document.getElementById('chat-online-status');
+      const onlineUsers = new Set();
+
+      function updateOnlineStatus() {
+        onlineStatusContainer.innerHTML = '';
+        if (onlineUsers.size === 0) return;
+        
+        onlineUsers.forEach(function (username) {
+          const badge = document.createElement('span');
+          badge.className = 'badge bg-success';
+          badge.innerHTML = '<i class="bi bi-circle-fill online-user-dot"></i>' + escapeHtml(username);
+          onlineStatusContainer.appendChild(badge);
+        });
+      }
+
+      refreshChat();
+
+      const socket = window.io ? window.io({
+        transports: ['websocket', 'polling'],
+        withCredentials: true
+      }) : null;
+
+      if (socket) {
+        socket.on('connect', function () {
+          socket.emit('join_ticket_room', { ticket_id: {{ ticket.id }} });
+        });
+
+        socket.on('user_online', function (data) {
+          onlineUsers.add(data.username);
+          updateOnlineStatus();
+          refreshChat();
+        });
+
+        socket.on('user_offline', function (data) {
+          onlineUsers.delete(data.username);
+          updateOnlineStatus();
+        });
+
+        socket.on('ticket_chat_message', function () {
+          refreshChat();
+        });
+
+        socket.on('connect_error', function () {
+          // Keep polling fallback active if socket connection fails.
+        });
+      }
+
+      setInterval(refreshChat, 5000);
+    })();
+
+    function submitReopenReason(form) {
+      const reason = window.prompt("{{ _('Please provide a short reason to reopen the ticket') }}");
+      if (!reason) return false;
+      const clean = reason.trim();
+      if (clean.length < 5) {
+        window.alert("{{ _('Please provide a short reason to reopen the ticket') }}");
+        return false;
+      }
+      form.querySelector('input[name="reopen_reason"]').value = clean;
+      return true;
+    }
+
+    (function () {
+      const updateForm = document.getElementById('ticket-update-form');
+      if (!updateForm) return;
+      const statusSelect = updateForm.querySelector('select[name="status"]');
+      if (!statusSelect) return;
+
+      updateForm.addEventListener('submit', function (event) {
+        if (statusSelect.value !== 'Cerrado') return;
+        const typed = window.prompt("{{ _('Type CERRAR to confirm closing this ticket') }}");
+        if ((typed || '').trim().toUpperCase() !== 'CERRAR') {
+          event.preventDefault();
+          window.alert("{{ _('Ticket close action was cancelled') }}");
+        }
+      });
+    })();
+
+    document.querySelectorAll('.quick-reply-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const ta = document.getElementById('comment-textarea');
+        if (!ta) return;
+        const text = btn.dataset.reply || '';
+        ta.value = ta.value ? (ta.value + '\n\n' + text) : text;
+        ta.focus();
+      });
+    });
+  </script>
+
+  <script>
+    (function () {
+      var starButtons = document.querySelectorAll('.csat-star-btn');
+      var ratingInput = document.getElementById('csat-rating-value');
+      var submitBtn = document.getElementById('csat-submit-btn');
+      if (!starButtons.length || !ratingInput) return;
+      var starsContainer = document.querySelector('.csat-stars');
+
+      function highlightStars(val) {
+        starButtons.forEach(function(b, i) { b.classList.toggle('active', i < val); });
+      }
+
+      starButtons.forEach(function(btn) {
+        btn.addEventListener('mouseover', function() {
+          highlightStars(parseInt(btn.dataset.value));
+        });
+        btn.addEventListener('click', function() {
+          var val = parseInt(btn.dataset.value);
+          ratingInput.value = val;
+          highlightStars(val);
+          if (submitBtn) submitBtn.disabled = false;
+        });
+      });
+
+      if (starsContainer) {
+        starsContainer.addEventListener('mouseleave', function() {
+          highlightStars(ratingInput.value ? parseInt(ratingInput.value) : 0);
+        });
+      }
+    })();
+  </script>
+</div>
+</section>
+{% endblock %}

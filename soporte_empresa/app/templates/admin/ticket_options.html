@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Ticket options') }}{% endblock %}
+{% block content %}
+<div class="container mt-4 ticket-options-page">
+  <div class="card mb-4 form-card">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+        <h2 class="card-title mb-0">{{ _('Ticket options') }}</h2>
+        <form method="post" action="{{ url_for('admin.restore_ticket_options_defaults') }}">
+          {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+          <input type="hidden" name="next" value="legacy">
+          <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-repeat me-1"></i>{{ _('Restore recommended options') }}
+          </button>
+        </form>
+      </div>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.option_type.label }}
+          {{ form.option_type(class_='form-select') }}
+          {% for e in form.option_type.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ form.value.label }}
+          {{ form.value(class_='form-control') }}
+          {% for e in form.value.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+        </div>
+        {{ form.submit(class_='btn btn-primary') }}
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">{{ _('Categories') }}</h4>
+          <ul class="list-group">
+            {% for item in categories %}
+              <li class="list-group-item">
+                <form method="post" action="{{ url_for('admin.edit_ticket_option', option_id=item.id) }}" class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
+                  <input type="text" name="value" value="{{ item.value }}" class="form-control form-control-sm">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">{{ _('Update') }}</button>
+                </form>
+                <div class="mt-2">
+                  <form method="post" action="{{ url_for('admin.delete_ticket_option', option_id=item.id) }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">{{ _('Delete') }}</button>
+                  </form>
+                </div>
+              </li>
+            {% else %}
+              <li class="list-group-item text-muted">{{ _('No categories configured') }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">{{ _('Priorities') }}</h4>
+          <ul class="list-group">
+            {% for item in priorities %}
+              <li class="list-group-item">
+                <form method="post" action="{{ url_for('admin.edit_ticket_option', option_id=item.id) }}" class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
+                  <input type="text" name="value" value="{{ item.value }}" class="form-control form-control-sm">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">{{ _('Update') }}</button>
+                </form>
+                <div class="mt-2">
+                  <form method="post" action="{{ url_for('admin.delete_ticket_option', option_id=item.id) }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">{{ _('Delete') }}</button>
+                  </form>
+                </div>
+              </li>
+            {% else %}
+              <li class="list-group-item text-muted">{{ _('No priorities configured') }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'admin/settings/layout.html' %}
+
+{% block title %}{{ _('Facturación') }} - {% endblock %}
+
+{% block settings_content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h2 class="h4 mb-3"><i class="bi bi-credit-card me-2"></i>{{ _('Facturación') }}</h2>
+        {% if not paypal_configured %}
+        <div class="alert alert-warning">
+            {{ _('PayPal aún no está configurado en el servidor. Define PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID y tus PLAN ID para activar los cobros.') }}
+        </div>
+        {% endif %}
+
+        {% if is_superadmin and company_options %}
+        <div class="mb-4">
+            <label for="company_selector" class="form-label fw-semibold">{{ _('Empresa a facturar') }}</label>
+            <select id="company_selector" class="form-select" onchange="window.location='{{ url_for('admin.settings_billing') }}?company_id=' + this.value;">
+                {% for option in company_options %}
+                <option value="{{ option.id }}" {% if company and option.id == company.id %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">{{ _('Selecciona la empresa para ver o gestionar su facturación.') }}</div>
+        </div>
+        {% endif %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <div class="small text-muted mb-1">{{ _('Estado de suscripción') }}</div>
+                    <div class="fw-semibold">{{ (company.billing_status or 'inactive')|replace('_', ' ')|capitalize }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <div class="small text-muted mb-1">{{ _('Plan ID actual') }}</div>
+                    <div class="fw-semibold">{{ company.stripe_price_id or default_plan_id or _('No configurado') }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <div class="small text-muted mb-1">{{ _('Referencia de suscriptor PayPal') }}</div>
+                    <div class="fw-semibold">{{ company.stripe_customer_id or _('Pendiente') }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <div class="small text-muted mb-1">{{ _('Suscripción PayPal') }}</div>
+                    <div class="fw-semibold">{{ company.stripe_subscription_id or _('Pendiente') }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <div class="small text-muted mb-1">{{ _('Próxima renovación') }}</div>
+                    <div class="fw-semibold">{{ company.stripe_current_period_end.strftime('%d/%m/%Y %H:%M') if company.stripe_current_period_end else _('Pendiente') }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <div class="small text-muted mb-1">{{ _('Último pago confirmado') }}</div>
+                    <div class="fw-semibold">{{ company.stripe_last_payment.strftime('%d/%m/%Y %H:%M') if company.stripe_last_payment else _('Sin registro') }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if company.billing_status == 'past_due' %}
+        <div class="alert alert-warning">
+            {{ _('PayPal marcó esta suscripción con incidencias de pago. Revisa la administración de la suscripción para actualizar el método de pago o reactivar el cobro.') }}
+        </div>
+        {% elif company.billing_status == 'canceled' %}
+        <div class="alert alert-danger">
+            {{ _('La suscripción fue cancelada. Para reactivar el acceso, inicia un nuevo checkout o reactiva la suscripción desde PayPal.') }}
+        </div>
+        {% endif %}
+
+        {% if company.stripe_last_invoice_url %}
+        <div class="mb-3">
+            <a class="btn btn-link px-0" href="{{ company.stripe_last_invoice_url }}" target="_blank" rel="noopener">
+                {{ _('Administrar suscripción en PayPal') }}
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="card border-0 bg-body-tertiary mb-4">
+            <div class="card-body">
+                <h5 class="h6 mb-3">{{ _('Configuración del Plan ID') }}</h5>
+                <form method="post" action="{{ url_for('admin.settings_billing_price_update') }}" class="row g-3 align-items-end">
+                    {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                    {% if is_superadmin %}<input type="hidden" name="company_id" value="{{ company.id }}">{% endif %}
+                    <div class="col-md-9">
+                        <label for="paypal_plan_id" class="form-label">{{ _('Plan ID de PayPal para esta empresa') }}</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="paypal_plan_id"
+                            name="paypal_plan_id"
+                            value="{{ company.stripe_price_id or '' }}"
+                            placeholder="P-..."
+                        >
+                        <div class="form-text">
+                            {{ _('Si lo dejas vacío, se utilizará PAYPAL_DEFAULT_PLAN_ID desde Render.') }}
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary">{{ _('Guardar Plan ID') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button id="btn-pay" class="btn btn-success me-2" {% if not paypal_configured %}disabled{% endif %}>{{ _('Ir a PayPal Checkout') }}</button>
+            <button id="btn-portal" class="btn btn-outline-primary" {% if not paypal_configured %}disabled{% endif %}>{{ _('Administrar suscripción') }}</button>
+        </div>
+
+        <h5 class="mt-4">{{ _('Historial de eventos de facturación') }}</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>{{ _('Fecha') }}</th>
+                        <th>{{ _('Evento') }}</th>
+                        <th>{{ _('Referencia') }}</th>
+                        <th>{{ _('Resumen') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for event in billing_events %}
+                    <tr>
+                        <td>{{ event.created_at.strftime('%d/%m/%Y %H:%M') if event.created_at else '-' }}</td>
+                        <td><code>{{ event.event_type }}</code></td>
+                        <td><code>{{ event.event_id }}</code></td>
+                        <td class="text-muted">{{ _('Evento recibido y almacenado para esta empresa.') }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">{{ _('Sin eventos registrados todavía.') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+const selectedCompanyId = {{ company.id|tojson }};
+
+document.getElementById('btn-pay').onclick = async function() {
+    const res = await fetch("/billing/create-checkout-session", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({company_id: selectedCompanyId})
+    });
+    const data = await res.json();
+    if (data.checkout_url) {
+        window.location = data.checkout_url;
+    } else {
+        alert(data.error || "Error al iniciar el checkout");
+    }
+};
+document.getElementById('btn-portal').onclick = async function() {
+    const res = await fetch("/billing/create-portal-session", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({company_id: selectedCompanyId})
+    });
+    const data = await res.json();
+    if (data.portal_url) {
+        window.location = data.portal_url;
+    } else {
+        alert(data.error || "Error al abrir la gestión de suscripción en PayPal");
+    }
+};
+</script>
+{% endblock %}

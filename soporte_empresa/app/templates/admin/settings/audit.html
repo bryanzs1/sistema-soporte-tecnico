@@ -1,0 +1,70 @@
+{% extends 'admin/settings/layout.html' %}
+{% block title %}{{ _('Audit Logs') }}{% endblock %}
+
+{% block settings_content %}
+<div class="app-surface-card mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 admin-section-header"><i class="bi bi-shield-check me-2"></i>{{ _('Audit Logs') }}</h5>
+    <a class="btn btn-sm btn-light" href="{{ url_for('admin.settings_audit_export', action=action, status=status, username=username) }}">
+      <i class="bi bi-download me-1"></i>{{ _('Export CSV') }}
+    </a>
+  </div>
+  <p class="text-muted">{{ _('Immutable-style security trail for critical actions. Review regularly.') }}</p>
+
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-md-4">
+      <input name="action" class="form-control" value="{{ action or '' }}" placeholder="{{ _('Action') }}">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select">
+        <option value="">{{ _('All statuses') }}</option>
+        <option value="success" {% if status == 'success' %}selected{% endif %}>{{ _('success') }}</option>
+        <option value="failure" {% if status == 'failure' %}selected{% endif %}>{{ _('failure') }}</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <input name="username" class="form-control" value="{{ username or '' }}" placeholder="{{ _('Username') }}">
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn app-primary-action text-white" type="submit">{{ _('Filter') }}</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table app-admin-table table-sm table-hover align-middle">
+      <thead>
+        <tr>
+          <th>{{ _('Date') }}</th>
+          <th>{{ _('User') }}</th>
+          <th>{{ _('Action') }}</th>
+          <th>{{ _('Resource') }}</th>
+          <th>{{ _('Status') }}</th>
+          <th>{{ _('IP') }}</th>
+          <th>{{ _('Details') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '—' }}</td>
+          <td>{{ log.user.username if log.user else '—' }}</td>
+          <td><code>{{ log.action }}</code></td>
+          <td>{{ (log.resource_type or '—') ~ '#' ~ (log.resource_id if log.resource_id is not none else '—') }}</td>
+          <td>
+            <span class="badge {{ 'bg-success' if log.status == 'success' else 'bg-danger' }}">{{ log.status }}</span>
+          </td>
+          <td>{{ log.ip_address or '—' }}</td>
+          <td>
+            {% if log.details %}
+              <small class="text-muted">{{ log.details[:180] }}{% if log.details|length > 180 %}...{% endif %}</small>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-muted">{{ _('No records found') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

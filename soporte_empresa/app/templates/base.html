@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{{ _('Support') }}{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232563eb'/%3E%3Ctext x='32' y='42' font-family='Arial, Helvetica, sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+    <!-- Bootswatch Cerulean for a clean corporate look -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.2.3/dist/cerulean/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260421-1') }}">
+  </head>
+  <body class="app-bg {% block body_class %}{% endblock %}">
+    {% set endpoint = request.endpoint or '' %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top app-shell-nav">
+      <div class="app-shell-nav-inner">
+        <a class="navbar-brand app-brand app-shell-brand" href="{{ url_for('main.index') }}">
+          <span class="app-brand-mark-wrap" aria-hidden="true">
+            <span class="app-brand-mark"></span>
+          </span>
+          <span class="app-brand-copy">
+            <span class="app-brand-kicker">SMART SUPPORT PLATFORM</span>
+            <span class="app-brand-text">Soporte IT <span class="app-brand-accent">Pro</span></span>
+          </span>
+        </a>
+        <button class="navbar-toggler app-menu-toggle app-shell-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse app-menu-panel app-shell-menu" id="navbarContent">
+          <ul class="navbar-nav me-auto app-nav-group app-shell-links">
+            {% if current_user.is_authenticated %}
+              <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'tickets.list_tickets' %}is-active{% endif %}" href="{{ url_for('tickets.list_tickets') }}" {% if endpoint == 'tickets.list_tickets' %}aria-current="page"{% endif %}>
+                <i class="bi bi-ticket-perforated"></i> {{ _('Tickets') }}
+              </a></li>
+              {% if current_user.is_admin() or current_user.is_technician() %}
+              <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}" {% if endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>
+                <i class="bi bi-speedometer2"></i> {{ 'Panel' if current_lang == 'es' else 'Dashboard' }}
+              </a></li>
+              {% endif %}
+            {% else %}
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.pricing' %}is-active{% endif %}" href="{{ url_for('main.pricing') }}" {% if endpoint == 'main.pricing' %}aria-current="page"{% endif %}>
+              <i class="bi bi-tags"></i> {{ 'Precios' if current_lang == 'es' else 'Pricing' }}
+            </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.about_us' %}is-active{% endif %}" href="{{ url_for('main.about_us') }}" {% if endpoint == 'main.about_us' %}aria-current="page"{% endif %}>
+              <i class="bi bi-people"></i> {{ _('Who We Are') }}
+            </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.services' %}is-active{% endif %}" href="{{ url_for('main.services') }}" {% if endpoint == 'main.services' %}aria-current="page"{% endif %}>
+              <i class="bi bi-grid"></i> {{ 'Servicios' if current_lang == 'es' else 'Services' }}
+            </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.technician_applications' %}is-active{% endif %}" href="{{ url_for('main.technician_applications') }}" {% if endpoint == 'main.technician_applications' %}aria-current="page"{% endif %}>
+              <i class="bi bi-person-plus"></i> {{ 'Solicitar técnico' if current_lang == 'es' else 'Apply Technician' }}
+            </a></li>
+            <li class="nav-item"><a class="nav-link app-nav-link {% if endpoint == 'main.contact' %}is-active{% endif %}" href="{{ url_for('main.contact') }}" {% if endpoint == 'main.contact' %}aria-current="page"{% endif %}>
+              <i class="bi bi-envelope"></i> {{ 'Contáctanos' if current_lang == 'es' else 'Contact Us' }}
+            </a></li>
+            {% endif %}
+          </ul>
+          <ul class="navbar-nav ms-auto app-nav-actions app-shell-actions">
+            {% if current_user.is_authenticated %}
+              <!-- User Dropdown Menu -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center app-nav-link app-user-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="user-avatar me-2">
+                    {{ current_user.username[0]|upper }}
+                  </div>
+                  <span class="d-none d-md-inline">{{ current_user.username }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                  <li class="dropdown-header">
+                    <div class="text-center">
+                      <div class="user-avatar-large mb-2">
+                        {{ current_user.username[0]|upper }}
+                      </div>
+                      <strong>{{ current_user.username }}</strong><br>
+                      <small class="text-muted">{{ current_user.email }}</small>
+                    </div>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{{ url_for('tickets.list_tickets') }}">
+                    <i class="bi bi-ticket-perforated"></i> {{ _('My Tickets') }}
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                    <i class="bi bi-key"></i> {{ _('Change Password') }}
+                  </a></li>
+                  {% if current_user.is_admin() %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{{ url_for('admin.settings') }}">
+                    <i class="bi bi-gear"></i> {{ _('Settings') }}
+                  </a></li>
+                  {% endif %}
+                  {% if current_user.is_admin() or current_user.is_technician() %}
+                  {% if not current_user.is_admin() %}
+                  <li><hr class="dropdown-divider"></li>
+                  {% endif %}
+                  <li><a class="dropdown-item" href="{{ url_for('admin.kb_list') }}">
+                    <i class="bi bi-journal-richtext"></i> {{ _('Knowledge Base') }}
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('admin.executive_report') }}">
+                    <i class="bi bi-bar-chart-line"></i> {{ _('Executive Report') }}
+                  </a></li>
+                  {% endif %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger logout-link" href="{{ url_for('auth.logout') }}" data-confirm-message="{{ _('Are you sure you want to log out?') }}" data-skip-unsaved-check="true">
+                    <i class="bi bi-box-arrow-right"></i> {{ _('Logout') }}
+                  </a></li>
+                </ul>
+              </li>
+              
+              <!-- Language Dropdown -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle app-nav-link app-lang-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'es')|upper }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end app-surface-dropdown">
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
+                    <i class="bi bi-translate me-2"></i>ES
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
+                    <i class="bi bi-translate me-2"></i>EN
+                  </a></li>
+                </ul>
+              </li>
+            {% else %}
+              <li class="nav-item dropdown d-flex align-items-center">
+                <a class="nav-link dropdown-toggle app-nav-link app-lang-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-globe"></i> <span class="d-inline">{{ (current_lang or 'es')|upper }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end app-surface-dropdown">
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}">
+                    <i class="bi bi-translate me-2"></i>{{ _('Spanish') }}
+                  </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}">
+                    <i class="bi bi-translate me-2"></i>{{ _('English') }}
+                  </a></li>
+                </ul>
+              </li>
+              <li class="nav-item d-flex align-items-center nav-guest-actions">
+                <a class="btn btn-sm app-secondary-action me-2" href="#accessModal" data-bs-toggle="modal" data-bs-target="#accessModal">{{ _('Solicitar acceso') }}</a>
+                <a class="btn btn-sm app-secondary-action" href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal">{{ _('Sign In') }}</a>
+                  <!-- Modal Solicitar Acceso y Demo -->
+                  <div class="modal fade" id="accessModal" tabindex="-1" aria-labelledby="accessModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content border-0 shadow">
+                        <div class="modal-header border-0 pb-0">
+                          <h5 class="modal-title fw-bold fs-5" id="accessModalLabel">Solicitar acceso y demo</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body pt-2 px-4 pb-4">
+                          <form method="post" action="{{ url_for('main.solicitar_acceso') }}" id="accessRequestForm">
+                            <div class="mb-3">
+                              <label for="nombre" class="form-label">Nombre completo</label>
+                              <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100">
+                            </div>
+                            <div class="mb-3">
+                              <label for="empresa" class="form-label">Empresa</label>
+                              <input type="text" class="form-control" id="empresa" name="empresa" maxlength="100">
+                            </div>
+                            <div class="mb-3">
+                              <label for="correo" class="form-label">Correo electrónico</label>
+                              <input type="email" class="form-control" id="correo" name="correo" required maxlength="120">
+                            </div>
+                            <div class="mb-3">
+                              <label for="telefono" class="form-label">Teléfono</label>
+                              <input type="tel" class="form-control" id="telefono" name="telefono" maxlength="30">
+                            </div>
+                            <div class="mb-3">
+                              <label for="mensaje" class="form-label">Mensaje</label>
+                              <textarea class="form-control" id="mensaje" name="mensaje" rows="3" maxlength="500" placeholder="¿Qué necesitas? ¿En qué podemos ayudarte?"></textarea>
+                            </div>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-primary w-100">Solicitar acceso y demo</button>
+                            <div class="text-center mt-3">
+                              <a href="#loginModal" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal" style="font-size:0.95em;">¿Ya tienes acceso? Inicia sesión aquí</a>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="alert-container">
+      {% if not request.args.get('login_failed') %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category or 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      {% endif %}
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <footer class="footer-custom footer-shell">
+      <div class="container text-center py-3">
+        <div class="row">
+          <div class="col-md-6 text-md-start">
+            <small>&copy; {{ current_year or 2026 }} Soporte IT Pro</small>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <small>
+              <a href="{{ url_for('main.about_us') }}" class="text-decoration-none">{{ _('Who We Are') }}</a>
+              <span class="mx-2">|</span>
+              <a href="{{ url_for('main.terms_and_conditions') }}" class="text-decoration-none">{{ _('Terms and Conditions') }}</a>
+              <span class="mx-2">|</span>
+              <a href="#" id="cookie-preferences-link" class="text-decoration-none">{{ _('Cookie Preferences') }}</a>
+            </small>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div id="cookie-consent" class="cookie-consent" role="dialog" aria-live="polite" aria-label="{{ _('Cookie Notice') }}" hidden>
+      <div class="cookie-consent-content">
+        <div class="cookie-consent-icon"><i class="bi bi-shield-check"></i></div>
+        <div class="cookie-consent-text">
+          <strong>{{ _('Cookie Notice') }}</strong>
+          <p class="mb-0">{{ _('We use essential cookies to keep the platform secure and functional. You can accept or reject optional cookies.') }}</p>
+        </div>
+      </div>
+      <div class="cookie-consent-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="cookie-reject-btn">{{ _('Reject') }}</button>
+        <button type="button" class="btn btn-sm btn-primary" id="cookie-accept-btn">{{ _('Accept') }}</button>
+      </div>
+      <a href="{{ url_for('main.terms_and_conditions') }}" class="cookie-consent-link">{{ _('Terms and Conditions') }}</a>
+    </div>
+    {% if current_user.is_authenticated %}
+    <div id="support-assistant"
+         class="support-assistant"
+         data-endpoint="{{ url_for('main.assistant_chat') }}"
+         data-thinking-label="{{ _('Assistant is thinking...') }}"
+         data-error-label="{{ _('I could not process your request right now. Please create a ticket and a technician will help you.') }}"
+         data-category-label="{{ _('Suggested category') }}">
+      <button type="button" class="support-assistant-toggle" aria-label="{{ _('Open support assistant') }}">
+        <i class="bi bi-chat-dots-fill"></i>
+      </button>
+      <section class="support-assistant-panel" hidden aria-label="{{ _('Support Assistant') }}">
+        <div class="support-assistant-header">
+          <div>
+            <strong>{{ _('Support Assistant') }}</strong>
+            <div class="support-assistant-subtitle">{{ _('Ask me about password, VPN, printers, email, or general technical issues.') }}</div>
+          </div>
+          <button type="button" class="support-assistant-close" aria-label="{{ _('Close assistant') }}">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+          <div class="support-assistant-body" id="assistantChatBox" style="max-height: 250px; overflow-y: auto;">
+            <div class="chat-message chat-message-assistant">{{ _('How can I help you today?') }}</div>
+          </div>
+          <form id="assistantChatForm" class="support-assistant-form mt-2" autocomplete="off" data-unsaved-guard="false">
+            <div class="input-group">
+              <textarea class="form-control support-assistant-input" id="assistantChatInput" rows="2" placeholder="{{ _('Describe your issue...') }}"></textarea>
+              <button type="submit" class="btn btn-primary support-assistant-send">{{ _('Send') }}</button>
+            </div>
+          </form>
+      </section>
+    </div>
+    {% endif %}
+    <script src="{{ url_for('static', filename='access-modal.js', v='20260508') }}"></script>
+    {% if current_user.is_authenticated %}
+    <script src="{{ url_for('static', filename='assistant-chat.js', v='20260508') }}"></script>
+    {% endif %}
+    <!-- Bootstrap JS bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Socket.IO for user online tracking (global connection) -->
+    {% if current_user.is_authenticated %}
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.4/dist/socket.io.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Connect to Socket.IO to register as online
+        const socket = io({
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
+          reconnectionAttempts: 5
+        });
+        
+        socket.on('connect', function() {
+          console.log('✅ Connected to server - User registered as online');
+        });
+        
+        socket.on('user_registered', function(data) {
+          console.log('✅ User registration confirmed:', data);
+          console.log(`   - Username: ${data.username}`);
+          console.log(`   - Total online: ${data.total_online}`);
+        });
+        
+        socket.on('disconnect', function() {
+          console.log('❌ Disconnected from server - User removed from online');
+        });
+        
+        socket.on('connect_error', function(error) {
+          console.error('❌ Connection error:', error);
+        });
+
+        // Fallback heartbeat: keeps online presence updated even if WebSocket fails.
+        function sendPresencePing() {
+          fetch("{{ url_for('main.presence_ping') }}", {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          }).catch(function() {
+            // Silent failure: heartbeat is best-effort.
+          });
+        }
+
+        sendPresencePing();
+        setInterval(sendPresencePing, 20000);
+      });
+    </script>
+    {% endif %}
+    
+    <script>
+      // Auto-hide alerts after 5 seconds
+      document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+        alerts.forEach(function(alert) {
+          setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+          }, 5000);
+        });
+      });
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const consentBox = document.getElementById('cookie-consent');
+        if (!consentBox) {
+          return;
+        }
+
+        const acceptBtn = document.getElementById('cookie-accept-btn');
+        const rejectBtn = document.getElementById('cookie-reject-btn');
+        const preferencesLink = document.getElementById('cookie-preferences-link');
+        const storageKey = 'cookie_consent_choice';
+
+        function setCookie(name, value, days) {
+          const maxAge = days * 24 * 60 * 60;
+          document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; samesite=lax`;
+        }
+
+        function hideBanner() {
+          consentBox.classList.add('cookie-consent-hidden');
+          setTimeout(function() {
+            consentBox.hidden = true;
+          }, 260);
+        }
+
+        function showBanner() {
+          consentBox.hidden = false;
+          consentBox.classList.remove('cookie-consent-hidden');
+        }
+
+        function saveChoice(value) {
+          localStorage.setItem(storageKey, value);
+          setCookie('cookie_consent', value, 180);
+          hideBanner();
+        }
+
+        const savedChoice = localStorage.getItem(storageKey);
+        if (!savedChoice) {
+          showBanner();
+        }
+
+        if (acceptBtn) {
+          acceptBtn.addEventListener('click', function() {
+            saveChoice('accepted');
+          });
+        }
+
+        if (rejectBtn) {
+          rejectBtn.addEventListener('click', function() {
+            saveChoice('rejected');
+          });
+        }
+
+        if (preferencesLink) {
+          preferencesLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            showBanner();
+          });
+        }
+      });
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const unsavedMessage = "{{ _('You have unsaved changes. If you leave this page, your information will be lost.') }}";
+        const trackedForms = Array.from(document.querySelectorAll('form')).filter(function (form) {
+          if ((form.method || '').toLowerCase() !== 'post') return false;
+          if (form.dataset.unsavedGuard === 'false') return false;
+          return form.querySelector('textarea, select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], input[type="date"], input[type="datetime-local"], input[type="checkbox"], input[type="radio"]');
+        });
+
+        let hasUnsavedChanges = false;
+        let isSubmitting = false;
+
+        function valueOf(field) {
+          const type = (field.type || '').toLowerCase();
+          if (type === 'checkbox' || type === 'radio') {
+            return field.checked ? '1' : '0';
+          }
+          if (type === 'file') {
+            return (field.files && field.files.length) ? String(field.files.length) : '';
+          }
+          return field.value || '';
+        }
+
+        function evaluateFormDirty(form) {
+          const fields = form.querySelectorAll('textarea, select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], input[type="date"], input[type="datetime-local"], input[type="checkbox"], input[type="radio"]');
+          for (const field of fields) {
+            if (field.dataset.initialValue !== valueOf(field)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        function recomputeDirtyState() {
+          hasUnsavedChanges = trackedForms.some(evaluateFormDirty);
+        }
+
+        trackedForms.forEach(function (form) {
+          const fields = form.querySelectorAll('textarea, select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], input[type="date"], input[type="datetime-local"], input[type="checkbox"], input[type="radio"]');
+          fields.forEach(function (field) {
+            field.dataset.initialValue = valueOf(field);
+            field.addEventListener('input', recomputeDirtyState);
+            field.addEventListener('change', recomputeDirtyState);
+          });
+          form.addEventListener('submit', function () {
+            isSubmitting = true;
+            hasUnsavedChanges = false;
+          });
+        });
+
+        window.addEventListener('beforeunload', function (event) {
+          if (!hasUnsavedChanges || isSubmitting) return;
+          event.preventDefault();
+          event.returnValue = unsavedMessage;
+        });
+
+        document.querySelectorAll('a.logout-link').forEach(function (logoutLink) {
+          logoutLink.addEventListener('click', function (event) {
+            const msg = logoutLink.dataset.confirmMessage || '{{ _('Are you sure you want to log out?') }}';
+            if (!window.confirm(msg)) {
+              event.preventDefault();
+            }
+          });
+        });
+
+        document.querySelectorAll('a[href]').forEach(function (link) {
+          if (link.classList.contains('logout-link')) return;
+          if (link.dataset.skipUnsavedCheck === 'true') return;
+          link.addEventListener('click', function (event) {
+            const href = link.getAttribute('href') || '';
+            if (!hasUnsavedChanges || isSubmitting) return;
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+            if (!window.confirm(unsavedMessage)) {
+              event.preventDefault();
+            }
+          });
+        });
+      });
+    </script>
+
+    {% if current_user.is_authenticated %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const root = document.getElementById('support-assistant');
+        if (!root) {
+          return;
+        }
+
+        const panel = root.querySelector('.support-assistant-panel');
+        const toggleButton = root.querySelector('.support-assistant-toggle');
+        const closeButton = root.querySelector('.support-assistant-close');
+        const form = document.getElementById('support-assistant-form');
+        const input = document.getElementById('support-assistant-input');
+        const sendButton = form ? form.querySelector('button[type="submit"]') : null;
+        const messages = document.getElementById('support-assistant-messages');
+        const chips = root.querySelectorAll('.support-assistant-chip');
+        const endpoint = root.dataset.endpoint;
+        let isSending = false;
+
+        function setOpenState(isOpen) {
+          panel.hidden = !isOpen;
+          root.classList.toggle('is-open', isOpen);
+          toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          if (isOpen) {
+            input.focus();
+          }
+        }
+
+        function appendMessage(role, text, options) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'support-assistant-message ' + (role === 'user' ? 'is-user' : 'is-assistant');
+
+          const bubble = document.createElement('div');
+          bubble.className = 'support-assistant-bubble';
+          bubble.textContent = text;
+          wrapper.appendChild(bubble);
+
+          if (options && options.categoryLabel) {
+            const meta = document.createElement('div');
+            meta.className = 'support-assistant-meta';
+            meta.textContent = root.dataset.categoryLabel + ': ' + options.categoryLabel;
+            wrapper.appendChild(meta);
+          }
+
+          if (options && options.url && options.label) {
+            const action = document.createElement('a');
+            action.className = 'support-assistant-action btn btn-sm btn-outline-primary';
+            action.href = options.url;
+            action.textContent = options.label;
+            wrapper.appendChild(action);
+          }
+
+          messages.appendChild(wrapper);
+          messages.scrollTop = messages.scrollHeight;
+          return wrapper;
+        }
+
+        function appendThinking() {
+          return appendMessage('assistant', root.dataset.thinkingLabel || '...');
+        }
+
+        async function sendMessage(message) {
+          const text = (message || '').trim();
+          if (!text || isSending) {
+            return;
+          }
+
+          isSending = true;
+          if (sendButton) {
+            sendButton.disabled = true;
+          }
+
+          setOpenState(true);
+          appendMessage('user', text);
+          input.value = '';
+          const pending = appendThinking();
+
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({ message: text })
+            });
+
+            const payload = await response.json();
+            pending.remove();
+
+            appendMessage('assistant', payload.reply || root.dataset.errorLabel, {
+              url: payload.create_ticket_url,
+              label: payload.create_ticket_label,
+              categoryLabel: payload.category_label
+            });
+          } catch (error) {
+            pending.remove();
+            appendMessage('assistant', root.dataset.errorLabel);
+          } finally {
+            isSending = false;
+            if (sendButton) {
+              sendButton.disabled = false;
+            }
+            input.focus();
+          }
+        }
+
+        toggleButton.addEventListener('click', function () {
+          setOpenState(panel.hidden);
+        });
+
+        closeButton.addEventListener('click', function () {
+          setOpenState(false);
+        });
+
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          sendMessage(input.value);
+        });
+
+        input.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(input.value);
+          }
+        });
+
+        chips.forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            sendMessage(chip.dataset.message || chip.textContent);
+          });
+        });
+      });
+    </script>
+    {% endif %}
+
+    {% if not current_user.is_authenticated %}
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow app-login-modal">
+          <div class="modal-header border-0 pb-0 app-login-modal-header">
+            <h5 class="modal-title fw-bold fs-5" id="loginModalLabel">
+              <i class="bi bi-shield-lock me-2 text-primary"></i>{{ _('Sign In') }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2 px-4 pb-4 app-login-modal-body">
+            {% if request.args.get('login_failed') %}
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category or 'danger' }} alert-dismissible fade show py-2" role="alert">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+            <form method="post" action="/auth/login" id="loginModalForm" data-unsaved-guard="false">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="source" value="modal">
+              <div class="mb-3">
+                <label for="modal-username" class="form-label fw-medium">{{ _('Username') }}</label>
+                <input type="text" class="form-control input-enhanced" id="modal-username" name="username"
+                       placeholder="{{ _('Username') }}" required autocomplete="username">
+              </div>
+              <div class="mb-3">
+                <label for="modal-password" class="form-label fw-medium">{{ _('Password') }}</label>
+                <div class="input-group">
+                  <input type="password" class="form-control input-enhanced" id="modal-password" name="password"
+                         placeholder="{{ _('Password') }}" required autocomplete="current-password">
+                  <button class="btn btn-outline-secondary" type="button" id="modal-toggle-password"
+                          tabindex="-1" aria-label="{{ _('Show password') }}">
+                    <i class="bi bi-eye" id="modal-eye-icon"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="modal-remember-me" name="remember_me">
+                  <label class="form-check-label small" for="modal-remember-me">{{ _('Remember Me') }}</label>
+                </div>
+                <a href="{{ url_for('auth.forgot_password') }}" class="small text-primary">{{ _('Forgot your password?') }}</a>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 btn-animated btn-lg app-login-submit">
+                <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('Sign In') }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var loginModalEl = document.getElementById('loginModal');
+        if (!loginModalEl) return;
+
+        // Auto-open when the login flow redirects to the homepage.
+        var loginParams = new URLSearchParams(window.location.search);
+        if (loginParams.has('login_failed') || loginParams.has('open_login')) {
+          var m = new bootstrap.Modal(loginModalEl);
+          m.show();
+        }
+
+        // Focus the username field every time the modal is shown
+        loginModalEl.addEventListener('shown.bs.modal', function () {
+          var usernameInput = document.getElementById('modal-username');
+          if (usernameInput && !usernameInput.value) usernameInput.focus();
+        });
+
+        // Password visibility toggle
+        var toggleBtn = document.getElementById('modal-toggle-password');
+        var passwordInput = document.getElementById('modal-password');
+        var eyeIcon = document.getElementById('modal-eye-icon');
+        if (toggleBtn && passwordInput) {
+          toggleBtn.addEventListener('click', function () {
+            var isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+          });
+        }
+      });
+    </script>
+    {% endif %}
+  </body>
+</html>

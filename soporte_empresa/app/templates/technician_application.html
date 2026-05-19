@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Solicitud de técnico certificado' if current_lang == 'es' else 'Certified technician application' }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
+{% block content %}
+{% set is_es = current_lang == 'es' %}
+<section class="app-page-shell">
+  <div class="container py-4">
+    <div class="app-page-hero mb-4">
+      <span class="app-page-kicker">{{ 'Talento técnico' if is_es else 'Technical talent' }}</span>
+      <h1 class="app-page-title">{{ 'Solicitud de técnico certificado' if is_es else 'Certified technician application' }}</h1>
+      <p class="app-page-subtitle">{{ 'Completa el formulario y nuestro equipo validará tu perfil para integrarte al sistema de tickets.' if is_es else 'Complete the form and our team will validate your profile to onboard you into the ticket system.' }}</p>
+    </div>
+
+    <div class="card app-surface-card">
+      <div class="card-body p-4 p-lg-5">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.full_name.label.text }}</label>
+              {{ form.full_name(class='form-control', placeholder='Ej. Ana López') }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.email.label.text }}</label>
+              {{ form.email(class='form-control', placeholder='ana@correo.com') }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.phone.label.text }}</label>
+              {{ form.phone(class='form-control', placeholder='+57 300 000 0000') }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.location.label.text }}</label>
+              {{ form.location(class='form-control', placeholder='Ciudad, País') }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.years_experience.label.text }}</label>
+              {{ form.years_experience(class='form-control', min='0', max='60') }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.specialties.label.text }}</label>
+              {{ form.specialties(class='form-control', rows='4', placeholder='Soporte técnico, redes, fibra óptica, switches...') }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.certifications.label.text }}</label>
+              {{ form.certifications(class='form-control', rows='4', placeholder='CCNA, Fortinet NSE, Mikrotik MTCNA...') }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.professional_summary.label.text }}</label>
+              {{ form.professional_summary(class='form-control', rows='4', placeholder='Experiencia relevante, sectores atendidos, fortalezas...') }}
+            </div>
+          </div>
+          <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn app-primary-action">{{ form.submit.label.text }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Users') }}{% endblock %}
+{% block content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        {{ message }}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-body">
+      <h2 class="card-title">{{ _('Users') }}</h2>
+      <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mb-3">{{ _('Create User') }}</a>
+      <a href="{{ url_for('admin.ticket_options') }}" class="btn btn-outline-primary mb-3">{{ _('Manage ticket options') }}</a>
+      <form method="get" class="row g-2 mb-3 align-items-end">
+        <div class="col-auto">
+          <label for="company_id" class="form-label mb-0">Empresa:</label>
+        </div>
+        <div class="col-auto">
+          <select name="company_id" id="company_id" class="form-select">
+            <option value="">Todas</option>
+            {% for company in companies %}
+              <option value="{{ company.id }}" {% if selected_company_id == company.id %}selected{% endif %}>{{ company.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-outline-secondary">Filtrar</button>
+        </div>
+      </form>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>{{ _('Username') }}</th>
+            <th>{{ _('Email') }}</th>
+            <th>{{ _('Empresa') }}</th>
+            <th>{{ _('Role') }}</th>
+            <th>{{ _('Status') }}</th>
+            <th>{{ _('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td>{% if u.company %}{{ u.company.name }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+              <td>{{ u.role }}</td>
+              <td>
+                {% if u.is_active %}
+                  <span class="badge bg-success">{{ _('Active') }}</span>
+                {% else %}
+                  <span class="badge bg-danger">{{ _('Inactive') }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <a class="btn btn-sm btn-info text-white" href="{{ url_for('admin.edit_user', user_id=u.id) }}">{{ _('Edit') }}</a>
+                <a class="btn btn-sm btn-warning text-dark" href="{{ url_for('admin.reset_user_password', user_id=u.id) }}">{{ _('Reset Password') }}</a>
+                <button class="btn btn-sm btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteUserModal"
+                        data-user-id="{{ u.id }}"
+                        data-username="{{ u.username }}"
+                        data-delete-url="{{ url_for('admin.delete_user', user_id=u.id) }}"
+                        {% if u.id == current_user.id %}disabled{% endif %}>{{ _('Delete') }}</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ _('Delete User') }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>{{ _('Are you sure you want to permanently delete user') }} <strong id="deleteUsername"></strong>?</p>
+        <p class="text-danger mb-1"><small>{{ _('This action cannot be undone.') }}</small></p>
+        <p class="text-muted mb-0"><small>{{ _('Existing records will be reassigned to administrator') }} <strong>{{ current_user.username }}</strong>.</small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+        <form id="deleteUserForm" method="POST" action="">
+          {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+          <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>{{ _('Delete Permanently') }}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('deleteUserModal').addEventListener('show.bs.modal', function (event) {
+  var btn = event.relatedTarget;
+  document.getElementById('deleteUsername').textContent = btn.getAttribute('data-username');
+  document.getElementById('deleteUserForm').action = btn.getAttribute('data-delete-url');
+});
+</script>
+{% endblock %}

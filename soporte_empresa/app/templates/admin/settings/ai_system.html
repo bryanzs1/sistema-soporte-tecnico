@@ -1,0 +1,125 @@
+{% extends 'admin/settings/layout.html' %}
+{% block title %}{{ _('AI System') }}{% endblock %}
+
+{% block settings_content %}
+<!-- AI Settings -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-cpu me-2"></i>{{ _('AI System Settings') }}</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.ai_system_settings') }}">
+            <!-- Sentiment Analysis -->
+            <div class="mb-4">
+                <h6><i class="bi bi-bar-chart-line me-2"></i>{{ _('Sentiment Analysis') }}</h6>
+                <p class="text-muted small">{{ _('Automatically detects customer sentiment and urgency level') }}</p>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="sentiment_enabled" 
+                           id="sentimentCheck" {% if ai_settings.sentiment_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="sentimentCheck">
+                        {{ _('Enable sentiment analysis') }}
+                    </label>
+                </div>
+                {% if not sentiment_available %}
+                <div class="alert alert-warning mt-2">
+                    <small><i class="bi bi-exclamation-triangle me-1"></i>TextBlob library not available. Sentiment analysis will use keyword matching only.</small>
+                </div>
+                {% endif %}
+            </div>
+            
+            <hr>
+            
+            <!-- Chatbot -->
+            <div class="mb-4">
+                <h6><i class="bi bi-chat-dots me-2"></i>{{ _('Auto-Response Chatbot') }}</h6>
+                <p class="text-muted small">{{ _('Provides automatic responses to common questions and issues') }}</p>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="chatbot_enabled" 
+                           id="chatbotCheck" {% if ai_settings.chatbot_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="chatbotCheck">
+                        {{ _('Enable auto-response chatbot') }}
+                    </label>
+                </div>
+                
+                <div class="mt-3">
+                    <label for="chatbotThreshold" class="form-label">{{ _('Auto-response confidence threshold') }}</label>
+                    <input type="number" id="chatbotThreshold" name="chatbot_threshold" 
+                           class="form-control" min="0" max="1" step="0.05"
+                           value="{{ ai_settings.chatbot_confidence_threshold }}">
+                    <small class="form-text text-muted">
+                        {{ _('Minimum confidence (0-1) to send automatic response') }}
+                    </small>
+                </div>
+            </div>
+            
+            <hr>
+            <button type="submit" class="btn btn-primary text-white"><i class="bi bi-floppy me-2"></i>{{ _('Save Settings') }}</button>
+        </form>
+    </div>
+</div>
+
+<!-- Sentiment Analysis Info -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>{{ _('Sentiment Analysis') }}</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ _('Analyzes ticket content to detect customer sentiment and urgency levels.') }}</p>
+        
+        <h6>{{ _('Detection Categories:') }}</h6>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">😡 {{ _('Very Negative') }}</h6>
+                    <p class="small text-muted">{{ _('Customer is very angry or frustrated') }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">😠 {{ _('Negative') }}</h6>
+                    <p class="small text-muted">{{ _('Customer is frustrated') }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">😐 {{ _('Neutral') }}</h6>
+                    <p class="small text-muted">{{ _('Customer is neutral or factual') }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">😊 {{ _('Positive') }}</h6>
+                    <p class="small text-muted">{{ _('Customer is satisfied or friendly') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chatbot Info -->
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>{{ _('Auto-Response Chatbot') }}</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ _('Responds automatically to common questions from our knowledge base.') }}</p>
+        
+        <h6>{{ _('Supported Categories:') }}</h6>
+        <div class="row g-2">
+            {% for category in chatbot_categories %}
+            <div class="col-md-6">
+                <span class="badge bg-primary">{{ category }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <h6 class="mt-4">{{ _('Benefits:') }}</h6>
+        <ul>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Instant answers to common problems') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Reduces ticket queue by handling FAQs') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Improves customer satisfaction') }}</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ _('Frees up technicians for complex issues') }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

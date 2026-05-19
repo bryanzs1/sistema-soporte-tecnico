@@ -1,0 +1,52 @@
+databases:
+  - name: soporte-tecnico-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: "17"
+    databaseName: soporte_db
+    user: soporte_user
+
+services:
+  - type: web
+    name: soporte-tecnico
+    runtime: python
+    plan: free
+    pythonVersion: 3.11
+    buildCommand: bash build.sh
+    preDeployCommand: python migrate_to_production.py
+    startCommand: gunicorn -k gthread --threads 8 -w 1 --bind 0.0.0.0:$PORT wsgi:app
+    envVars:
+      - key: RENDER
+        value: 'true'
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: 'false'
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: soporte-tecnico-db
+          property: connectionString
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_MODE
+        sync: false
+      - key: PAYPAL_DEFAULT_PLAN_ID
+        sync: false
+      - key: PAYPAL_MONTHLY_PLAN_ID
+        sync: false
+      - key: PAYPAL_ANNUAL_PLAN_ID
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: DEFAULT_ADMIN_USERNAME
+        sync: false
+      - key: DEFAULT_ADMIN_PASSWORD
+        sync: false
+      - key: DEFAULT_ADMIN_EMAIL
+        sync: false

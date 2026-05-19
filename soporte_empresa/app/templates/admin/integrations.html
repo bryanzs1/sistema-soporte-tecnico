@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Integrations') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4"><i class="bi bi-link-45deg me-2"></i>{{ _('Chat Integrations') }}</h1>
+    <p class="text-muted">{{ _('Manage API tokens and integrations with Slack, Teams, and other platforms') }}</p>
+    
+    <!-- API Tokens Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ _('API Tokens') }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">{{ _('API tokens allow external applications to create tickets programmatically.') }}</p>
+            
+            {% if api_tokens %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Token Name') }}</th>
+                            <th>{{ _('Created') }}</th>
+                            <th>{{ _('Last Used') }}</th>
+                            <th>{{ _('Status') }}</th>
+                            <th>{{ _('Actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in api_tokens %}
+                        <tr>
+                            <td><strong>{{ token.name }}</strong></td>
+                            <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if token.last_used_at %}
+                                    {% extends "base.html" %}
+
+                                    {% block title %}{{ _('Integrations') }}{% endblock %}
+
+                                    {% block content %}
+                                    <div class="app-page-shell">
+                                        <h2 class="admin-section-header mb-2"><i class="bi bi-link-45deg me-2"></i>{{ _('Chat Integrations') }}</h2>
+                                        <p class="text-muted mb-4">{{ _('Manage API tokens and integrations with Slack, Teams, and other platforms') }}</p>
+
+                                        <!-- API Tokens Section -->
+                                        <div class="app-surface-card mb-4">
+                                            <h5 class="mb-3"><i class="bi bi-key me-2"></i>{{ _('API Tokens') }}</h5>
+                                            <p class="text-muted">{{ _('API tokens allow external applications to create tickets programmatically.') }}</p>
+                                            {% if api_tokens %}
+                                            <div class="table-responsive">
+                                                <table class="table app-admin-table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{{ _('Token Name') }}</th>
+                                                            <th>{{ _('Created') }}</th>
+                                                            <th>{{ _('Last Used') }}</th>
+                                                            <th>{{ _('Status') }}</th>
+                                                            <th>{{ _('Actions') }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for token in api_tokens %}
+                                                        <tr>
+                                                            <td><strong>{{ token.name }}</strong></td>
+                                                            <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                            <td>
+                                                                {% if token.last_used_at %}
+                                                                    {{ token.last_used_at.strftime('%Y-%m-%d %H:%M') }}
+                                                                {% else %}
+                                                                    <em class="text-muted">{{ _('Never') }}</em>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if token.is_active %}
+                                                                    <span class="badge bg-success">{{ _('Active') }}</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">{{ _('Revoked') }}</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if token.is_active %}
+                                                                <form method="POST" action="{{ url_for('admin.revoke_api_token', token_id=token.id) }}" class="d-inline" onsubmit="return strongRevokeConfirm()">
+                                                                    <button type="submit" class="btn btn-sm btn-danger text-white" 
+                                                                            onclick="return confirm('{{ _('Revoke this API token?') }}')">
+                                                                        {{ _('Revoke') }}
+                                                                    </button>
+                                                                </form>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            {% else %}
+                                            <p class="text-muted">{{ _('No API tokens yet. Create one to get started.') }}</p>
+                                            {% endif %}
+
+                                            <!-- Create Token Form -->
+                                            <hr>
+                                            <h6>{{ _('Create New Token') }}</h6>
+                                            <form method="POST" action="{{ url_for('admin.create_api_token') }}" class="row g-3">
+                                                <div class="col-md-6">
+                                                    <input type="text" name="name" class="form-control" placeholder="{{ _('Token Name') }}" required>
+                                                    <small class="text-muted">{{ _('Example: Slack Integration, Teams Bot, etc.') }}</small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <button type="submit" class="btn app-primary-action text-white">{{ _('Create') }}</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Integrations Section -->
+                                        <div class="app-surface-card mb-4">
+                                            <h5 class="mb-3"><i class="bi bi-plug me-2"></i>{{ _('Active Integrations') }}</h5>
+                                            <p class="text-muted">{{ _('Configure webhooks for Slack, Microsoft Teams, and other platforms.') }}</p>
+                                            {% if integrations %}
+                                            <div class="table-responsive">
+                                                <table class="table app-admin-table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{{ _('Platform') }}</th>
+                                                            <th>{{ _('Name') }}</th>
+                                                            <th>{{ _('Created') }}</th>
+                                                            <th>{{ _('Last Used') }}</th>
+                                                            <th>{{ _('Status') }}</th>
+                                                            <th>{{ _('Actions') }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for integration in integrations %}
+                                                        <tr>
+                                                            <td>
+                                                                {% if integration.platform == 'slack' %}
+                                                                    <span class="badge bg-dark">Slack</span>
+                                                                {% elif integration.platform == 'teams' %}
+                                                                    <span class="badge bg-primary">Teams</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">{{ integration.platform }}</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td><strong>{{ integration.name }}</strong></td>
+                                                            <td>{{ integration.created_at.strftime('%Y-%m-%d') }}</td>
+                                                            <td>
+                                                                {% if integration.last_used_at %}
+                                                                    {{ integration.last_used_at.strftime('%Y-%m-%d %H:%M') }}
+                                                                {% else %}
+                                                                    <em class="text-muted">{{ _('Never') }}</em>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if integration.is_active %}
+                                                                    <span class="badge bg-success">{{ _('Active') }}</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">{{ _('Inactive') }}</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                <!-- Actions for integrations could go here -->
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            {% else %}
+                                            <p class="text-muted">{{ _('No integrations yet. Configure one to get started.') }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endblock %}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Setup Instructions -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ _('Setup Instructions') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="accordion" id="setupAccordion">
+                <!-- Slack Setup -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#slackSetup">
+                            <i class="bi bi-slack me-2"></i>Slack {{ _('Setup') }}
+                        </button>
+                    </h2>
+                    <div id="slackSetup" class="accordion-collapse collapse show" data-bs-parent="#setupAccordion">
+                        <div class="accordion-body">
+                            <h6>{{ _('Create Slash Command in Slack:') }}</h6>
+                            <ol>
+                                <li>{{ _('Go to') }} <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a></li>
+                                <li>{{ _('Create a new app or select existing') }}</li>
+                                <li>{{ _('Go to Slash Commands and create new command') }}:
+                                    <ul>
+                                        <li><strong>{{ _('Command') }}:</strong> <code>/ticket</code></li>
+                                        <li><strong>{{ _('Request URL') }}:</strong> <code>{{ request.url_root }}api/v1/webhooks/slack</code></li>
+                                        <li><strong>{{ _('Short Description') }}:</strong> {{ _('Create a support ticket') }}</li>
+                                    </ul>
+                                </li>
+                                <li>{{ _('Install the app to your workspace') }}</li>
+                                <li>{{ _('Use command') }}: <code>/ticket {{ _('Printer not working') }} - {{ _('Cannot print documents') }}</code></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Teams Setup -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#teamsSetup">
+                            <i class="bi bi-microsoft-teams me-2"></i>Microsoft Teams {{ _('Setup') }}
+                        </button>
+                    </h2>
+                    <div id="teamsSetup" class="accordion-collapse collapse" data-bs-parent="#setupAccordion">
+                        <div class="accordion-body">
+                            <h6>{{ _('Create Outgoing Webhook in Teams:') }}</h6>
+                            <ol>
+                                <li>{{ _('Open your Teams channel') }}</li>
+                                <li>{{ _('Click') }} <strong>•••</strong> → <strong>{{ _('Connectors') }}</strong></li>
+                                <li>{{ _('Configure Outgoing Webhook') }}:
+                                    <ul>
+                                        <li><strong>{{ _('Name') }}:</strong> {{ _('Support Ticket Bot') }}</li>
+                                        <li><strong>{{ _('Callback URL') }}:</strong> <code>{{ request.url_root }}api/v1/webhooks/teams</code></li>
+                                    </ul>
+                                </li>
+                                <li>{{ _('Copy the security token and add it to the integration config above') }}</li>
+                                <li>{{ _('Mention the bot') }}: <code>@SupportTicketBot {{ _('Need help with printer') }}</code></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Usage -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiSetup">
+                            <i class="bi bi-code-slash me-2"></i>{{ _('Direct API Usage') }}
+                        </button>
+                    </h2>
+                    <div id="apiSetup" class="accordion-collapse collapse" data-bs-parent="#setupAccordion">
+                        <div class="accordion-body">
+                            <h6>{{ _('REST API Endpoint:') }}</h6>
+                            <p><code>POST {{ request.url_root }}api/v1/tickets</code></p>
+                            
+                            <h6>{{ _('Headers:') }}</h6>
+                            <pre class="bg-light p-3"><code>X-API-Token: YOUR_TOKEN_HERE
+Content-Type: application/json</code></pre>
+                            
+                            <h6>{{ _('Request Body:') }}</h6>
+                            <pre class="bg-light p-3"><code>{
+  "title": "{{ _('Printer not working') }}",
+  "description": "{{ _('Cannot print documents from my computer') }}",
+  "creator_name": "{{ _('John Doe') }}",
+  "creator_email": "john@example.com",
+  "category": "Hardware",
+  "priority": "{{ _('High') }}"
+}</code></pre>
+                            
+                            <h6>{{ _('Example using curl:') }}</h6>
+                            <pre class="bg-light p-3"><code>curl -X POST {{ request.url_root }}api/v1/tickets \
+  -H "X-API-Token: YOUR_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test","description":"Test ticket","creator_name":"API User"}'</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary text-white">← {{ _('Back to Dashboard') }}</a>
+</div>
+
+<script>
+function strongRevokeConfirm() {
+    var value = window.prompt("{{ _('Type REVOCAR to confirm token revocation') }}");
+    return (value || '').trim().toUpperCase() === 'REVOCAR';
+}
+</script>
+{% endblock %}

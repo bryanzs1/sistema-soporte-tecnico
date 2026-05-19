@@ -1,0 +1,70 @@
+{% extends 'admin/settings/layout.html' %}
+{% block title %}{{ 'Solicitudes de técnicos' if current_lang == 'es' else 'Technician applications' }}{% endblock %}
+
+{% block settings_content %}
+<div class="card app-surface-card admin-settings-card">
+  <div class="card-body">
+    <div class="admin-section-header">
+      <div>
+        <h5 class="mb-1"><i class="bi bi-person-vcard me-2"></i>{{ 'Solicitudes de técnicos certificados' if current_lang == 'es' else 'Certified technician applications' }}</h5>
+        <p class="text-muted mb-0">{{ 'Aprueba candidatos para habilitarlos en asignación de tickets.' if current_lang == 'es' else 'Approve candidates to enable them in ticket assignment.' }}</p>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <a class="btn btn-sm {% if active_status == 'all' %}app-primary-action{% else %}app-secondary-action{% endif %}" href="{{ url_for('admin.settings_technician_applications', status='all') }}">{{ 'Todas' if current_lang == 'es' else 'All' }}</a>
+      <a class="btn btn-sm {% if active_status == 'pending' %}app-primary-action{% else %}app-secondary-action{% endif %}" href="{{ url_for('admin.settings_technician_applications', status='pending') }}">{{ 'Pendientes' if current_lang == 'es' else 'Pending' }}</a>
+      <a class="btn btn-sm {% if active_status == 'in_review' %}app-primary-action{% else %}app-secondary-action{% endif %}" href="{{ url_for('admin.settings_technician_applications', status='in_review') }}">{{ 'En revisión' if current_lang == 'es' else 'In review' }}</a>
+      <a class="btn btn-sm {% if active_status == 'approved' %}app-primary-action{% else %}app-secondary-action{% endif %}" href="{{ url_for('admin.settings_technician_applications', status='approved') }}">{{ 'Aprobadas' if current_lang == 'es' else 'Approved' }}</a>
+      <a class="btn btn-sm {% if active_status == 'rejected' %}app-primary-action{% else %}app-secondary-action{% endif %}" href="{{ url_for('admin.settings_technician_applications', status='rejected') }}">{{ 'Rechazadas' if current_lang == 'es' else 'Rejected' }}</a>
+    </div>
+
+    <div class="table-responsive app-admin-table-wrap">
+      <table class="table table-hover app-admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{ 'Nombre' if current_lang == 'es' else 'Name' }}</th>
+            <th>{{ 'Correo' if current_lang == 'es' else 'Email' }}</th>
+            <th>{{ 'Experiencia' if current_lang == 'es' else 'Experience' }}</th>
+            <th>{{ 'Estado' if current_lang == 'es' else 'Status' }}</th>
+            <th>{{ 'Fecha' if current_lang == 'es' else 'Date' }}</th>
+            <th>{{ 'Acciones' if current_lang == 'es' else 'Actions' }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applications %}
+          <tr>
+            <td><strong>#{{ a.id }}</strong></td>
+            <td>{{ a.full_name }}</td>
+            <td>{{ a.email }}</td>
+            <td>{{ a.years_experience }} {{ 'años' if current_lang == 'es' else 'years' }}</td>
+            <td>
+              {% if a.status == 'approved' %}
+              <span class="badge bg-success">{{ 'Aprobada' if current_lang == 'es' else 'Approved' }}</span>
+              {% elif a.status == 'rejected' %}
+              <span class="badge bg-danger">{{ 'Rechazada' if current_lang == 'es' else 'Rejected' }}</span>
+              {% elif a.status == 'in_review' %}
+              <span class="badge bg-warning text-dark">{{ 'En revisión' if current_lang == 'es' else 'In review' }}</span>
+              {% else %}
+              <span class="badge bg-secondary">{{ 'Pendiente' if current_lang == 'es' else 'Pending' }}</span>
+              {% endif %}
+            </td>
+            <td>{{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '-' }}</td>
+            <td>
+              <a class="btn btn-sm app-secondary-action" href="{{ url_for('admin.settings_technician_application_detail', application_id=a.id) }}">
+                <i class="bi bi-eye me-1"></i>{{ 'Revisar' if current_lang == 'es' else 'Review' }}
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if not applications %}
+    <div class="alert alert-info mt-3">{{ 'No hay solicitudes en este estado.' if current_lang == 'es' else 'No applications in this status.' }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

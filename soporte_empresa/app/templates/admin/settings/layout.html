@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Settings') }} - {% endblock %}
+{% block body_class %}app-page-body{% endblock %}
+
+{% block content %}
+<section class="app-page-shell settings-page admin-settings-page">
+<div class="container-fluid">
+    <div class="app-page-hero settings-page-hero">
+        <span class="app-page-kicker">{{ _('Configuration Hub') }}</span>
+        <h1 class="app-page-title"><i class="bi bi-gear me-2"></i>{{ _('System Settings') }}</h1>
+        <p class="app-page-subtitle">{{ _('Manage all system configurations in one place') }}</p>
+    </div>
+    
+    <div class="row g-3 settings-layout-row">
+        <!-- Sidebar Navigation -->
+        <div class="col-12 col-lg-3 mb-3 settings-sidebar-col">
+            <div class="list-group sticky-top settings-sidebar-nav app-settings-sidebar app-surface-card">
+                <a href="{{ url_for('admin.settings_users') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_users' %}active{% endif %}">
+                    <i class="bi bi-people me-2"></i>{{ _('User Management') }}
+                </a>
+                <a href="{{ url_for('admin.settings_technician_applications') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint in ['admin.settings_technician_applications', 'admin.settings_technician_application_detail'] %}active{% endif %}">
+                    <i class="bi bi-person-vcard me-2"></i>{{ 'Solicitudes de técnicos' if current_lang == 'es' else 'Technician applications' }}
+                </a>
+                <a href="{{ url_for('admin.settings_companies') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_companies' %}active{% endif %}">
+                    <i class="bi bi-buildings me-2"></i>{{ _('Companies') }}
+                </a>
+                <a href="{{ url_for('admin.settings_ticket_options') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_ticket_options' %}active{% endif %}">
+                    <i class="bi bi-card-checklist me-2"></i>{{ _('Ticket Options') }}
+                </a>
+                <a href="{{ url_for('admin.settings_ml') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_ml' %}active{% endif %}">
+                    <i class="bi bi-cpu me-2"></i>{{ _('ML Classification System') }}
+                </a>
+                <a href="{{ url_for('admin.settings_ai') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_ai' %}active{% endif %}">
+                    <i class="bi bi-lightbulb me-2"></i>{{ _('AI System') }}
+                </a>
+                <a href="{{ url_for('admin.settings_integrations') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_integrations' %}active{% endif %}">
+                    <i class="bi bi-link-45deg me-2"></i>{{ _('Chat Integrations') }}
+                </a>
+                <a href="{{ url_for('admin.settings_audit') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_audit' %}active{% endif %}">
+                    <i class="bi bi-shield-check me-2"></i>{{ _('Audit Logs') }}
+                </a>
+                <a href="{{ url_for('admin.settings_billing') }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'admin.settings_billing' %}active{% endif %}">
+                    <i class="bi bi-credit-card me-2"></i>{{ _('Facturación') }}
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-12 col-lg-9 settings-content-col">
+            <div class="admin-settings-content-shell">
+                {% block settings_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}

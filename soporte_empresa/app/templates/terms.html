@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Terms and Conditions') }}{% endblock %}
+{% block body_class %}home-page{% endblock %}
+{% block content %}
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+
+      <div class="hero-text">
+        <h1 class="hero-title">{{ _('Terms and Conditions') }}</h1>
+        <p class="hero-subtitle">{{ _('Please read these terms carefully before using the support system.') }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="features-section">
+    <div class="container py-5">
+      <div class="section-card">
+        <h3>{{ _('Acceptance of Terms') }}</h3>
+        <p>{{ _('By accessing this platform, you agree to comply with these terms and all applicable policies.') }}</p>
+
+        <h3>{{ _('Service Scope') }}</h3>
+        <p>{{ _('This system is intended for management of technical support tickets and related communication between users, technicians, and administrators.') }}</p>
+
+        <h3>{{ _('User Responsibilities') }}</h3>
+        <p>{{ _('Provide truthful information in tickets and avoid abusive, illegal, or malicious content.') }}</p>
+
+        <h3>{{ _('Confidentiality and Data') }}</h3>
+        <p>{{ _('Information managed in tickets may include internal operational data and must be treated as confidential.') }}</p>
+
+        <h3>{{ _('Password and Access Security') }}</h3>
+        <p>{{ _('Each user is responsible for safeguarding their credentials and promptly reporting unauthorized access.') }}</p>
+
+        <h3>{{ _('Availability and Changes') }}</h3>
+        <p>{{ _('The service may be updated, suspended, or modified to improve security and performance.') }}</p>
+
+        <h3>{{ _('Contact') }}</h3>
+        <p>{{ _('For questions about these terms, contact the system administrator.') }}</p>
+
+        <p class="text-muted mb-0"><small>{{ _('Last updated') }}: 2026-03-10</small></p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

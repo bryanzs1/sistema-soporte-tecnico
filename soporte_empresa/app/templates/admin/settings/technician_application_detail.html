@@ -1,0 +1,56 @@
+{% extends 'admin/settings/layout.html' %}
+{% block title %}{{ 'Revisión de solicitud' if current_lang == 'es' else 'Application review' }}{% endblock %}
+
+{% block settings_content %}
+<div class="card app-surface-card admin-settings-card">
+  <div class="card-body">
+    <div class="admin-section-header">
+      <div>
+        <h5 class="mb-1"><i class="bi bi-person-lines-fill me-2"></i>{{ application.full_name }}</h5>
+        <p class="text-muted mb-0">{{ application.email }}</p>
+      </div>
+      <a href="{{ url_for('admin.settings_technician_applications') }}" class="btn app-secondary-action">{{ 'Volver' if current_lang == 'es' else 'Back' }}</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><strong>{{ 'Teléfono' if current_lang == 'es' else 'Phone' }}:</strong> {{ application.phone or '-' }}</div>
+      <div class="col-md-6"><strong>{{ 'Ubicación' if current_lang == 'es' else 'Location' }}:</strong> {{ application.location or '-' }}</div>
+      <div class="col-md-6"><strong>{{ 'Experiencia' if current_lang == 'es' else 'Experience' }}:</strong> {{ application.years_experience }} {{ 'años' if current_lang == 'es' else 'years' }}</div>
+      <div class="col-md-6"><strong>{{ 'Estado actual' if current_lang == 'es' else 'Current status' }}:</strong> {{ application.status }}</div>
+    </div>
+
+    <div class="mb-3">
+      <h6>{{ 'Especialidades' if current_lang == 'es' else 'Specialties' }}</h6>
+      <div class="p-3 border rounded bg-light-subtle">{{ application.specialties }}</div>
+    </div>
+
+    <div class="mb-3">
+      <h6>{{ 'Certificaciones' if current_lang == 'es' else 'Certifications' }}</h6>
+      <div class="p-3 border rounded bg-light-subtle">{{ application.certifications }}</div>
+    </div>
+
+    <div class="mb-3">
+      <h6>{{ 'Resumen profesional' if current_lang == 'es' else 'Professional summary' }}</h6>
+      <div class="p-3 border rounded bg-light-subtle">{{ application.professional_summary or '-' }}</div>
+    </div>
+
+    <form method="POST">
+      {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+      <div class="mb-3">
+        <label class="form-label">{{ 'Vigencia de certificación hasta' if current_lang == 'es' else 'Certification valid until' }}</label>
+        <input class="form-control" type="date" name="certified_until" value="{{ application.approved_user.certified_until.strftime('%Y-%m-%d') if application.approved_user and application.approved_user.certified_until else '' }}">
+        <small class="text-muted">{{ 'Si no defines fecha, se aplicará 1 año desde la aprobación.' if current_lang == 'es' else 'If empty, a 1-year validity period will be applied from approval date.' }}</small>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'Notas de revisión' if current_lang == 'es' else 'Review notes' }}</label>
+        <textarea class="form-control" name="review_notes" rows="4" placeholder="{{ 'Observaciones de validación' if current_lang == 'es' else 'Validation notes' }}">{{ application.review_notes or '' }}</textarea>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn app-secondary-action" name="action" value="mark_review" type="submit">{{ 'Marcar en revisión' if current_lang == 'es' else 'Mark in review' }}</button>
+        <button class="btn btn-success" name="action" value="approve" type="submit">{{ 'Aprobar y dar de alta técnico' if current_lang == 'es' else 'Approve and enable technician' }}</button>
+        <button class="btn btn-danger" name="action" value="reject" type="submit">{{ 'Rechazar solicitud' if current_lang == 'es' else 'Reject application' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

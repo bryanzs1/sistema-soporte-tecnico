@@ -1,0 +1,243 @@
+{% extends 'admin/settings/layout.html' %}
+{% block title %}{{ _('Chat Integrations') }}{% endblock %}
+
+{% block settings_content %}
+<!-- Office 365 Email Intake (Optional) -->
+<div class="card mb-4 border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-envelope-at me-2"></i>{{ _('Office 365 Email to Ticket (Optional)') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-3">{{ _('Enable this only for companies that use Office 365. Keep disabled otherwise.') }}</p>
+
+        <form method="POST" action="{{ url_for('admin.settings_office365_email_update') }}" class="row g-3">
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="office365_enabled" name="office365_enabled" {% if office365_config.enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="office365_enabled">{{ _('Enable Office 365 email intake') }}</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ _('Support mailbox') }}</label>
+                <input type="email" name="office365_mailbox" class="form-control" placeholder="soporte@empresa.com" value="{{ office365_config.mailbox or '' }}">
+                <small class="text-muted">{{ _('Used to validate sender domain when restricted mode is enabled.') }}</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ _('Intake endpoint') }}</label>
+                <input type="text" readonly class="form-control" value="{{ email_intake_url }}">
+                <small class="text-muted">{{ _('Use this URL in Power Automate HTTP action.') }}</small>
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="office365_allow_external" name="office365_allow_external" {% if office365_config.allow_external_senders %}checked{% endif %}>
+                    <label class="form-check-label" for="office365_allow_external">{{ _('Allow external senders') }}</label>
+                </div>
+                <small class="text-muted">{{ _('If disabled, only sender emails from the same domain as support mailbox are accepted.') }}</small>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-info text-white">{{ _('Save settings') }}</button>
+            </div>
+        </form>
+
+        <hr>
+        <h6 class="mb-2">{{ _('Power Automate payload example') }}</h6>
+<pre class="bg-light p-3 rounded small mb-0">{
+  "subject": "VPN no conecta",
+  "body": "No me puedo conectar desde casa...",
+  "from_email": "usuario@empresa.com",
+  "from_name": "Usuario Demo",
+  "message_id": "&lt;outlook-message-id&gt;"
+}</pre>
+        <small class="text-muted d-block mt-2">{{ _('Header required: X-API-Token or Authorization: Bearer &lt;token&gt;') }}</small>
+    </div>
+</div>
+
+<!-- API Tokens Section -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-key me-2"></i>{{ _('API Tokens') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">{{ _('API tokens allow external applications to create tickets programmatically.') }}</p>
+        
+        {% if api_tokens %}
+        <div class="table-responsive mb-4">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{{ _('Token Name') }}</th>
+                        <th>{{ _('Created') }}</th>
+                        <th>{{ _('Last Used') }}</th>
+                        <th>{{ _('Status') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for token in api_tokens %}
+                    <tr>
+                        <td><strong>{{ token.name }}</strong></td>
+                        <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if token.last_used_at %}
+                                {{ token.last_used_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                <em class="text-muted">{{ _('Never') }}</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if token.is_active %}
+                                <span class="badge bg-success">{{ _('Active') }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ _('Revoked') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if token.is_active %}
+                            <form method="POST" action="{{ url_for('admin.revoke_api_token', token_id=token.id) }}" class="d-inline" onsubmit="return strongRevokeConfirm()">
+                                <button type="submit" class="btn btn-sm btn-danger text-white" 
+                                        onclick="return confirm('{{ _('Revoke this API token?') }}')">
+                                    {{ _('Revoke') }}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-4">{{ _('No API tokens yet. Create one to get started.') }}</p>
+        {% endif %}
+        
+        <!-- Create Token Form -->
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-plus-circle me-2"></i>{{ _('Create New Token') }}</h6>
+                <form method="POST" action="{{ url_for('admin.create_api_token') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="name" class="form-control" placeholder="{{ _('Token Name') }}" required>
+                        <small class="text-muted">{{ _('Example: Slack Integration, Teams Bot, etc.') }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary text-white">{{ _('Create') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Integrations Section -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>{{ _('Active Integrations') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">{{ _('Configure webhooks for Slack, Microsoft Teams, and other platforms.') }}</p>
+        
+        {% if integrations %}
+        <div class="table-responsive mb-4">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{{ _('Platform') }}</th>
+                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Created') }}</th>
+                        <th>{{ _('Last Used') }}</th>
+                        <th>{{ _('Status') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for integration in integrations %}
+                    <tr>
+                        <td>
+                            {% if integration.platform == 'slack' %}
+                                <span class="badge bg-dark">Slack</span>
+                            {% elif integration.platform == 'teams' %}
+                                <span class="badge bg-primary">Teams</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ integration.platform }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ integration.name }}</strong></td>
+                        <td>{{ integration.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if integration.last_used_at %}
+                                {{ integration.last_used_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                <em class="text-muted">{{ _('Never') }}</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if integration.is_active %}
+                                <span class="badge bg-success">{{ _('Active') }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ _('Inactive') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.toggle_integration', integration_id=integration.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-secondary text-white">
+                                    {{ _('Toggle') }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.delete_integration', integration_id=integration.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger text-white" 
+                                        onclick="return confirm('¿Eliminar esta integración?')">
+                                    {{ _('Delete') }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-4">{{ _('No integrations configured yet.') }}</p>
+        {% endif %}
+        
+        <!-- Create Integration Form -->
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-plus-circle me-2"></i>{{ _('Create New Integration') }}</h6>
+                <form method="POST" action="{{ url_for('admin.create_integration') }}" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">{{ _('Platform') }}</label>
+                        <select name="platform" class="form-select" required>
+                            <option value="slack">Slack</option>
+                            <option value="teams">Microsoft Teams</option>
+                            <option value="other">{{ _('Other') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ _('Name') }}</label>
+                        <input type="text" name="name" class="form-control" placeholder="{{ _('Integration name') }}" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">{{ _('Webhook URL') }} ({{ _('Optional') }})</label>
+                        <input type="url" name="webhook_url" class="form-control" placeholder="https://hooks.slack.com/...">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">{{ _('Verification Token') }} ({{ _('Optional') }})</label>
+                        <input type="text" name="verification_token" class="form-control" placeholder="xoxb-...">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-success text-white w-100">{{ _('Create') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function strongRevokeConfirm() {
+    var value = window.prompt("{{ _('Type REVOCAR to confirm token revocation') }}");
+    return (value || '').trim().toUpperCase() === 'REVOCAR';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+[1mdiff --git a/render.yaml b/render.yaml[m
+[1mindex 851e6dd..91ba878 100644[m
+[1m--- a/render.yaml[m
+[1m+++ b/render.yaml[m
+[36m@@ -1,9 +1,18 @@[m
+[32m+[m[32mdatabases:[m
+[32m+[m[32m  - name: soporte-tecnico-db[m
+[32m+[m[32m    plan: basic-256mb[m
+[32m+[m[32m    region: oregon[m
+[32m+[m[32m    postgresMajorVersion: "17"[m
+[32m+[m[32m    databaseName: soporte_db[m
+[32m+[m[32m    user: soporte_user[m
+[32m+[m
+ services:[m
+   - type: web[m
+     name: soporte-tecnico[m
+[31m-    env: python[m
+[32m+[m[32m    runtime: python[m
+     pythonVersion: 3.11[m
+     buildCommand: bash build.sh[m
+[32m+[m[32m    preDeployCommand: python migrate_to_production.py[m
+     startCommand: gunicorn -k gthread --threads 8 -w 1 --bind 0.0.0.0:$PORT wsgi:app[m
+     envVars:[m
+       - key: RENDER[m
+[36m@@ -13,9 +22,11 @@[m [mservices:[m
+       - key: FLASK_DEBUG[m
+         value: 'false'[m
+       - key: SECRET_KEY[m
+[31m-        sync: false[m
+[32m+[m[32m        generateValue: true[m
+       - key: DATABASE_URL[m
+[31m-        sync: false[m
+[32m+[m[32m        fromDatabase:[m
+[32m+[m[32m          name: soporte-tecnico-db[m
+[32m+[m[32m          property: connectionString[m
+       - key: REDIS_URL[m
+         sync: false[m
+       - key: DEFAULT_ADMIN_USERNAME[m

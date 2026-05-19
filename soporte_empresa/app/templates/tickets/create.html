@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('New Ticket') }}{% endblock %}
+{% block body_class %}app-page-body{% endblock %}
+{% block content %}
+<section class="app-page-shell create-ticket-page">
+<div class="container">
+  <div class="mb-5">
+    <div class="app-page-hero">
+      <span class="app-page-kicker">{{ _('Support Workflow') }}</span>
+      <h1 class="app-page-title">{{ _('Create a new ticket') }}</h1>
+      <p class="app-page-subtitle">{{ _('Describe the issue clearly and the platform will route it with the same polished experience used across the refreshed interface.') }}</p>
+    </div>
+    
+    <!-- Main Form Card -->
+    <div class="form-card app-surface-card app-form-layout-card">
+      <form method="post" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <!-- Basic Information Section -->
+        <div class="section-card app-surface-card mb-4">
+          <h3>{{ _('Basic Information') }}</h3>
+          
+          <div class="row mb-3 g-3">
+            <div class="col-12 col-lg-6">
+              <div class="mb-3">
+                {{ form.creator_name.label }}
+                {{ form.creator_name(class_='form-control input-enhanced', placeholder=_('Your name'), readonly=true) }}
+                <small class="text-muted d-block mt-1">{{ _('This field is automatically filled with your account name') }}</small>
+              </div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="mb-3">
+                {{ form.category.label }}
+                {{ form.category(class_='form-select input-enhanced') }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            {{ form.title.label }}
+            {{ form.title(class_='form-control input-enhanced', placeholder=_('Ticket title')) }}
+          </div>
+          
+          <div class="mb-3">
+            {{ form.description.label }}
+            {{ form.description(class_='form-control input-enhanced', rows=5, placeholder=_('Describe the issue in detail')) }}
+          </div>
+
+          <div class="alert alert-light border mb-0 app-soft-status" role="status">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <strong>{{ _('Suggested solutions from Knowledge Base') }}</strong>
+              <small class="text-muted">{{ _('Type at least 3 characters in description') }}</small>
+            </div>
+            <div id="kb-create-suggestions" class="small text-muted">{{ _('Start typing your issue to see possible solutions') }}</div>
+          </div>
+        </div>
+        
+        <!-- Options Section -->
+        <div class="section-card app-surface-card mb-4">
+          <h3>{{ _('Options') }}</h3>
+          
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="mb-3">
+                {{ form.priority.label }}
+                {{ form.priority(class_='form-select input-enhanced') }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Attachment Section -->
+        <div class="section-card app-surface-card mb-4">
+          <h3>{{ _('Attachments') }}</h3>
+          
+          <div class="mb-3">
+            {{ form.attachment.label }}
+            {{ form.attachment(class_='form-control input-enhanced') }}
+            <small class="text-muted d-block mt-2">{{ _('Accepted formats') }}: PNG, JPG, PDF, TXT, DOCX, XLSX, CSV</small>
+          </div>
+        </div>
+        
+        <!-- Submit Section -->
+        <div class="d-flex flex-column flex-md-row gap-3 create-ticket-actions">
+          {{ form.submit(class_='btn btn-primary btn-animated btn-lg app-primary-action', value=_('Create Ticket')) }}
+          <a href="{{ url_for('tickets.list_tickets') }}" class="btn app-secondary-action btn-lg">{{ _('Cancel') }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+  (function () {
+    const descriptionField = document.getElementById('{{ form.description.id }}');
+    const box = document.getElementById('kb-create-suggestions');
+    if (!descriptionField || !box) return;
+
+    let timer;
+    descriptionField.addEventListener('input', function () {
+      clearTimeout(timer);
+      const query = descriptionField.value.trim();
+      if (query.length < 3) {
+        box.innerHTML = "{{ _('Start typing your issue to see possible solutions') }}";
+        return;
+      }
+
+      timer = setTimeout(function () {
+        fetch("{{ url_for('tickets.kb_suggestions') }}?q=" + encodeURIComponent(query))
+          .then(function (r) { return r.json(); })
+          .then(function (items) {
+            if (!items || !items.length) {
+              box.innerHTML = "{{ _('No related articles found') }}";
+              return;
+            }
+            box.innerHTML = items.map(function (item) {
+              return '<div class="mb-2"><strong>' + item.title + '</strong><div class="text-muted">' + item.preview + '</div></div>';
+            }).join('');
+          })
+          .catch(function () {
+            box.innerHTML = "{{ _('Could not load suggestions right now') }}";
+          });
+      }, 350);
+    });
+  })();
+</script>
+{% endblock %}

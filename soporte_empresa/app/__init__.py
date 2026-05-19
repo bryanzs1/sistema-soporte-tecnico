@@ -1,0 +1,1211 @@
+from flask import Flask, current_app, session, render_template, request, redirect, url_for
+from flask_wtf.csrf import generate_csrf
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, current_user
+from flask_migrate import Migrate
+from flask_mail import Mail, Message
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
+from flask_cors import CORS
+from flask_socketio import SocketIO
+from datetime import datetime, timedelta, timezone
+
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from dotenv import load_dotenv
+import os
+import sys
+import logging
+import hashlib
+from logging.handlers import RotatingFileHandler
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+
+# extensions
+
+db = SQLAlchemy()
+migrate = Migrate()
+login = LoginManager()
+# default login view; must match the endpoint name in auth blueprint
+login.login_view = 'auth.login'  # redirects unauthorized users to /auth/login
+
+mail = Mail()
+
+
+def utcnow():
+    """Return naive UTC datetime compatible with existing DB columns."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _rate_limit_key():
+    """Use real client IP behind reverse proxies (Render) before fallback."""
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return get_remote_address()
+
+
+limiter = Limiter(key_func=_rate_limit_key)
+talisman = Talisman()
+cors = CORS()
+socketio = SocketIO()
+
+# Global registry of online users: {user_id: {'username': str, 'joined_at': datetime}}
+online_users = {}
+
+
+TRANSLATIONS = {
+    'es': {
+        'Support': 'Soporte',
+        'Tickets': 'Tickets',
+        'Dashboard': 'Panel',
+        'Admin': 'Administrador',
+        'Technician': 'Técnico',
+        'User': 'Usuario',
+        'Chat Monitoring': 'Monitoreo de chat',
+        'Settings': 'Configuración',
+        'Companies': 'Empresas',
+        'Company': 'Empresa',
+        'New company': 'Nueva empresa',
+        'Edit company': 'Editar empresa',
+        'Company name': 'Nombre de la empresa',
+        'Register and manage the companies available in the platform.': 'Registrar y administrar las empresas disponibles en la plataforma.',
+        'Register and manage companies': 'Registrar y administrar empresas',
+        'No companies registered yet.': 'No hay empresas registradas todavía.',
+        'Actions': 'Acciones',
+        'Edit': 'Editar',
+        'Save': 'Guardar',
+        'Cancel': 'Cancelar',
+        'Logout': 'Cerrar sesión',
+        'Are you sure you want to log out?': '¿Seguro que deseas cerrar sesión?',
+        'You have unsaved changes. If you leave this page, your information will be lost.': 'Tienes cambios sin guardar. Si sales de esta página, la información se perderá.',
+        'Login': 'Iniciar sesión',
+        'Forgot your password?': '¿Olvidaste tu contraseña?',
+        'Reset your password': 'Restablece tu contraseña',
+        'Enter your account email and we will send you a reset link.': 'Ingresa el correo de tu cuenta y te enviaremos un enlace para restablecerla.',
+        'Request reset link': 'Solicitar enlace de restablecimiento',
+        'Back to login': 'Volver al inicio de sesión',
+        'Password reset link': 'Enlace para restablecer contraseña',
+        'Open this link to reset your password: {url}': 'Abre este enlace para restablecer tu contraseña: {url}',
+        'If the email exists in our system, you will receive password reset instructions shortly.': 'Si el correo existe en nuestro sistema, recibirás instrucciones de restablecimiento en breve.',
+        'Invalid or expired password reset link. Request a new one.': 'El enlace de restablecimiento es inválido o expiró. Solicita uno nuevo.',
+        'Set a new password': 'Define una nueva contraseña',
+        'Your password has been reset successfully. Please sign in.': 'Tu contraseña fue restablecida correctamente. Inicia sesión.',
+        'Language': 'Idioma',
+        'English': 'Inglés',
+        'Spanish': 'Español',
+        'Support Assistant': 'Asistente de soporte',
+        'How can I help you today?': '¿Cómo puedo ayudarte hoy?',
+        'Pregúntame sobre contraseña, VPN, impresoras, correo o incidencias técnicas generales.': 'Ask me about password, VPN, printers, email, or general technical issues.',
+        'Abrir asistente de soporte': 'Open support assistant',
+        'Cerrar asistente': 'Close assistant',
+        'Describe tu problema...': 'Describe tu problema...',
+        'Enviar': 'Send',
+        'El asistente está pensando...': 'Assistant is thinking...',
+        'Categoría sugerida': 'Suggested category',
+        'Crear ticket con este contexto': 'Create ticket with this context',
+        'Necesito ayuda para restablecer mi contraseña': 'I need help resetting my password',
+        'No puedo conectarme a la VPN': 'I cannot connect to the VPN',
+        'Mi impresora no funciona': 'My printer is not working',
+        'No estoy recibiendo correos': 'I am not receiving emails',
+        'Restablecer contraseña': 'Password reset',
+        'Acceso VPN': 'VPN access',
+        'Problema de impresora': 'Printer issue',
+        'Problema de correo': 'Email issue',
+        'Describe un poco mejor tu problema para que pueda ayudarte.': 'Please describe your issue in a bit more detail so I can help you better.',
+        'Aún no encontré una respuesta precisa, pero puedo ayudarte a crear un ticket con la información que ya escribiste.': "I couldn't find a precise answer yet, but I can help you create a ticket with the information you've already typed.",
+        'No pude procesar tu solicitud en este momento. Crea un ticket y un técnico te ayudará.': 'I could not process your request right now. Please create a ticket and a technician will help you.',
+        'Solicitud de soporte': 'Support request',
+        '¿Seguro que deseas cerrar sesión?': 'Are you sure you want to log out?',
+        'Tienes cambios sin guardar. Si sales de esta página, la información se perderá.': 'You have unsaved changes. If you leave this page, your information will be lost.',
+        '¿Olvidaste tu contraseña?': 'Forgot your password?',
+        'Restablece tu contraseña': 'Reset your password',
+        'Ingresa el correo de tu cuenta y te enviaremos un enlace para restablecerla.': 'Enter your account email and we will send you a reset link.',
+        'Solicitar enlace de restablecimiento': 'Request reset link',
+        'Volver al inicio de sesión': 'Back to login',
+        'Enlace para restablecer contraseña': 'Password reset link',
+        'Abre este enlace para restablecer tu contraseña: {url}': 'Open this link to reset your password: {url}',
+        'Si el correo existe en nuestro sistema, recibirás instrucciones de restablecimiento en breve.': 'If the email exists in our system, you will receive password reset instructions shortly.',
+        'El enlace de restablecimiento es inválido o expiró. Solicita uno nuevo.': 'Invalid or expired password reset link. Request a new one.',
+        'Define una nueva contraseña': 'Set a new password',
+        'Tu contraseña fue restablecida correctamente. Inicia sesión.': 'Your password has been reset successfully. Please sign in.',
+        'Usuario o contraseña inválidos': 'Invalid username or password',
+        'Ticket creado correctamente': 'Ticket created successfully',
+        'No tienes acceso a este ticket': 'You do not have access to this ticket',
+        'Ticket actualizado': 'Ticket updated',
+        'Se requiere acceso de administrador': 'Administrator access required',
+        'Se requiere acceso de técnico o administrador': 'Technician or admin access required',
+        'Usuario creado': 'User created',
+        'Usuario actualizado': 'User updated',
+        'Se requiere pandas para exportar a Excel': 'pandas required for excel export',
+        'Opciones de ticket': 'Ticket options',
+        'Restaurar opciones recomendadas': 'Restore recommended options',
+        'Opciones recomendadas restauradas: {count}': 'Recommended options restored: {count}',
+        'Las opciones de ticket ya están actualizadas': 'Ticket options are already up to date',
+        'Gestionar opciones de ticket': 'Manage ticket options',
+        'Categorías': 'Categories',
+        'Prioridades': 'Priorities',
+        'Eliminar': 'Delete',
+        'Eliminar usuario': 'Delete User',
+        'Eliminar permanentemente': 'Delete Permanently',
+        '¿Estás seguro de que deseas eliminar permanentemente al usuario': 'Are you sure you want to permanently delete user',
+        'Esta acción no se puede deshacer.': 'This action cannot be undone.',
+        'Los registros existentes se reasignarán al administrador': 'Existing records will be reassigned to administrator',
+        'Esta acción no se puede deshacer. Los usuarios con registros existentes deben desactivarse en su lugar.': 'This action cannot be undone. Users with existing records must be deactivated instead.',
+        'No puedes eliminar tu propia cuenta.': 'You cannot delete your own account.',
+        'No se puede eliminar la última cuenta de administrador.': 'Cannot delete the last administrator account.',
+        'El usuario "{username}" tiene registros asociados y no puede eliminarse. Desactiva la cuenta en su lugar.': 'User "{username}" has associated records and cannot be deleted. Deactivate the account instead.',
+        'El usuario "{username}" ha sido eliminado permanentemente.': 'User "{username}" has been permanently deleted.',
+        'Error al eliminar usuario. Por favor intenta de nuevo.': 'Error deleting user. Please try again.',
+        'Tipo': 'Type',
+        'Valor': 'Value',
+        'Agregar': 'Add',
+        'No hay categorías configuradas': 'No categories configured',
+        'No hay prioridades configuradas': 'No priorities configured',
+        'Opción agregada': 'Option added',
+        'Opción eliminada': 'Option removed',
+        'Opción actualizada': 'Option updated',
+        'La opción ya existe': 'Option already exists',
+        'La opción ya existía y fue reactivada': 'Option already existed and was reactivated',
+        'El valor es obligatorio': 'Value is required',
+        'Actualizar': 'Update',
+        'Acción': 'Action',
+        'Vencimiento SLA': 'SLA Due',
+        'Vencido': 'Overdue',
+        'En tiempo': 'On time',
+        'No se encontraron tickets': 'No tickets found',
+        'Comentarios': 'Comments',
+        'Reabierto': 'Reopened',
+        'vez/veces': 'time(s)',
+        'Adjuntos': 'Attachments',
+        'Descargar': 'Download',
+        'Sin adjuntos': 'No attachments',
+        'Usuario': 'User',
+        'Aún no hay comentarios': 'No comments yet',
+        'Error': 'Error',
+        'Ocurrió un error inesperado al procesar la solicitud': 'An unexpected error occurred',
+        'Intenta nuevamente. Si el problema continúa, avisa al administrador.': 'Try again. If the problem persists, notify the administrator.',
+        'Volver a tickets': 'Back to tickets',
+        'SLA vencidos': 'Overdue SLA',
+        'Promedio resolución (h)': 'Avg resolution (h)',
+        'Tickets reabiertos': 'Reopened tickets',
+        'Adjunto': 'Attachment',
+        'Comentario': 'Comment',
+        'Agregar comentario': 'Add comment',
+        'Repetir contraseña': 'Repeat Password',
+        'Actualizar ticket': 'Update Ticket',
+        'Nuevo ticket creado': 'New ticket created',
+        'Ver detalles': 'View Details',
+        'Tomar ticket': 'Take ticket',
+        'Liberar ticket': 'Release ticket',
+        '¿Necesitas devolver este ticket a la cola?': 'Need to return this ticket to the queue?',
+        'Al liberarlo se quitará el técnico asignado y el ticket volverá a abierto.': 'Releasing it will remove the assigned technician and set the ticket back to open.',
+        'Ticket liberado por {username} y devuelto a la cola sin asignar': 'Ticket released by {username} and returned to the unassigned queue',
+        'El ticket #{id} fue liberado correctamente': 'Ticket #{id} was released successfully',
+        'Este ticket ya está sin asignar': 'This ticket is already unassigned',
+        'Solo puedes liberar tickets asignados a ti': 'You can only release tickets assigned to you',
+        'Solo los administradores pueden asignar o reasignar técnicos': 'Only administrators can assign or reassign technicians',
+        'Política de asignación de tickets': 'Ticket assignment policy',
+        'Permitir que los técnicos asignen o reasignen tickets': 'Allow technicians to assign or reassign tickets',
+        'Reasignación por técnicos habilitada': 'Technician reassignment enabled',
+        'Guardar política': 'Save policy',
+        'Los técnicos ahora pueden reasignar tickets': 'Technicians can now reassign tickets',
+        'Solo los administradores pueden reasignar tickets': 'Only administrators can reassign tickets',
+        'Los tickets cerrados no se pueden liberar': 'Closed tickets cannot be released',
+        'Este ticket está esperando un técnico': 'This ticket is waiting for a technician',
+        'Puedes tomar este ticket y empezar a trabajarlo de inmediato.': 'You can take ownership of this ticket and start working on it immediately.',
+        'Ticket tomado por el técnico {username}': 'Ticket taken by technician {username}',
+        'Has tomado el ticket #{id} correctamente': 'You have taken ticket #{id} successfully',
+        'Este ticket ya está asignado a otro técnico': 'This ticket is already assigned to another technician',
+        'Este ticket ya está asignado a ti': 'This ticket is already assigned to you',
+        'Los tickets cerrados no se pueden tomar': 'Closed tickets cannot be taken',
+        'Tu ticket fue actualizado': 'Your ticket was updated',
+        'El ticket "{title}" fue creado por {username}.': 'Ticket "{title}" has been created by {username}.',
+        'El estado de tu ticket "{title}" ahora es {status}.': 'Your ticket "{title}" status is now {status}.',
+        'Bienvenido al sistema de soporte': 'Welcome to the support system',
+        'Use la navegación para entrar o crear tickets.': 'Use navigation to sign in or create tickets.',
+        'Ver Tickets': 'View Tickets',
+        'Características Principales': 'Key Features',
+        'Todo lo que necesitas para una gestión eficiente del soporte': 'Everything you need for efficient support management',
+        'Fácil de Usar': 'Easy to Use',
+        'Interfaz intuitiva diseñada para una gestión y seguimiento perfecto de tickets': 'Intuitive interface designed for seamless ticket management and tracking',
+        'Seguimiento de SLA': 'SLA Tracking',
+        'Monitorea tiempos de respuesta y SLAs de resolución de tickets con alertas en tiempo real': 'Monitor response times and resolution SLAs for tickets with real-time alerts',
+        'Colaborar': 'Collaborate',
+        'Agrega comentarios y adjuntos a los tickets para la colaboración del equipo': 'Add comments and attachments to tickets for team collaboration',
+        'Ve analíticas y KPIs en todos los tickets y métricas de soporte': 'View analytics and KPIs across all tickets and support metrics',
+        'Asistente de soporte con IA': 'AI Support Assistant',
+        'Asistente flotante con IA para resolver incidencias técnicas y guiar a los usuarios con pasos accionables.': 'Floating assistant with AI to help resolve technical issues and guide users with actionable steps.',
+        'Creación guiada de tickets': 'Guided Ticket Creation',
+        'Convierte conversaciones en tickets prellenados con contexto, sugerencias de categoría y triaje más rápido.': 'Turn conversations into prefilled tickets with context, category suggestions, and faster triage.',
+        'Clasificación automática': 'Automatic Classification',
+        'Detecta categorías como VPN, impresoras, correo, cuentas y software para enrutar solicitudes correctamente.': 'Detects categories like VPN, printers, email, accounts, and software to route requests correctly.',
+        'Panel operativo': 'Operational Dashboard',
+        'Monitorea SLAs, estados de tickets y desempeño del soporte con visibilidad operativa en tiempo real.': 'Track SLAs, ticket states, and support performance with real-time operational visibility.',
+        '¿Listo para comenzar?': 'Ready to get started?',
+        'Únete al sistema de soporte y gestiona tickets de manera eficiente': 'Join the support system and manage tickets efficiently',
+        'Ir a Tickets': 'Go to Tickets',
+        'Entrar Ahora': 'Sign In Now',
+        'Personalizar tabla': 'Customize table',
+        'Restablecer diseño de tabla': 'Reset table layout',
+        'Arrastra y suelta los encabezados para reordenar. Activa o desactiva columnas abajo.': 'Drag and drop column headers to reorder. Enable or disable columns below.',
+        'Información Básica': 'Basic Information',
+        'Opciones': 'Options',
+        'Línea de tiempo': 'Timeline',
+        'Primera respuesta': 'First response',
+        'El equipo de soporte comenzó a trabajar en el ticket': 'Support team started working on the ticket',
+        'Resuelto': 'Resolved',
+        'Ticket marcado como cerrado': 'Ticket marked as closed',
+        'Ticket creado por {name}': 'Ticket created by {name}',
+        'Aún no hay eventos en la línea de tiempo': 'No timeline data available yet',
+        '¿Necesitas más ayuda?': 'Need more help?',
+        'Puedes reabrir este ticket con un motivo para que el equipo continúe el soporte.': 'You can reopen this ticket with a reason so the team can continue support.',
+        'Reabrir ticket': 'Reopen ticket',
+        'Solo se pueden reabrir tickets cerrados': 'Only closed tickets can be reopened',
+        'Por favor ingresa un motivo breve para reabrir el ticket': 'Please provide a short reason to reopen the ticket',
+        'Motivo de reapertura: {reason}': 'Reopen reason: {reason}',
+        'Ticket reabierto correctamente': 'Ticket reopened successfully',
+        'Notificación de ticket reabierto': 'Ticket reopened notification',
+        'El ticket #{id} fue reabierto por {user}. Motivo: {reason}': 'Ticket #{id} was reopened by {user}. Reason: {reason}',
+        'Reapertura disponible hasta': 'Reopen available until',
+        'Período de reapertura vencido': 'Reopen period expired',
+        'Ventana de reapertura vencida. Los tickets cerrados solo pueden reabrirse dentro de 7 días.': 'Reopen window expired. Closed tickets can only be reopened within 7 days.',
+        'Escribe CERRAR para confirmar el cierre de este ticket': 'Type CERRAR to confirm closing this ticket',
+        'La acción de cierre del ticket fue cancelada': 'Ticket close action was cancelled',
+        '¿Revocar este token API?': 'Revoke this API token?',
+        'Escribe REVOCAR para confirmar la revocación del token': 'Type REVOCAR to confirm token revocation',
+        'Este ticket fue reabierto {count} vez/veces': 'This ticket was reopened {count} time(s)',
+        'Respuesta rápida: Acuse recibido': 'Quick reply: Acknowledged',
+        'Respuesta rápida: Solicitar evidencia': 'Quick reply: Ask for evidence',
+        'Respuesta rápida: Resolución': 'Quick reply: Resolution',
+        'Hola, estamos revisando tu caso y te actualizaremos en breve.': 'Hello, we are reviewing your case and will update you shortly.',
+        'Por favor comparte una captura o el mensaje de error exacto para continuar.': 'Please share a screenshot or exact error message so we can continue.',
+        'Incidente resuelto. Por favor confirma si todo funciona correctamente de tu lado.': 'Issue resolved. Please confirm if everything is working correctly on your side.',
+        'Soluciones sugeridas desde la Base de Conocimiento': 'Suggested solutions from Knowledge Base',
+        'Este campo se completa automáticamente con el nombre de tu cuenta': 'This field is automatically filled with your account name',
+        'Escribe al menos 3 caracteres en la descripción': 'Type at least 3 characters in description',
+        'Comienza a escribir tu problema para ver posibles soluciones': 'Start typing your issue to see possible solutions',
+        'No se encontraron artículos relacionados': 'No related articles found',
+        'No se pudieron cargar sugerencias en este momento': 'Could not load suggestions right now',
+        'Adjuntos': 'Attachments',
+        'Formatos aceptados': 'Accepted formats',
+        'Cancelar': 'Cancel',
+        'Detalles': 'Details',
+        'Información de SLA': 'SLA Information',
+        'Vencimiento SLA': 'SLA Due',
+        'Acciones Rápidas': 'Quick Actions',
+        'Por categoría': 'By category',
+        'Centro de Operaciones': 'Operations Hub',
+        'Accesos directos interactivos para operaciones diarias': 'Interactive shortcuts for daily operations',
+        'Ir a': 'Jump to',
+        'Selecciona una acción': 'Select an action',
+        'Cola de tickets': 'Ticket Queue',
+        'Revisa todos los tickets activos': 'Review all active tickets',
+        'Sigue las conversaciones en vivo': 'Follow live conversations',
+        'Consulta los usuarios conectados ahora': 'See connected users now',
+        'Revisa y aprueba contenido': 'Review and approve content',
+        'Abre el resumen gerencial': 'Open the management summary',
+        'Resumen operativo': 'Operational Snapshot',
+        'Carga actual de tickets y estado de ejecución': 'Current ticket workload and execution status',
+        'Productividad y riesgo': 'Productivity and Risk',
+        'Velocidad de resolución, tickets reabiertos e incumplimientos de SLA': 'Resolution speed, reopened tickets and SLA breaches',
+        'Calidad del servicio': 'Service Quality',
+        'Indicadores de cumplimiento de SLA y satisfacción del usuario': 'SLA compliance and user satisfaction indicators',
+        'Administrar usuarios': 'Manage users',
+        'Administrar opciones de ticket': 'Manage ticket options',
+        'Tu nombre': 'Your name',
+        'Título del ticket': 'Ticket title',
+        'Describe el problema en detalle': 'Describe the issue in detail',
+        'Agregar un comentario...': 'Add a comment...',
+        'AI System': 'AI System',
+        'Sentiment Analysis': 'Sentiment Analysis',
+        'Auto-Response Chatbot': 'Auto-Response Chatbot',
+        'Sentiment': 'Sentiment',
+        'Very Negative': 'Very Negative',
+        'Negative': 'Negative',
+        'Neutral': 'Neutral',
+        'Positive': 'Positive',
+        'Very Positive': 'Very Positive',
+        'Urgency': 'Urgency',
+        'High': 'High',
+        'Medium': 'Medium',
+        'Low': 'Low',
+        'AI Response': 'AI Response',
+        'Provided by AI': 'Provided by AI',
+        'Mark as helpful': 'Mark as helpful',
+        'This was helpful': 'This was helpful',
+        'I need more help': 'I need more help',
+        'Enable AI': 'Enable AI',
+        'Disable AI': 'Disable AI',
+        'AI System Settings': 'Configuración del sistema de IA',
+        'Enable sentiment analysis': 'Habilitar análisis de sentimiento',
+        'Enable auto-response chatbot': 'Habilitar chatbot de respuesta automática',
+        'Auto-response confidence threshold': 'Umbral de confianza para respuesta automática',
+        'Minimum confidence (0-1) to send automatic response': 'Confianza mínima (0-1) para enviar respuesta automática',
+        'Detected sentiment: {sentiment}': 'Sentimiento detectado: {sentiment}',
+        'Urgency level: {urgency}': 'Nivel de urgencia: {urgency}',
+        'Configuración': 'Settings',
+        'Gestión de Usuarios': 'Users Management',
+        'Opciones de Ticket': 'Ticket Options',
+        'Sistema de ML': 'ML System',
+        'Sistema de IA': 'AI System',
+        'Centro de Configuración': 'Centro de configuración',
+        'System Settings': 'Configuración del sistema',
+        'Manage all system configurations in one place': 'Administra toda la configuración del sistema en un solo lugar',
+        'Create, edit, and manage system users and their roles': 'Create, edit, and manage system users and their roles',
+        'Active': 'Active',
+        'Inactive': 'Inactive',
+        'No users found. Create the first user to get started.': 'No se encontraron usuarios. Crea el primero para comenzar.',
+        'Configure categories and priority levels for tickets': 'Configura categorías y niveles de prioridad para los tickets',
+        'Add New Option': 'Agregar nueva opción',
+        'You need at least 10 closed tickets to train the model.': 'Necesitas al menos 10 tickets cerrados para entrenar el modelo.',
+        'Unknown': 'Desconocido',
+        'ML System Not Available': 'Sistema de ML no disponible',
+        'Please install ML dependencies': 'Instala las dependencias de ML',
+        'An error occurred loading the ML system': 'Ocurrió un error al cargar el sistema de ML',
+        'Considers category and priority:': 'Considera categoría y prioridad:',
+        'Uses the selected category and priority level.': 'Usa la categoría y el nivel de prioridad seleccionados.',
+        'Evaluates technician expertise:': 'Evalúa la experiencia del técnico:',
+        'Reviews past performance, resolution time, and specialization.': 'Revisa rendimiento previo, tiempo de resolución y especialización.',
+        'Suggests the best technician:': 'Sugiere el mejor técnico:',
+        'Recommends the most suitable technician with a confidence score.': 'Recomienda el técnico más adecuado con un puntaje de confianza.',
+        'Auto-assigns high-confidence tickets:': 'Autoasigna tickets con alta confianza:',
+        'If confidence > 70%, automatically assigns the ticket.': 'Si la confianza es mayor al 70%, asigna el ticket automáticamente.',
+        'Technician Performance Statistics': 'Estadísticas de rendimiento de técnicos',
+        'Avg. Resolution Time': 'Tiempo promedio de resolución',
+        'Avg. Satisfaction': 'Satisfacción promedio',
+        'Top Category': 'Categoría principal',
+        'hours': 'horas',
+        'No statistics available yet. Statistics are calculated when the model is trained.': 'Aún no hay estadísticas disponibles. Se calculan al entrenar el modelo.',
+        'Automatically detects customer sentiment and urgency level': 'Detecta automáticamente el sentimiento del cliente y el nivel de urgencia',
+        'Provides automatic responses to common questions and issues': 'Proporciona respuestas automáticas a preguntas e incidencias comunes',
+        'Customer is very angry or frustrated': 'El cliente está muy molesto o frustrado',
+        'Customer is frustrated': 'El cliente está frustrado',
+        'Customer is neutral or factual': 'El cliente está neutral o describe hechos',
+        'Customer is satisfied or friendly': 'El cliente está satisfecho o se expresa de forma cordial',
+        'Detection Categories:': 'Categorías de detección:',
+        'Supported Categories:': 'Categorías compatibles:',
+        'Benefits:': 'Beneficios:',
+        'Instant answers to common problems': 'Respuestas inmediatas a problemas comunes',
+        'Reduces ticket queue by handling FAQs': 'Reduce la cola de tickets al resolver preguntas frecuentes',
+        'Improves customer satisfaction': 'Mejora la satisfacción del cliente',
+        'Frees up technicians for complex issues': 'Libera a los técnicos para incidencias complejas',
+        'Responds automatically to common questions from our knowledge base.': 'Responde automáticamente preguntas comunes desde la base de conocimiento.',
+        'Analyzes ticket content to detect customer sentiment and urgency levels.': 'Analiza el contenido del ticket para detectar sentimiento y niveles de urgencia.',
+        'API tokens allow external applications to create tickets programmatically.': 'Los tokens de API permiten que aplicaciones externas creen tickets de forma programática.',
+        'Configure webhooks for Slack, Microsoft Teams, and other platforms.': 'Configura webhooks para Slack, Microsoft Teams y otras plataformas.',
+        'No API tokens yet. Create one to get started.': 'Aún no hay tokens de API. Crea uno para comenzar.',
+        'Example: Slack Integration, Teams Bot, etc.': 'Ejemplo: integración con Slack, bot de Teams, etc.',
+        'No integrations configured yet.': 'Aún no hay integraciones configuradas.',
+        'Save Settings': 'Guardar configuración',
+        'Analyzes the title and description using NLP (Natural Language Processing).': 'Analiza el título y la descripción usando NLP (procesamiento de lenguaje natural).',
+        'Other': 'Other',
+        'Integration name': 'Integration name',
+        'Manage all system configurations and settings in one place': 'Administra toda la configuración y ajustes del sistema en un solo lugar',
+        'My Tickets': 'Mis tickets',
+        'Change Password': 'Cambiar contraseña',
+        'Feature coming soon': 'Función disponible próximamente',
+        'Who We Are': 'Quiénes somos',
+        'We are a team focused on delivering agile, reliable corporate technical support with clear processes and people-centered service.': 'Somos un equipo enfocado en brindar soporte técnico corporativo ágil y confiable, con procesos claros y atención centrada en las personas.',
+        'Our Identity': 'Nuestra identidad',
+        'We combine technology, methodology, and service to keep your company operating without interruptions.': 'Combinamos tecnología, metodología y servicio para mantener a tu empresa operando sin interrupciones.',
+        'Mission': 'Misión',
+        'Resolve incidents and requests with speed, quality, and traceability, ensuring operational continuity for every business area.': 'Resolver incidentes y solicitudes con rapidez, calidad y trazabilidad, asegurando continuidad operativa para cada área del negocio.',
+        'Vision': 'Visión',
+        'Be a benchmark help desk in efficiency and user experience, driving decisions through metrics and continuous improvement.': 'Ser una mesa de ayuda referente en eficiencia y experiencia de usuario, impulsando decisiones mediante métricas y mejora continua.',
+        'Values': 'Valores',
+        'Commitment, transparency, collaboration, and customer focus in every interaction, from ticket creation to closure.': 'Compromiso, transparencia, colaboración y enfoque en el cliente en cada interacción, desde la creación del ticket hasta su cierre.',
+        'Ready to support you': 'Listos para apoyarte',
+        'Our goal is for every team to work without interruptions, with professional and approachable technical support.': 'Nuestro objetivo es que cada equipo trabaje sin interrupciones, con soporte técnico profesional y cercano.',
+        'Create ticket now': 'Crear ticket ahora',
+        'Sign in to the system': 'Entrar al sistema',
+        'Terms and Conditions': 'Términos y condiciones',
+        'Please read these terms carefully before using the support system.': 'Lee estos términos cuidadosamente antes de usar el sistema de soporte.',
+        'Acceptance of Terms': 'Aceptación de términos',
+        'By accessing this platform, you agree to comply with these terms and all applicable policies.': 'Al acceder a esta plataforma, aceptas cumplir estos términos y todas las políticas aplicables.',
+        'Service Scope': 'Alcance del servicio',
+        'This system is intended for management of technical support tickets and related communication between users, technicians, and administrators.': 'Este sistema está destinado a la gestión de tickets de soporte técnico y la comunicación relacionada entre usuarios, técnicos y administradores.',
+        'User Responsibilities': 'Responsabilidades del usuario',
+        'Provide truthful information in tickets and avoid abusive, illegal, or malicious content.': 'Proporciona información veraz en los tickets y evita contenido abusivo, ilegal o malicioso.',
+        'Confidentiality and Data': 'Confidencialidad y datos',
+        'Information managed in tickets may include internal operational data and must be treated as confidential.': 'La información gestionada en los tickets puede incluir datos operativos internos y debe tratarse como confidencial.',
+        'Password and Access Security': 'Seguridad de contraseñas y accesos',
+        'Each user is responsible for safeguarding their credentials and promptly reporting unauthorized access.': 'Cada usuario es responsable de resguardar sus credenciales y reportar de inmediato cualquier acceso no autorizado.',
+        'Availability and Changes': 'Disponibilidad y cambios',
+        'The service may be updated, suspended, or modified to improve security and performance.': 'El servicio puede actualizarse, suspenderse o modificarse para mejorar seguridad y rendimiento.',
+        'Contact': 'Contacto',
+        'For questions about these terms, contact the system administrator.': 'Para consultas sobre estos términos, contacta al administrador del sistema.',
+        'Last updated': 'Última actualización',
+        'Control Panel': 'Panel de control',
+        'Operations Center': 'Centro de operaciones',
+        'Monitor operational flow, inspect service health and move between critical admin actions from a unified workspace.': 'Monitorea el flujo operativo, revisa el estado del servicio y navega entre acciones administrativas críticas desde un espacio unificado.',
+        'Operations Hub': 'Centro de operaciones',
+        'Interactive shortcuts for daily operations': 'Accesos directos interactivos para la operación diaria',
+        'Jump to': 'Ir a',
+        'Select an action': 'Selecciona una acción',
+        'View tickets': 'Ver tickets',
+        'Open tickets': 'Tickets abiertos',
+        'In Progress': 'En proceso',
+        'Chat Monitoring': 'Monitoreo de chat',
+        'Online Users': 'Usuarios en línea',
+        'Ticket Queue': 'Cola de tickets',
+        'Review all active tickets': 'Revisar todos los tickets activos',
+        'Follow live conversations': 'Seguir conversaciones en vivo',
+        'See connected users now': 'Ver usuarios conectados ahora',
+        'Review and approve content': 'Revisar y aprobar contenido',
+        'Register and manage companies': 'Registrar y gestionar empresas',
+        'Open the management summary': 'Abrir el resumen gerencial',
+        'Operational Snapshot': 'Resumen operativo',
+        'Current ticket workload and execution status': 'Carga actual de tickets y estado de ejecución',
+        # --- Módulo de tickets ---
+        'New Ticket': 'Nuevo ticket',
+        'Create Ticket': 'Crear ticket',
+        'Create a new ticket': 'Crear un nuevo ticket',
+        'Support Workflow': 'Flujo de soporte',
+        'Describe the issue clearly and the platform will route it with the same polished experience used across the refreshed interface.': 'Describe el problema con claridad y la plataforma lo gestionará con la misma experiencia ágil del sistema.',
+        'Basic Information': 'Información básica',
+        'Options': 'Opciones',
+        'Attachments': 'Adjuntos',
+        'Accepted formats': 'Formatos aceptados',
+        'Your name': 'Tu nombre',
+        'Ticket title': 'Título del ticket',
+        'Describe the issue in detail': 'Describe el problema en detalle',
+        # --- Lista de tickets ---
+        'Track requests, filter operational load and move through the queue with the same visual system used across the renewed product.': 'Gestiona solicitudes, filtra la carga operativa y navega la cola con el mismo sistema visual del producto.',
+        'Active tickets': 'Tickets activos',
+        'History': 'Historial',
+        'All tickets': 'Todos los tickets',
+        'All statuses': 'Todos los estados',
+        'All categories': 'Todas las categorías',
+        'All priorities': 'Todas las prioridades',
+        'From': 'Desde',
+        'To': 'Hasta',
+        'Search...': 'Buscar...',
+        'Filter': 'Filtrar',
+        'Export': 'Exportar',
+        'Export CSV': 'Exportar CSV',
+        'Export XLSX': 'Exportar XLSX',
+        # --- Detalle de ticket ---
+        'View Details': 'Ver detalles',
+        'Live': 'En vivo',
+        'Prediction accuracy:': 'Precisión del modelo:',
+        'Retrain Model': 'Reentrenar modelo',
+        'Model not trained yet': 'Modelo no entrenado aún',
+        # ============================================================
+        # MENSAJES FLASH — autenticación
+        # ============================================================
+        'Account is locked due to multiple failed login attempts. Try again later.': 'Cuenta bloqueada por múltiples intentos fallidos. Intenta más tarde.',
+        'Account locked. Too many failed attempts.': 'Cuenta bloqueada. Demasiados intentos fallidos.',
+        'Invalid username or password': 'Usuario o contraseña incorrectos',
+        'Please change the default admin password before continuing': 'Cambia la contraseña de administrador por defecto antes de continuar',
+        'Welcome back, {username}!': '¡Bienvenido de nuevo, {username}!',
+        'If the email exists in our system, you will receive password reset instructions shortly.': 'Si el correo existe en nuestro sistema, recibirás instrucciones para restablecer tu contraseña en breve.',
+        'Invalid or expired password reset link. Request a new one.': 'El enlace de restablecimiento es inválido o ha expirado. Solicita uno nuevo.',
+        'Password does not meet security requirements: ': 'La contraseña no cumple los requisitos de seguridad: ',
+        'This password was recently used. Please choose a different one.': 'Esta contraseña fue usada recientemente. Por favor elige una diferente.',
+        'New password must be different from current password': 'La nueva contraseña debe ser diferente a la actual',
+        'Your password has been reset successfully. Please sign in.': 'Tu contraseña fue restablecida correctamente. Por favor inicia sesión.',
+        'Password updated successfully': 'Contraseña actualizada correctamente',
+        'Current password is incorrect': 'La contraseña actual es incorrecta',
+        'Password changed successfully': 'Contraseña cambiada correctamente',
+        'Login successful': 'Inicio de sesión exitoso',
+        'Invalid backup code': 'Código de respaldo inválido',
+        'Invalid 2FA code': 'Código 2FA inválido',
+        'You have been logged out successfully': 'Has cerrado sesión correctamente',
+        # ============================================================
+        # MENSAJES FLASH — administración de empresas
+        # ============================================================
+        'Company created successfully': 'Empresa creada correctamente',
+        'Company name already exists': 'El nombre de empresa ya existe',
+        'Error creating company. Please try again.': 'Error al crear la empresa. Por favor inténtalo de nuevo.',
+        'Company updated successfully': 'Empresa actualizada correctamente',
+        'Error updating company. Please try again.': 'Error al actualizar la empresa. Por favor inténtalo de nuevo.',
+        # ============================================================
+        # MENSAJES FLASH — permisos y acceso
+        # ============================================================
+        'Administrator access required': 'Se requiere acceso de administrador',
+        'Technician or admin access required': 'Se requiere acceso de técnico o administrador',
+        'An unexpected error occurred': 'Ocurrió un error inesperado',
+        # ============================================================
+        # MENSAJES FLASH — administración de usuarios
+        # ============================================================
+        'Username or email already exists': 'El usuario o correo ya existe',
+        'Error creating user. Please try again.': 'Error al crear el usuario. Por favor inténtalo de nuevo.',
+        'User created successfully': 'Usuario creado correctamente',
+        'User "{username}" updated - Role: {role}, Status: {status}': 'Usuario "{username}" actualizado — Rol: {role}, Estado: {status}',
+        'Password for user "{username}" was reset successfully': 'Contraseña del usuario "{username}" restablecida correctamente',
+        'Error resetting password. Please try again.': 'Error al restablecer la contraseña. Por favor inténtalo de nuevo.',
+        'You cannot delete your own account.': 'No puedes eliminar tu propia cuenta.',
+        'Cannot delete the last administrator account.': 'No se puede eliminar la última cuenta de administrador.',
+        'User "{username}" has been permanently deleted.': 'El usuario "{username}" fue eliminado permanentemente.',
+        'Error deleting user. Please try again.': 'Error al eliminar el usuario. Por favor inténtalo de nuevo.',
+        # ============================================================
+        # MENSAJES FLASH — opciones de tickets
+        # ============================================================
+        'Recommended options restored: {count}': 'Opciones recomendadas restauradas: {count}',
+        'Ticket options are already up to date': 'Las opciones de tickets ya están actualizadas',
+        'Option already existed and was reactivated': 'La opción ya existía y fue reactivada',
+        'Option "{value}" added to {type}': 'Opción "{value}" añadida a {type}',
+        'Option "{value}" removed': 'Opción "{value}" eliminada',
+        'Value is required': 'El valor es requerido',
+        'Option already exists': 'La opción ya existe',
+        'Option updated to "{value}"': 'Opción actualizada a "{value}"',
+        'Option added': 'Opción añadida',
+        'Error adding option: {error}': 'Error al añadir la opción: {error}',
+        # ============================================================
+        # MENSAJES FLASH — ML / IA
+        # ============================================================
+        'Machine Learning dependencies not installed. Please run: pip install scikit-learn numpy': 'Dependencias de Machine Learning no instaladas. Ejecuta: pip install scikit-learn numpy',
+        'An error occurred loading the ML system': 'Ocurrió un error al cargar el sistema ML',
+        'ML model trained successfully! Accuracy: {accuracy:.1%}': '¡Modelo ML entrenado correctamente! Precisión: {accuracy:.1%}',
+        'Error training model: {error}': 'Error al entrenar el modelo: {error}',
+        'Technicians can now reassign tickets': 'Los técnicos ahora pueden reasignar tickets',
+        'Only administrators can reassign tickets': 'Solo los administradores pueden reasignar tickets',
+        # ============================================================
+        # MENSAJES FLASH — tokens API e integraciones
+        # ============================================================
+        'Token name is required': 'El nombre del token es requerido',
+        "API token created successfully. Save it now, it won't be shown again: {token}": 'Token API creado correctamente. Guárdalo ahora, no se mostrará de nuevo: {token}',
+        'API token revoked': 'Token API revocado',
+        'Platform and name are required': 'La plataforma y el nombre son requeridos',
+        'Integration created successfully': 'Integración creada correctamente',
+        'Integration {status}': 'Integración {status}',
+        'Integration deleted': 'Integración eliminada',
+        'AI System Settings updated': 'Configuración del sistema IA actualizada',
+        'Error loading chat monitoring': 'Error al cargar el monitoreo de chat',
+        # ============================================================
+        # MENSAJES FLASH — Office 365 / configuración
+        # ============================================================
+        'Office 365 email intake settings saved': 'Configuración de recepción de correo Office 365 guardada',
+        # ============================================================
+        # MENSAJES FLASH — base de conocimiento (KB)
+        # ============================================================
+        'Ticket must be closed before creating a KB article': 'El ticket debe estar cerrado antes de crear un artículo de KB',
+        'Title and content are required': 'El título y el contenido son requeridos',
+        'Article created successfully': 'Artículo creado correctamente',
+        'Article submitted for admin approval': 'Artículo enviado para aprobación del administrador',
+        'You can only edit your own pending KB proposals': 'Solo puedes editar tus propias propuestas de KB pendientes',
+        'Article updated successfully': 'Artículo actualizado correctamente',
+        'Article removed from knowledge base': 'Artículo eliminado de la base de conocimiento',
+        'Article approved and published': 'Artículo aprobado y publicado',
+        'Please provide a rejection reason': 'Por favor proporciona un motivo de rechazo',
+        'Article rejected with feedback': 'Artículo rechazado con comentarios',
+        # ============================================================
+        # MENSAJES FLASH — tickets (operaciones)
+        # ============================================================
+        'Some historical ticket records could not be rendered and were skipped.': 'Algunos registros históricos de tickets no pudieron mostrarse y fueron omitidos.',
+        'There was a problem loading the ticket list. Review historical records or contact admin.': 'Hubo un problema al cargar la lista de tickets. Revisa los registros históricos o contacta al administrador.',
+        'Ticket created successfully': 'Ticket creado correctamente',
+        'This option is only for normal users': 'Esta opción es solo para usuarios normales',
+        'Password reset ticket created successfully': 'Ticket de restablecimiento de contraseña creado correctamente',
+        'You do not have access to this ticket': 'No tienes acceso a este ticket',
+        'Only the requester, assigned technician, or admin can chat on this ticket': 'Solo el solicitante, el técnico asignado o un administrador puede chatear en este ticket',
+        'Comment added': 'Comentario añadido',
+        'Ticket updated': 'Ticket actualizado',
+        'Ticket #{id} updated successfully - Status: {status}': 'Ticket #{id} actualizado correctamente — Estado: {status}',
+        'Only administrators can assign or reassign technicians': 'Solo los administradores pueden asignar o reasignar técnicos',
+        'Closed tickets cannot be taken': 'Los tickets cerrados no pueden tomarse',
+        'This ticket is already assigned to another technician': 'Este ticket ya está asignado a otro técnico',
+        'This ticket is already assigned to you': 'Este ticket ya está asignado a ti',
+        'You have taken ticket #{id} successfully': 'Tomaste el ticket #{id} correctamente',
+        'Closed tickets cannot be released': 'Los tickets cerrados no pueden liberarse',
+        'This ticket is already unassigned': 'Este ticket ya está sin asignar',
+        'You can only release tickets assigned to you': 'Solo puedes liberar tickets asignados a ti',
+        'Ticket #{id} was released successfully': 'El ticket #{id} fue liberado correctamente',
+        'Only closed tickets can be reopened': 'Solo los tickets cerrados pueden reabrirse',
+        'Reopen window expired. Closed tickets can only be reopened within 7 days.': 'Ventana de reapertura expirada. Los tickets cerrados solo pueden reabrirse dentro de los 7 días.',
+        'Please provide a short reason to reopen the ticket': 'Por favor proporciona un motivo breve para reabrir el ticket',
+        'Ticket reopened successfully': 'Ticket reabierto correctamente',
+        'You can only rate closed tickets': 'Solo puedes calificar tickets cerrados',
+        'You have already submitted a rating for this ticket': 'Ya enviaste una calificación para este ticket',
+        'Please select a valid rating': 'Por favor selecciona una calificación válida',
+        'Thank you for your feedback!': '¡Gracias por tu comentario!',
+        'Ticket deletion is disabled by security policy': 'La eliminación de tickets está deshabilitada por política de seguridad',
+        'Your technician certification has expired. Please request recertification.': 'Tu certificación de técnico ha vencido. Solicita recertificación.',
+        'This ticket category is outside your certified specialties.': 'La categoría de este ticket está fuera de tus especialidades certificadas.',
+        # ============================================================
+        # MENSAJES FLASH — solicitudes de técnicos
+        # ============================================================
+        'Technician application submitted successfully. Our team will review your profile.': 'Solicitud de técnico enviada correctamente. Nuestro equipo revisará tu perfil.',
+        'Cannot approve application without a valid company assignment': 'No se puede aprobar la solicitud sin una empresa válida asignada.',
+        'Invalid certification end date format. Use YYYY-MM-DD': 'Formato de fecha de fin de certificación inválido. Usa YYYY-MM-DD.',
+        'Your profile was approved as certified technician. Username: {username}': 'Tu perfil fue aprobado como técnico certificado. Usuario: {username}',
+        'Temporary password: {password}': 'Contraseña temporal: {password}',
+        'Certification valid until: {date}': 'Certificación vigente hasta: {date}',
+        'Certified technician application approved': 'Solicitud de técnico certificado aprobada',
+        'Technician created, but approval email could not be sent': 'El técnico fue creado, pero no se pudo enviar el correo de aprobación',
+        'Application approved and technician enabled in the ticket system': 'Solicitud aprobada y técnico habilitado en el sistema de tickets.',
+        'Application rejected': 'Solicitud rechazada',
+        'Application status updated': 'Estado de la solicitud actualizado',
+    }
+}
+
+
+def translate(text: str, lang: str = 'es') -> str:
+    return TRANSLATIONS.get(lang, {}).get(text, text)
+
+
+def send_email(subject, recipients, body, html=None):
+    # helper used by views; respect MAIL_SUPPRESS_SEND to avoid real SMTP during tests
+    if current_app.config.get('MAIL_SUPPRESS_SEND'):
+        current_app.logger.debug('send_email suppressed: %s -> %s', subject, recipients)
+    else:
+        msg = Message(subject, recipients=recipients)
+        msg.body = body
+        if html:
+            msg.html = html
+        mail.send(msg)
+
+    # always attempt webhook notification if configured
+    send_webhook(body)
+
+
+def send_webhook(message: str):
+    """Post a simple text message to configured chat webhook (Slack/Teams)."""
+    url = current_app.config.get('CHAT_WEBHOOK_URL')
+    if not url:
+        return
+    try:
+        import requests
+        # Slack/Teams both accept JSON payloads with a 'text' field
+        requests.post(url, json={'text': message})
+    except Exception as e:
+        current_app.logger.error('webhook send failed: %s', e)
+
+
+def _validate_secret_key(app):
+    """Validate SECRET_KEY and enforce stricter rules in production."""
+    secret_key = app.config.get('SECRET_KEY', '')
+    secret_key_invalid = (
+        not secret_key
+        or secret_key == 'you-will-never-guess'
+        or len(secret_key) < 12
+    )
+    if not secret_key_invalid:
+        return
+
+    app_logger = logging.getLogger(__name__)
+
+    # Production must never run with a weak/missing secret.
+    if os.environ.get('RENDER') == 'true':
+        app_logger.critical('CRITICAL SECURITY: SECRET_KEY is weak or missing in production.')
+        app_logger.critical('Set SECRET_KEY in Render Environment (minimum 12 chars).')
+        raise RuntimeError('Missing or weak SECRET_KEY in production environment')
+
+    # Development fallback for local convenience.
+    app_logger.warning('SECRET_KEY is weak or missing in development. Generating temporary key.')
+    app.config['SECRET_KEY'] = os.urandom(32).hex()
+    print('\nWARNING: SECRET_KEY not set in environment. Set it in .env or Render settings:')
+    print('   Minimum 12 characters, recommended 24+')
+    print('   Example: export SECRET_KEY="$(python -c "import secrets; print(secrets.token_hex(6))")"')
+
+
+def create_app(config_class=None):
+    # Load environment variables from .env file
+    load_dotenv()
+
+    app = Flask(__name__)
+    app.config.from_object(config_class or 'config.Config')
+
+    from app.billing import bp as billing_bp
+    app.register_blueprint(billing_bp)
+
+    _validate_secret_key(app)
+
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    mail.init_app(app)
+
+    # Rate limiting storage: prefer Redis in production, fallback to memory for local/dev.
+    rate_limit_storage = (
+        os.environ.get('RATELIMIT_STORAGE_URI')
+        or os.environ.get('REDIS_URL')
+        or 'memory://'
+    )
+    app.config['RATELIMIT_STORAGE_URI'] = rate_limit_storage
+    if rate_limit_storage == 'memory://' and os.environ.get('RENDER') == 'true':
+        app.logger.warning('⚠️  Flask-Limiter using in-memory storage in production. Configure REDIS_URL to harden rate limits.')
+
+    limiter.init_app(app)
+    configured_async_mode = os.environ.get('SOCKETIO_ASYNC_MODE', '').strip().lower()
+    if configured_async_mode:
+        socketio_async_mode = configured_async_mode
+    else:
+        # Default to threading to avoid eventlet deprecation issues in modern Python/Gunicorn.
+        socketio_async_mode = 'threading'
+    socketio_logging_env = os.environ.get('SOCKETIO_LOGGING')
+    if socketio_logging_env is None:
+        # Keep logs quiet by default in Render production; verbose locally for troubleshooting.
+        socketio_logging = os.environ.get('RENDER') != 'true'
+    else:
+        socketio_logging = socketio_logging_env.strip().lower() in ('1', 'true', 'yes', 'on')
+
+    socketio.init_app(
+        app, 
+        cors_allowed_origins='*',  # Allow WebSocket connections from anywhere
+        manage_session=True,  # Allow access to Flask session and current_user
+        async_mode=socketio_async_mode,
+        logger=socketio_logging,
+        engineio_logger=socketio_logging,
+        ping_timeout=60,
+        ping_interval=25
+    )
+    
+    # Configure Talisman with proper CSP for CDN resources
+    csp_policy = {
+        'default-src': "'self'",
+        'script-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+        'style-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
+        'font-src': ["'self'", "cdn.jsdelivr.net", "fonts.gstatic.com"],
+        'img-src': ["'self'", "data:", "cdn.jsdelivr.net"],
+        'connect-src': ["'self'", 'wss:', 'https:'],
+    }
+    # Configure Talisman - disable force_https to allow Render health checks
+    # Render's proxy handles HTTPS termination
+    talisman.init_app(
+        app, 
+        force_https=False,  # Render proxy handles HTTPS
+        content_security_policy=csp_policy,
+        strict_transport_security=True,
+        strict_transport_security_max_age=31536000,
+        strict_transport_security_include_subdomains=True,
+        strict_transport_security_preload=True
+    )
+    
+    # CORS Configuration - Allow only your domain
+    cors_config = {
+        'origins': os.environ.get('CORS_ORIGINS', 'http://localhost:5000').split(','),
+        'allow_headers': ['Content-Type', 'Authorization', 'X-Requested-With'],
+        'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        'supports_credentials': True,
+        'max_age': 3600
+    }
+    cors.init_app(app, resources={r'/api/*': cors_config})
+    
+    # Sentry Monitoring (if configured)
+    sentry_dsn = os.environ.get('SENTRY_DSN')
+    if sentry_dsn:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=0.1,  # 10% of transactions
+            environment=os.environ.get('FLASK_ENV', 'production')
+        )
+        current_app.logger.info('✓ Sentry monitoring initialized')
+
+    # ensure loader registered (in case auth module import didn't run yet)
+    @login.user_loader
+    def load_user(user_id):
+        from app.models import User
+        return db.session.get(User, int(user_id))
+
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.tickets import bp as tickets_bp
+    app.register_blueprint(tickets_bp, url_prefix='/tickets')
+
+    # admin blueprint for user management
+    from app.admin import bp as admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    # API blueprint for external integrations
+    from app.api import bp as api_bp
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
+
+
+    # Importa routes y models para asegurar que los endpoints estén definidos antes de registrar el blueprint
+    from app import routes, models  # noqa: F401
+    from app.routes import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    @app.before_request
+    def ensure_default_language():
+        session.setdefault('lang', 'es')
+
+    # make current year available in templates for footer
+    @app.context_processor
+    def inject_current_year():
+        lang = session.get('lang', 'es')
+
+        def _translate(text):
+            return translate(text, lang)
+
+        return {
+            'current_year': utcnow().year,
+            '_': _translate,
+            'current_lang': lang,
+            'csrf_token': generate_csrf,
+        }
+    
+    # Add custom Jinja2 filters
+    @app.template_filter('from_json')
+    def from_json_filter(value):
+        """Convert JSON string to Python dict"""
+        if not value:
+            return {}
+        try:
+            import json
+            return json.loads(value)
+        except:
+            return {}
+
+    @app.before_request
+    def update_user_activity_and_enforce_password():
+        if current_user.is_authenticated:
+            # Update last_activity timestamp and in-memory online presence.
+            current_user.last_activity = utcnow()
+
+            # Fallback presence tracking in case Socket.IO is unavailable.
+            existing = online_users.get(current_user.id, {})
+            online_users[current_user.id] = {
+                'username': current_user.username,
+                'user_role': current_user.role,
+                'joined_at': existing.get('joined_at', utcnow()),
+                'last_seen': utcnow(),
+            }
+
+            # Cleanup stale users (no activity in last 90 seconds).
+            stale_after = utcnow() - timedelta(seconds=90)
+            stale_ids = [
+                uid for uid, info in online_users.items()
+                if info.get('last_seen', info.get('joined_at', utcnow())) < stale_after
+            ]
+            for uid in stale_ids:
+                online_users.pop(uid, None)
+
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+        
+        if not current_user.is_authenticated:
+            return None
+
+        endpoint = request.endpoint or ''
+        allowed_endpoints = {
+            'auth.force_password_change',
+            'auth.logout',
+            'main.set_language',
+            'static',
+        }
+        if endpoint in allowed_endpoints or endpoint.startswith('static'):
+            return None
+
+        from app.auth import must_change_default_admin_password
+        if must_change_default_admin_password(current_user):
+            return redirect(url_for('auth.force_password_change'))
+
+        return None
+
+    # app logging to file to diagnose production errors without crashing user flow
+    log_dir = app.instance_path
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, 'app.log')
+    file_handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3, encoding='utf-8')
+    file_handler.setLevel(logging.ERROR)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s'))
+    if not any(isinstance(h, RotatingFileHandler) for h in app.logger.handlers):
+        app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.ERROR)
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(error):
+        if isinstance(error, HTTPException) and error.code != 500:
+            return error
+        app.logger.exception('Unhandled exception: %s', error)
+        return render_template('errors/500.html'), 500
+
+    # Bootstrap for first deployment (e.g. fresh Render instance):
+    # create tables if missing and seed default admin user.
+    with app.app_context():
+        try:
+            from app.models import User
+            db.create_all()
+
+            # Add is_active column if it doesn't exist (migration support)
+            inspector = db.inspect(db.engine)
+            user_columns = [col['name'] for col in inspector.get_columns('user')]
+            company_columns = [col['name'] for col in inspector.get_columns('company')]
+
+            if 'is_active' not in company_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE company ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE'))
+                    conn.commit()
+                app.logger.warning('Added is_active column to company table')
+
+            if 'deactivation_reason' not in company_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE company ADD COLUMN deactivation_reason VARCHAR(255)'))
+                    conn.commit()
+                app.logger.warning('Added deactivation_reason column to company table')
+
+            if 'company_id' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to user table')
+
+            if 'is_active' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE'))
+                    conn.commit()
+                app.logger.warning('Added is_active column to user table')
+
+            if 'last_activity' not in user_columns:
+                with db.engine.connect() as conn:
+                    # Use NULL default for SQLite compatibility (CURRENT_TIMESTAMP is non-constant in ALTER TABLE)
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN last_activity TIMESTAMP DEFAULT NULL'))
+                    conn.commit()
+                app.logger.warning('Added last_activity column to user table')
+
+            # Add 2FA and security columns to user table
+            if 'totp_secret' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN totp_secret VARCHAR(32)'))
+                    conn.commit()
+                app.logger.warning('Added totp_secret column to user table')
+
+            if 'totp_enabled' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN totp_enabled BOOLEAN DEFAULT FALSE'))
+                    conn.commit()
+                app.logger.warning('Added totp_enabled column to user table')
+
+            if 'totp_backup_codes' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN totp_backup_codes TEXT'))
+                    conn.commit()
+                app.logger.warning('Added totp_backup_codes column to user table')
+
+            if 'password_changed_at' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN password_changed_at TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added password_changed_at column to user table')
+
+            if 'failed_login_attempts' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN failed_login_attempts INTEGER DEFAULT 0'))
+                    conn.commit()
+                app.logger.warning('Added failed_login_attempts column to user table')
+
+            if 'last_failed_login_at' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN last_failed_login_at TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added last_failed_login_at column to user table')
+
+            if 'locked_until' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN locked_until TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added locked_until column to user table')
+
+            if 'certified_technician' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN certified_technician BOOLEAN DEFAULT TRUE'))
+                    conn.commit()
+                app.logger.warning('Added certified_technician column to user table')
+
+            if 'certified_until' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN certified_until TIMESTAMP'))
+                    conn.commit()
+                app.logger.warning('Added certified_until column to user table')
+
+            if 'technician_specialties' not in user_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN technician_specialties TEXT'))
+                    conn.commit()
+                app.logger.warning('Added technician_specialties column to user table')
+
+            # Add ML-related columns to ticket table
+            ticket_columns = [col['name'] for col in inspector.get_columns('ticket')]
+
+            if 'company_id' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to ticket table')
+            
+            if 'resolution_time_minutes' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN resolution_time_minutes INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added resolution_time_minutes column to ticket table')
+            
+            if 'satisfaction_rating' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN satisfaction_rating INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added satisfaction_rating column to ticket table')
+            
+            if 'ml_suggested_technician_id' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ml_suggested_technician_id INTEGER REFERENCES "user"(id)'))
+                    conn.commit()
+                app.logger.warning('Added ml_suggested_technician_id column to ticket table')
+            
+            if 'ml_confidence_score' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ml_confidence_score REAL'))
+                    conn.commit()
+                app.logger.warning('Added ml_confidence_score column to ticket table')
+            
+            if 'auto_assigned' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN auto_assigned BOOLEAN DEFAULT FALSE'))
+                    conn.commit()
+                app.logger.warning('Added auto_assigned column to ticket table')
+            
+            # Add AI sentiment analysis columns
+            if 'sentiment_label' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN sentiment_label VARCHAR(20)'))
+                    conn.commit()
+                app.logger.warning('Added sentiment_label column to ticket table')
+            
+            if 'sentiment_score' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN sentiment_score REAL'))
+                    conn.commit()
+                app.logger.warning('Added sentiment_score column to ticket table')
+            
+            if 'urgency_level' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN urgency_level VARCHAR(20)'))
+                    conn.commit()
+                app.logger.warning('Added urgency_level column to ticket table')
+            
+            # Add AI chatbot fields
+            if 'ai_response' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response TEXT'))
+                    conn.commit()
+                app.logger.warning('Added ai_response column to ticket table')
+            
+            if 'ai_response_id' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added ai_response_id column to ticket table')
+            
+            if 'ai_response_confidence' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response_confidence REAL'))
+                    conn.commit()
+                app.logger.warning('Added ai_response_confidence column to ticket table')
+            
+            if 'ai_response_accepted' not in ticket_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE ticket ADD COLUMN ai_response_accepted BOOLEAN'))
+                    conn.commit()
+                app.logger.warning('Added ai_response_accepted column to ticket table')
+
+            # Create technician_stats table if it doesn't exist
+            if not inspector.has_table('technician_stats'):
+                from app.models import TechnicianStats
+                TechnicianStats.__table__.create(db.engine)
+                app.logger.warning('Created technician_stats table')
+            
+            # Create api_token table if it doesn't exist
+            if not inspector.has_table('api_token'):
+                from app.models import ApiToken
+                ApiToken.__table__.create(db.engine)
+                app.logger.warning('Created api_token table')
+            
+            # Create integration table if it doesn't exist
+            if not inspector.has_table('integration'):
+                from app.models import Integration
+                Integration.__table__.create(db.engine)
+                app.logger.warning('Created integration table')
+
+            # Create audit_log table if it doesn't exist
+            if not inspector.has_table('audit_log'):
+                from app.models import AuditLog
+                AuditLog.__table__.create(db.engine)
+                app.logger.warning('Created audit_log table')
+
+            # Create password_history table if it doesn't exist
+            if not inspector.has_table('password_history'):
+                from app.models import PasswordHistory
+                PasswordHistory.__table__.create(db.engine)
+                app.logger.warning('Created password_history table')
+
+            inspector = db.inspect(db.engine)
+
+            api_token_columns = [col['name'] for col in inspector.get_columns('api_token')]
+            if 'company_id' not in api_token_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE api_token ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to api_token table')
+
+            integration_columns = [col['name'] for col in inspector.get_columns('integration')]
+            if 'company_id' not in integration_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE integration ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to integration table')
+
+            audit_log_columns = [col['name'] for col in inspector.get_columns('audit_log')]
+            if 'company_id' not in audit_log_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE audit_log ADD COLUMN company_id INTEGER'))
+                    conn.commit()
+                app.logger.warning('Added company_id column to audit_log table')
+
+            from app.models import ApiToken, Integration, AuditLog
+
+            api_tokens_without_company = ApiToken.query.filter(ApiToken.company_id.is_(None)).all()
+            for token in api_tokens_without_company:
+                if token.created_by and token.created_by.company_id:
+                    token.company_id = token.created_by.company_id
+
+            integrations_without_company = Integration.query.filter(Integration.company_id.is_(None)).all()
+            for integration in integrations_without_company:
+                if integration.created_by and integration.created_by.company_id:
+                    integration.company_id = integration.created_by.company_id
+
+            audit_logs_without_company = AuditLog.query.filter(AuditLog.company_id.is_(None)).all()
+            for log in audit_logs_without_company:
+                # Evitar error si log no tiene user
+                if hasattr(log, 'user') and log.user and hasattr(log.user, 'company_id') and log.user.company_id:
+                    log.company_id = log.user.company_id
+
+            db.session.commit()
+
+            default_admin_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
+            default_admin_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
+            default_admin_email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'admin@eie-puj.com')
+
+            existing_admin = User.query.filter_by(username=default_admin_username).first()
+            if existing_admin is None:
+                admin_user = User(
+                    username=default_admin_username,
+                    email=default_admin_email,
+                    role='admin'
+                )
+                admin_user.set_password(default_admin_password)
+                db.session.add(admin_user)
+                db.session.commit()
+                app.logger.warning('Default admin user created for initial setup: %s', default_admin_username)
+        except IntegrityError:
+            db.session.rollback()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            app.logger.error('Database bootstrap failed: %s', e)
+
+    # Register ML commands
+    from app.ml_commands import register_ml_commands
+    register_ml_commands(app)
+
+    return app
+
+
+# Compatibility entrypoint for platforms configured with: gunicorn app:app
+config_name = 'config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.Config'
+app = create_app(config_name)
