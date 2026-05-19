@@ -708,7 +708,7 @@ def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or 'config.Config')
 
-    from app.billing import bp as billing_bp
+    from soporte_empresa.app.billing import bp as billing_bp
     app.register_blueprint(billing_bp)
 
     _validate_secret_key(app)
@@ -798,27 +798,27 @@ def create_app(config_class=None):
     # ensure loader registered (in case auth module import didn't run yet)
     @login.user_loader
     def load_user(user_id):
-        from app.models import User
+        from soporte_empresa.app.models import User
         return db.session.get(User, int(user_id))
 
-    from app.auth import bp as auth_bp
+    from soporte_empresa.app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    from app.tickets import bp as tickets_bp
+    from soporte_empresa.app.tickets import bp as tickets_bp
     app.register_blueprint(tickets_bp, url_prefix='/tickets')
 
     # admin blueprint for user management
-    from app.admin import bp as admin_bp
+    from soporte_empresa.app.admin import bp as admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
     # API blueprint for external integrations
-    from app.api import bp as api_bp
+    from soporte_empresa.app.api import bp as api_bp
     app.register_blueprint(api_bp, url_prefix='/api/v1')
 
 
     # Importa routes y models para asegurar que los endpoints estén definidos antes de registrar el blueprint
-    from app import routes, models  # noqa: F401
-    from app.routes import bp as main_bp
+    from soporte_empresa.app import routes, models  # noqa: F401
+    from soporte_empresa.app.routes import bp as main_bp
     app.register_blueprint(main_bp)
 
     @app.before_request
@@ -894,7 +894,7 @@ def create_app(config_class=None):
         if endpoint in allowed_endpoints or endpoint.startswith('static'):
             return None
 
-        from app.auth import must_change_default_admin_password
+        from soporte_empresa.app.auth import must_change_default_admin_password
         if must_change_default_admin_password(current_user):
             return redirect(url_for('auth.force_password_change'))
 
@@ -922,7 +922,7 @@ def create_app(config_class=None):
     # create tables if missing and seed default admin user.
     with app.app_context():
         try:
-            from app.models import User
+            from soporte_empresa.app.models import User
             db.create_all()
 
             # Add is_active column if it doesn't exist (migration support)
@@ -1107,31 +1107,31 @@ def create_app(config_class=None):
 
             # Create technician_stats table if it doesn't exist
             if not inspector.has_table('technician_stats'):
-                from app.models import TechnicianStats
+                from soporte_empresa.app.models import TechnicianStats
                 TechnicianStats.__table__.create(db.engine)
                 app.logger.warning('Created technician_stats table')
             
             # Create api_token table if it doesn't exist
             if not inspector.has_table('api_token'):
-                from app.models import ApiToken
+                from soporte_empresa.app.models import ApiToken
                 ApiToken.__table__.create(db.engine)
                 app.logger.warning('Created api_token table')
             
             # Create integration table if it doesn't exist
             if not inspector.has_table('integration'):
-                from app.models import Integration
+                from soporte_empresa.app.models import Integration
                 Integration.__table__.create(db.engine)
                 app.logger.warning('Created integration table')
 
             # Create audit_log table if it doesn't exist
             if not inspector.has_table('audit_log'):
-                from app.models import AuditLog
+                from soporte_empresa.app.models import AuditLog
                 AuditLog.__table__.create(db.engine)
                 app.logger.warning('Created audit_log table')
 
             # Create password_history table if it doesn't exist
             if not inspector.has_table('password_history'):
-                from app.models import PasswordHistory
+                from soporte_empresa.app.models import PasswordHistory
                 PasswordHistory.__table__.create(db.engine)
                 app.logger.warning('Created password_history table')
 
@@ -1158,7 +1158,7 @@ def create_app(config_class=None):
                     conn.commit()
                 app.logger.warning('Added company_id column to audit_log table')
 
-            from app.models import ApiToken, Integration, AuditLog
+            from soporte_empresa.app.models import ApiToken, Integration, AuditLog
 
             api_tokens_without_company = ApiToken.query.filter(ApiToken.company_id.is_(None)).all()
             for token in api_tokens_without_company:
@@ -1200,7 +1200,7 @@ def create_app(config_class=None):
             app.logger.error('Database bootstrap failed: %s', e)
 
     # Register ML commands
-    from app.ml_commands import register_ml_commands
+    from soporte_empresa.app.ml_commands import register_ml_commands
     register_ml_commands(app)
 
     return app
