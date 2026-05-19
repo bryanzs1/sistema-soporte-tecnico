@@ -81,7 +81,7 @@ def _ensure_columns(table_name, columns):
 
 def ensure_runtime_schema():
     """Idempotent schema sync for environments with drifted legacy databases."""
-    from app import models  # noqa: F401
+    from soporte_empresa.app import models  # noqa: F401
 
     db.create_all()
 

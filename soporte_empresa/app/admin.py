@@ -15,9 +15,9 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from soporte_empresa.app import db, translate
-from app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats, BillingEvent, TechnicianApplication
-from app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
-from app.models import Company
+from soporte_empresa.app.models import User, Ticket, TicketOption, ApiToken, Integration, KBArticle, KBArticleRejection, TicketComment, AuditLog, PasswordHistory, TicketAttachment, TechnicianStats, BillingEvent, TechnicianApplication
+from soporte_empresa.app.forms import UserRoleForm, NewUserForm, TicketOptionForm, AdminResetPasswordForm, CompanyForm
+from soporte_empresa.app.models import Company
 
 
 def admin_required(func):
@@ -198,7 +198,7 @@ def _company_user_or_404(user_id):
 def _company_form_choices():
     # Si el usuario es superadmin, puede ver todas las empresas
     if hasattr(current_user, 'is_superadmin') and current_user.is_superadmin():
-        from app.models import Company
+        from soporte_empresa.app.models import Company
         return [(c.id, c.name) for c in Company.query.order_by(Company.name).all()]
     company = current_user.company
     if not company:
@@ -376,8 +376,8 @@ def reset_user_password(user_id):
     if form.validate_on_submit():
         try:
             # Validate password strength
-            from app.security import PasswordValidator, AuditHelper
-            from app.models import PasswordHistory
+            from soporte_empresa.app.security import PasswordValidator, AuditHelper
+            from soporte_empresa.app.models import PasswordHistory
             
             is_valid, message = PasswordValidator.validate(form.new_password.data)
             if not is_valid:
@@ -478,7 +478,7 @@ def delete_user(user_id):
 @tech_or_admin_required
 def dashboard():
     # gather some ticket statistics
-    from app.models import Ticket
+    from soporte_empresa.app.models import Ticket
     from datetime import datetime
     from sqlalchemy import func
 
@@ -565,7 +565,7 @@ def dashboard():
 @admin_required
 def chat_monitoring():
     """Monitor all ticket chats with activity status"""
-    from app.models import Ticket, TicketComment
+    from soporte_empresa.app.models import Ticket, TicketComment
     from datetime import datetime, timedelta
     
     try:
@@ -606,7 +606,7 @@ def chat_monitoring():
 
 def _get_chat_participants(ticket):
     """Get unique participants in a ticket's chat with separation by role"""
-    from app.models import TicketComment
+    from soporte_empresa.app.models import TicketComment
     try:
         comments = TicketComment.query.filter_by(ticket_id=ticket.id).all()
         all_participants = set()
@@ -641,7 +641,7 @@ def _get_chat_participants(ticket):
 @admin_required
 def online_users_list():
     """Display all currently online users"""
-    from app import online_users
+    from soporte_empresa.app import online_users
     from datetime import datetime
     
     # Get list of online users with their info
@@ -668,7 +668,7 @@ def online_users_list():
 @admin_required
 def online_users_data():
     """JSON data for live online users dashboard without full-page reload."""
-    from app import online_users
+    from soporte_empresa.app import online_users
     from datetime import datetime
 
     users_list = []
@@ -697,7 +697,7 @@ def online_users_data():
 @admin_required
 def debug_online_users_json():
     """Debug endpoint to see raw online_users dict as JSON"""
-    from app import online_users
+    from soporte_empresa.app import online_users
     import json
     from datetime import datetime
     
@@ -787,8 +787,8 @@ def edit_ticket_option(option_id):
 def ml_system():
     """Página de administración del sistema ML"""
     try:
-        from app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
-        from app.models import TechnicianStats
+        from soporte_empresa.app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
+        from soporte_empresa.app.models import TechnicianStats
         
         if not ML_AVAILABLE:
             flash(_t('Machine Learning dependencies not installed. Please run: pip install scikit-learn numpy'), 'warning')
@@ -845,7 +845,7 @@ def ml_system():
 @admin_required
 def ml_train():
     """Entrena el modelo ML"""
-    from app.ml_classifier import classifier
+    from soporte_empresa.app.ml_classifier import classifier
     
     result = classifier.train(min_tickets=10)
     
@@ -980,8 +980,8 @@ def delete_integration(integration_id):
 @admin_required
 def ai_system():
     """Panel de control del sistema IA"""
-    from app.ai_sentiment import get_analyzer
-    from app.ai_chatbot import get_chatbot
+    from soporte_empresa.app.ai_sentiment import get_analyzer
+    from soporte_empresa.app.ai_chatbot import get_chatbot
     
     # Get settings from session or DB
     ai_settings = session.get('ai_settings', {
@@ -1004,7 +1004,7 @@ def ai_system():
 @admin_required
 def ai_system_settings():
     """Actualizar configuración de IA"""
-    from app.models import db
+    from soporte_empresa.app.models import db
     
     # Actualizar configuración en sesión (en producción, usar DB)
     ai_settings = {
@@ -1128,7 +1128,7 @@ def settings_technician_application_detail(application_id):
             db.session.commit()
 
             try:
-                from app import send_email
+                from soporte_empresa.app import send_email
                 approved_user = User.query.get(application.approved_user_id)
                 email_body = _t('Your profile was approved as certified technician. Username: {username}').format(
                     username=approved_user.username if approved_user else application.email,
@@ -1242,20 +1242,20 @@ def settings_ticket_policies_update():
 def settings_ml():
     """Configuración del sistema ML desde settings"""
     try:
-        from app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
+        from soporte_empresa.app.ml_classifier import classifier, ML_AVAILABLE, ML_IMPORT_ERROR
         
         ml_available = ML_AVAILABLE
         model_info = classifier.get_model_info() if ML_AVAILABLE else {}
         ml_accuracy = 0
         
         # Get technician stats
-        from app.models import TechnicianStats
+        from soporte_empresa.app.models import TechnicianStats
         tech_stats = TechnicianStats.query.join(User, TechnicianStats.technician_id == User.id).filter(
             User.company_id == current_user.company_id
         ).all()
         
         # Get recent tickets with ML predictions
-        from app.models import Ticket
+        from soporte_empresa.app.models import Ticket
         ml_tickets = _company_ticket_query().filter(
             Ticket.ml_suggested_technician_id.isnot(None)
         ).order_by(Ticket.created_at.desc()).limit(10).all()
@@ -1290,8 +1290,8 @@ def settings_ml():
 @admin_required
 def settings_ai():
     """Configuración del sistema IA desde settings"""
-    from app.ai_sentiment import get_analyzer
-    from app.ai_chatbot import get_chatbot
+    from soporte_empresa.app.ai_sentiment import get_analyzer
+    from soporte_empresa.app.ai_chatbot import get_chatbot
     
     # Get settings from session or DB
     ai_settings = session.get('ai_settings', {
@@ -1735,7 +1735,7 @@ def kb_reject(article_id):
 @login_required
 @tech_or_admin_required
 def executive_report():
-    from app.models import Ticket
+    from soporte_empresa.app.models import Ticket
     from datetime import datetime, timedelta
     from sqlalchemy import func
 

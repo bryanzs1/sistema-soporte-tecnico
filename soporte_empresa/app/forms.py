@@ -4,8 +4,8 @@ from wtforms.validators import DataRequired, EqualTo, Length, NumberRange
 from wtforms import ValidationError
 from flask_wtf.file import FileField, FileAllowed
 from flask import session
-from app import translate
-from app.models import Ticket, User, Company
+from soporte_empresa.app import translate
+from soporte_empresa.app.models import Ticket, User, Company
 class CompanyForm(FlaskForm):
     name = StringField('Nombre de la empresa', validators=[DataRequired(), Length(max=120)])
     description = StringField('Descripción', validators=[Length(max=255)])

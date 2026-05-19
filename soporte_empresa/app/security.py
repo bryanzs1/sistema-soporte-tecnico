@@ -297,7 +297,7 @@ class AuditHelper:
     @staticmethod
     def log_login_attempt(user, success, ip_address=None, user_agent=None):
         """Log a login attempt (success or failure)"""
-        from app.models import AuditLog
+        from soporte_empresa.app.models import AuditLog
         
         if ip_address is None:
             ip_address = AuditHelper.get_client_ip()
@@ -317,7 +317,7 @@ class AuditHelper:
     @staticmethod
     def log_password_change(user_id, ip_address=None, user_agent=None):
         """Log a password change"""
-        from app.models import AuditLog
+        from soporte_empresa.app.models import AuditLog
         
         if ip_address is None:
             ip_address = AuditHelper.get_client_ip()
@@ -336,7 +336,7 @@ class AuditHelper:
     @staticmethod
     def log_2fa_setup(user_id, enabled, ip_address=None, user_agent=None):
         """Log 2FA setup/disable"""
-        from app.models import AuditLog
+        from soporte_empresa.app.models import AuditLog
         
         if ip_address is None:
             ip_address = AuditHelper.get_client_ip()
@@ -355,7 +355,7 @@ class AuditHelper:
     @staticmethod
     def log_ticket_action(user_id, action, ticket_id, ip_address=None, user_agent=None):
         """Log ticket-related actions"""
-        from app.models import AuditLog
+        from soporte_empresa.app.models import AuditLog
         
         if ip_address is None:
             ip_address = AuditHelper.get_client_ip()

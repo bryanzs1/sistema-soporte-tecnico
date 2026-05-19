@@ -380,7 +380,7 @@ def _can_reopen_ticket(ticket):
 def handle_connect():
     """Register user as online when they connect"""
     from flask import current_app
-    from app import online_users
+    from soporte_empresa.app import online_users
     
     current_app.logger.info(f'=== Socket.IO Connect Event ===')
     current_app.logger.info(f'is_authenticated: {current_user.is_authenticated}')
@@ -442,7 +442,7 @@ def handle_disconnect():
     from flask import current_app
     
     if current_user.is_authenticated:
-        from app import online_users
+        from soporte_empresa.app import online_users
         username = current_user.username
         user_id = current_user.id
         online_users.pop(user_id, None)
@@ -500,7 +500,7 @@ def _save_attachment(file_storage, ticket_id):
         return None
 
     # Security: Validate file
-    from app.security import FileSecurityValidator
+    from soporte_empresa.app.security import FileSecurityValidator
     is_valid, error_msg, mime_type = FileSecurityValidator.validate(file_storage)
     if not is_valid:
         current_app.logger.warning(f'File upload validation failed: {error_msg}')
@@ -782,7 +782,7 @@ def create_ticket():
         
         # ML: Obtener sugerencia de técnico
         try:
-            from app.ml_classifier import classifier
+            from soporte_empresa.app.ml_classifier import classifier
             
             ticket_data = {
                 'title': ticket.title,
@@ -876,7 +876,7 @@ def request_password_reset_ticket():
     
     # ML: Obtener sugerencia de técnico
     try:
-        from app.ml_classifier import classifier
+        from soporte_empresa.app.ml_classifier import classifier
         
         ticket_data = {
             'title': ticket.title,
@@ -1256,7 +1256,7 @@ def reopen_ticket(ticket_id):
 
     if recipients:
         try:
-            from app import send_email
+            from soporte_empresa.app import send_email
             send_email(
                 _t('Ticket reopened notification'),
                 recipients,

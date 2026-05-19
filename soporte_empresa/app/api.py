@@ -214,7 +214,7 @@ def create_ticket_api():
         
         # ML: Obtener sugerencia de técnico
         try:
-            from app.ml_classifier import classifier
+            from soporte_empresa.app.ml_classifier import classifier
             
             ticket_data = {
                 'title': ticket.title,
@@ -430,7 +430,7 @@ def slack_webhook():
         
         # ML: Intentar auto-asignar
         try:
-            from app.ml_classifier import classifier
+            from soporte_empresa.app.ml_classifier import classifier
             
             ticket_data = {
                 'title': ticket.title,
@@ -554,7 +554,7 @@ def teams_webhook():
         
         # ML: Intentar auto-asignar
         try:
-            from app.ml_classifier import classifier
+            from soporte_empresa.app.ml_classifier import classifier
             
             ticket_data = {
                 'title': ticket.title,

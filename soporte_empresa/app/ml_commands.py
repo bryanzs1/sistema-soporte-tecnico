@@ -15,7 +15,7 @@ def register_ml_commands(app: Flask):
     def train_model(min_tickets):
         """Entrena el modelo de clasificación de tickets"""
         try:
-            from app.ml_classifier import classifier, ML_AVAILABLE
+            from soporte_empresa.app.ml_classifier import classifier, ML_AVAILABLE
             
             if not ML_AVAILABLE:
                 click.echo("❌ ML dependencies not available. Install them with:")
@@ -42,7 +42,7 @@ def register_ml_commands(app: Flask):
     def model_info():
         """Muestra información del modelo actual"""
         try:
-            from app.ml_classifier import classifier, ML_AVAILABLE
+            from soporte_empresa.app.ml_classifier import classifier, ML_AVAILABLE
             
             if not ML_AVAILABLE:
                 click.echo("❌ ML dependencies not available. Install them with:")
@@ -67,8 +67,8 @@ def register_ml_commands(app: Flask):
     def technician_stats():
         """Muestra estadísticas de técnicos"""
         try:
-            from app.ml_classifier import ML_AVAILABLE
-            from app.models import TechnicianStats
+            from soporte_empresa.app.ml_classifier import ML_AVAILABLE
+            from soporte_empresa.app.models import TechnicianStats
             
             if not ML_AVAILABLE:
                 click.echo("❌ ML dependencies not available. Install them with:")

@@ -325,7 +325,7 @@ def verify_totp():
         
         if use_backup:
             # Try backup code
-            from app.security import TOTPManager
+            from soporte_empresa.app.security import TOTPManager
             verified, remaining_codes = TOTPManager.verify_backup_code(user.totp_backup_codes, code)
             if verified:
                 user.totp_backup_codes = remaining_codes
@@ -339,7 +339,7 @@ def verify_totp():
                 flash(_t('Invalid backup code'), 'danger')
         else:
             # Try TOTP code
-            from app.security import TOTPManager
+            from soporte_empresa.app.security import TOTPManager
             if TOTPManager.verify_token(user.totp_secret, code):
                 AuditHelper.log_login_attempt(user, True)
                 session['totp_verified'] = True

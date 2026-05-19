@@ -106,7 +106,7 @@ def validate_request(schema_class, data=None):
     Validate incoming request data
     
     Usage:
-        from app.api_validators import validate_request, TicketCreateSchema
+        from soporte_empresa.app.api_validators import validate_request, TicketCreateSchema
         
         errors = validate_request(TicketCreateSchema, request.json)
         if errors:
