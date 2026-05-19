@@ -1,0 +1,1 @@
+Este respaldo contiene la carpeta 'app' original de la raíz antes de eliminarla para evitar conflictos de rutas en Flask. Si necesitas restaurarla, solo vuelve a copiarla a la raíz.
